@@ -6,6 +6,7 @@ import type { Client } from "@stomp/stompjs";
 import { createGroupMessageClient, publishGroupMessage } from "@/lib/api/realtimeMessages";
 import type { GroupMessage } from "@/lib/types/message";
 import { useMessages } from "@/hooks/useMessages";
+import { PageHeader, Panel, SiteShell } from "../../../../../../site";
 
 export default function GroupChatPage() {
   const params = useParams<{ eventId: string; groupId: string }>();
@@ -84,22 +85,19 @@ export default function GroupChatPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-5 px-4 py-8">
-      <header className="border-b border-zinc-200 pb-4">
-        <p className="text-sm text-zinc-500">Group #{groupId}</p>
-        <div className="mt-2 flex items-center justify-between gap-3">
-          <h1 className="text-2xl font-semibold text-zinc-950">Realtime chat</h1>
-          <span className="rounded-full border border-zinc-300 px-3 py-1 text-sm text-zinc-700">
-            {connectionStatus}
-          </span>
-        </div>
-      </header>
+    <SiteShell>
+      <PageHeader
+        title="Realtime chat"
+        subtitle={`Group #${groupId}`}
+        action={<span className="rounded-full border border-white/10 px-3 py-1 text-sm text-slate-300">{connectionStatus}</span>}
+      />
 
-      <section className="flex min-h-[420px] flex-1 flex-col gap-3 rounded-lg border border-zinc-200 bg-white p-4">
-        {isLoading ? <p className="text-sm text-zinc-500">Loading messages...</p> : null}
+      <Panel>
+        <div className="flex min-h-[520px] flex-col gap-3">
+        {isLoading ? <p className="text-sm text-slate-400">Loading messages...</p> : null}
         {isError ? (
           <button
-            className="self-start rounded-md bg-zinc-950 px-3 py-2 text-sm font-medium text-white"
+            className="secondary-button self-start"
             type="button"
             onClick={() => void refetch()}
           >
@@ -109,39 +107,40 @@ export default function GroupChatPage() {
 
         <div className="flex flex-1 flex-col gap-3 overflow-y-auto">
           {messages.length === 0 && !isLoading ? (
-            <p className="text-sm text-zinc-500">No messages yet.</p>
+            <p className="text-sm text-slate-500">No messages yet.</p>
           ) : null}
 
           {messages.map((message) => (
-            <article key={message.id} className="rounded-md border border-zinc-200 bg-zinc-50 p-3">
+            <article key={message.id} className="rounded-md border border-white/10 bg-slate-950 p-3">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-medium text-zinc-950">{message.senderName}</p>
-                <time className="text-xs text-zinc-500">
+                <p className="text-sm font-medium text-white">{message.senderName}</p>
+                <time className="text-xs text-slate-500">
                   {new Date(message.createdAt).toLocaleString()}
                 </time>
               </div>
-              <p className="mt-2 whitespace-pre-wrap text-sm text-zinc-800">{message.messageText}</p>
+              <p className="mt-2 whitespace-pre-wrap text-sm text-slate-200">{message.messageText}</p>
             </article>
           ))}
         </div>
 
-        <form className="flex gap-2 border-t border-zinc-200 pt-4" onSubmit={handleSubmit}>
+        <form className="flex gap-2 border-t border-white/10 pt-4" onSubmit={handleSubmit}>
           <input
-            className="min-w-0 flex-1 rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-950 outline-none focus:border-zinc-950"
+            className="min-w-0 flex-1 rounded-md border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-cyan-400"
             maxLength={1000}
             onChange={(event) => setMessageText(event.target.value)}
             placeholder="Write a message"
             value={messageText}
           />
           <button
-            className="rounded-md bg-zinc-950 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-zinc-400"
+            className="primary-button"
             disabled={!canSend}
             type="submit"
           >
             Send
           </button>
         </form>
-      </section>
-    </main>
+        </div>
+      </Panel>
+    </SiteShell>
   );
 }
