@@ -2,7 +2,7 @@ import axios from "axios";
 import { clearAuthToken, getAuthToken } from "../auth/session";
 
 const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL ?? "/api",
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "/api",
 });
 
 apiClient.interceptors.request.use((config) => {
