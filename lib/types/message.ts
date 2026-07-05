@@ -2,6 +2,11 @@ export interface GroupMessage {
   id: string;
   groupId: string;
   senderId: string;
-  content: string;
-  sentAt: string;
+  senderName: string;
+  messageText: string;
+  createdAt: string;
+}
+
+export interface CreateGroupMessageRequest {
+  messageText: string;
 }
