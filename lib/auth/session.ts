@@ -13,7 +13,17 @@ function getDocumentCookieValue(cookieName: string): string | null {
 }
 
 export function getAuthToken(): string | null {
-  return getDocumentCookieValue(SESSION_TOKEN_COOKIE_NAME);
+  const cookieToken = getDocumentCookieValue(SESSION_TOKEN_COOKIE_NAME);
+
+  if (cookieToken) {
+    return cookieToken;
+  }
+
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  return window.localStorage.getItem("token");
 }
 
 export function setAuthToken(token: string): void {
@@ -22,6 +32,7 @@ export function setAuthToken(token: string): void {
   }
 
   document.cookie = `${SESSION_TOKEN_COOKIE_NAME}=${encodeURIComponent(token)}; path=/; samesite=lax`;
+  window.localStorage.setItem("token", token);
 }
 
 export function clearAuthToken(): void {
@@ -30,4 +41,5 @@ export function clearAuthToken(): void {
   }
 
   document.cookie = `${SESSION_TOKEN_COOKIE_NAME}=; path=/; max-age=0; samesite=lax`;
+  window.localStorage.removeItem("token");
 }
