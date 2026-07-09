@@ -120,22 +120,42 @@
   transition: border-color 0.3s ease;
 }
 
-.cardWrapper:hover .cardFront,
-.cardWrapper:hover .cardBack {
-  border-color: rgba(217, 70, 239, 0.35); /* Subtle pink/purple glowing border on hover */
+.cardFront {
+  z-index: 2;
+  pointer-events: auto;
 }
 
 .cardBack {
   transform: rotateY(180deg);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.cardInner.flipped .cardFront {
+  z-index: 1;
+  pointer-events: none;
+}
+
+.cardInner.flipped .cardBack {
+  z-index: 2;
+  pointer-events: auto;
+}
+
+.cardWrapper:hover .cardFront,
+.cardWrapper:hover .cardBack {
+  border-color: rgba(217, 70, 239, 0.35); /* Subtle pink/purple glowing border on hover */
 }
 
 /* Front Side Layout */
 .imageArea {
   position: relative;
   width: 100%;
-  height: 50%;
+  height: 48%;
   overflow: hidden;
   flex-shrink: 0;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)),
+    #172033;
 }
 
 .image {
@@ -152,7 +172,7 @@
 .fallbackGradient {
   width: 100%;
   height: 100%;
-  /* background applied via inline style for variety */
+  background: transparent;
   position: relative;
 }
 
@@ -202,12 +222,73 @@
   color: #d946ef; /* Pink/Purple */
 }
 
-.cardContent {
-  padding: 20px;
+.cardBody {
+  height: 52%;
+  position: relative;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(139, 92, 246, 0.28), transparent 35%),
+    radial-gradient(circle at 85% 80%, rgba(255, 122, 24, 0.24), transparent 38%),
+    linear-gradient(135deg, #111827 0%, #160b18 45%, #0b1220 100%);
+}
+
+.cardBody::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(7, 10, 15, 0.35);
+  pointer-events: none;
+}
+
+.cardBodyContent {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
-  flex: 1;
+  height: 100%;
   justify-content: space-between;
+}
+
+.bodyGradientTech {
+  background:
+    radial-gradient(circle at 20% 15%, rgba(139, 92, 246, 0.34), transparent 36%),
+    radial-gradient(circle at 90% 85%, rgba(236, 72, 153, 0.24), transparent 40%),
+    linear-gradient(135deg, #111827, #190b2e 50%, #07111f);
+}
+
+.bodyGradientOutdoor {
+  background:
+    radial-gradient(circle at 20% 15%, rgba(77, 255, 210, 0.22), transparent 36%),
+    radial-gradient(circle at 90% 85%, rgba(59, 130, 246, 0.28), transparent 40%),
+    linear-gradient(135deg, #111827, #0b1b2e 50%, #07111f);
+}
+
+.bodyGradientArt {
+  background:
+    radial-gradient(circle at 20% 15%, rgba(251, 146, 60, 0.28), transparent 36%),
+    radial-gradient(circle at 90% 85%, rgba(236, 72, 153, 0.22), transparent 40%),
+    linear-gradient(135deg, #111827, #24100c 50%, #07111f);
+}
+
+.bodyGradientSocial {
+  background:
+    radial-gradient(circle at 20% 15%, rgba(168, 85, 247, 0.3), transparent 36%),
+    radial-gradient(circle at 90% 85%, rgba(244, 114, 182, 0.2), transparent 40%),
+    linear-gradient(135deg, #111827, #1d1030 50%, #07111f);
+}
+
+.bodyGradientMusic {
+  background:
+    radial-gradient(circle at 20% 15%, rgba(236, 72, 153, 0.3), transparent 36%),
+    radial-gradient(circle at 90% 85%, rgba(217, 70, 239, 0.2), transparent 40%),
+    linear-gradient(135deg, #111827, #220b33 50%, #07111f);
+}
+
+.bodyGradientSport {
+  background:
+    radial-gradient(circle at 20% 15%, rgba(20, 184, 166, 0.25), transparent 36%),
+    radial-gradient(circle at 90% 85%, rgba(59, 130, 246, 0.25), transparent 40%),
+    linear-gradient(135deg, #111827, #092021 50%, #07111f);
 }
 
 .textGroup {
