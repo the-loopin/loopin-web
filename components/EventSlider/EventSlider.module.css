@@ -71,18 +71,98 @@
   width: 100%;
   height: 100%;
   perspective: 1200px;
-  transition: transform 250ms ease, box-shadow 250ms ease;
-  transform-origin: center center;
+  transform-style: preserve-3d;
+  transform:
+    translateY(0)
+    scale(1)
+    rotateX(0deg)
+    rotateY(0deg);
+  transition:
+    transform 260ms ease,
+    box-shadow 260ms ease,
+    border-color 260ms ease,
+    filter 260ms ease;
+  will-change: transform;
   border-radius: 20px;
+  position: relative;
 }
 
-.cardWrapper:hover .cardInteractive {
-  /* Premium tilt: slide up, scale up, and rotate slightly */
-  transform: translateY(-14px) scale(1.045) rotate(-0.6deg);
-  /* Glowing box shadow utilizing pink/purple and orange, kept visually compact */
-  box-shadow: 
-    0 16px 36px rgba(0, 0, 0, 0.35), 
-    0 4px 12px rgba(217, 70, 239, 0.12);
+/* Cursor-following light reflection effect inside the card */
+.cardInteractive::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    radial-gradient(
+      circle at var(--mx, 50%) var(--my, 50%),
+      rgba(255, 255, 255, 0.08),
+      transparent 35%
+    );
+  opacity: 0;
+  transition: opacity 220ms ease;
+}
+
+/* Soft glow behind/around the card on hover */
+.cardInteractive::after {
+  content: "";
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: -22px;
+  height: 64px;
+  z-index: -1;
+  border-radius: 999px;
+  background: rgba(139, 92, 246, 0.22);
+  filter: blur(26px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 240ms ease;
+}
+
+.cardInteractive:hover {
+  z-index: 30;
+  transform:
+    translateY(-16px)
+    scale(1.04)
+    rotateX(var(--rx, 0deg))
+    rotateY(var(--ry, 0deg));
+  box-shadow:
+    0 28px 70px rgba(0, 0, 0, 0.48),
+    0 18px 42px rgba(139, 92, 246, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.045);
+  filter: saturate(1.06);
+}
+
+.cardInteractive:hover::before {
+  opacity: 1;
+}
+
+.cardInteractive:hover::after {
+  opacity: 0.55;
+}
+
+.cardInteractive:hover .cardBodyContent {
+  transform: translateY(-4px);
+}
+
+.cardInteractive:hover .moreInfoBtn {
+  transform: translateY(-2px);
+  box-shadow:
+    0 10px 24px rgba(217, 70, 239, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  filter: brightness(1.15);
+}
+
+.cardInteractive:hover .joinBtn {
+  filter: brightness(1.15);
+}
+
+.cardInteractive:hover .categoryBadge {
+  filter: brightness(1.15) saturate(1.1);
+  border-color: rgba(255, 255, 255, 0.25) !important;
 }
 
 /* Inner card manages the 3D rotation flip state with a bouncy physics easing */
@@ -109,14 +189,16 @@
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.07);
   background: linear-gradient(135deg, rgba(23, 32, 51, 0.65) 0%, rgba(17, 24, 39, 0.75) 100%);
   backdrop-filter: blur(16px) saturate(180%);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  box-shadow:
+    0 18px 42px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035);
   transition: border-color 0.3s ease;
 }
 
@@ -143,7 +225,7 @@
 
 .cardWrapper:hover .cardFront,
 .cardWrapper:hover .cardBack {
-  border-color: rgba(217, 70, 239, 0.35); /* Subtle pink/purple glowing border on hover */
+  border-color: rgba(255, 255, 255, 0.09); /* Soft, subtle white highlight on hover */
 }
 
 /* Front Side Layout */
@@ -156,6 +238,20 @@
   background:
     linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)),
     #172033;
+}
+
+.imageArea::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 56px;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(7, 10, 15, 0.42)
+  );
+  pointer-events: none;
+  z-index: 1;
 }
 
 .image {
@@ -247,6 +343,7 @@
   flex-direction: column;
   height: 100%;
   justify-content: space-between;
+  transition: transform 240ms ease;
 }
 
 .bodyGradientTech {
