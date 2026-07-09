@@ -9,6 +9,12 @@
   background: transparent;
   display: flex;
   flex-direction: column;
+  opacity: 0;
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sliderContainer.ready {
+  opacity: 1;
 }
 
 .trackWrapper {
