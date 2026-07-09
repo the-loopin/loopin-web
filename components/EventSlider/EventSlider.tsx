@@ -68,37 +68,43 @@ const formatEventDateTime = (startStr: string, endStr?: string) => {
   }
 };
 
-// Reusable gradient mapping representing smooth, rich, moody and slightly vibrant styles
-const GRADIENTS = [
-  "linear-gradient(135deg, #2e1065 0%, #d946ef 50%, #8b5cf6 100%)", // Tech: purple / pink / magenta
-  "linear-gradient(135deg, #0f172a 0%, #06b6d4 50%, #3b82f6 100%)", // Outdoor: blue / cyan / indigo
-  "linear-gradient(135deg, #450a0a 0%, #f97316 50%, #ec4899 100%)", // Art: orange / amber / warm rose
-  "linear-gradient(135deg, #1e1b4b 0%, #a855f7 50%, #f472b6 100%)", // Social: violet / purple / pink
-  "linear-gradient(135deg, #311042 0%, #ec4899 50%, #d946ef 100%)", // Music: indigo / pink / fuchsia
-  "linear-gradient(135deg, #064e3b 0%, #14b8a6 50%, #3b82f6 100%)", // Sport: teal / blue / aqua
-];
-
-// Helper to resolve card cover gradients based on variant, category, or index rotation
-const getCardGradient = (event: EventCardItem, index: number) => {
+// Helper to get card body gradient class name based on variant, category, or index rotation
+const getBodyGradientClass = (event: EventCardItem, index: number) => {
   if (event.coverVariant) {
     const match = event.coverVariant.match(/\d+/);
     if (match) {
       const idx = parseInt(match[0], 10) - 1;
-      if (idx >= 0 && idx < GRADIENTS.length) {
-        return GRADIENTS[idx];
+      const variants = [
+        "bodyGradientTech",
+        "bodyGradientOutdoor",
+        "bodyGradientArt",
+        "bodyGradientSocial",
+        "bodyGradientMusic",
+        "bodyGradientSport",
+      ];
+      if (idx >= 0 && idx < variants.length) {
+        return variants[idx];
       }
     }
   }
 
   const cat = event.category?.toUpperCase() || "";
-  if (cat.includes("TECH")) return GRADIENTS[0];
-  if (cat.includes("OUTDOOR")) return GRADIENTS[1];
-  if (cat.includes("ART")) return GRADIENTS[2];
-  if (cat.includes("SOCIAL")) return GRADIENTS[3];
-  if (cat.includes("MUSIC")) return GRADIENTS[4];
-  if (cat.includes("SPORT")) return GRADIENTS[5];
+  if (cat.includes("TECH")) return "bodyGradientTech";
+  if (cat.includes("OUTDOOR")) return "bodyGradientOutdoor";
+  if (cat.includes("ART")) return "bodyGradientArt";
+  if (cat.includes("SOCIAL")) return "bodyGradientSocial";
+  if (cat.includes("MUSIC")) return "bodyGradientMusic";
+  if (cat.includes("SPORT")) return "bodyGradientSport";
 
-  return GRADIENTS[index % GRADIENTS.length];
+  const fallbackVariants = [
+    "bodyGradientTech",
+    "bodyGradientOutdoor",
+    "bodyGradientArt",
+    "bodyGradientSocial",
+    "bodyGradientMusic",
+    "bodyGradientSport",
+  ];
+  return fallbackVariants[index % fallbackVariants.length];
 };
 
 // Default interests mapping for fallback cases when interests are not explicitly provided
@@ -213,64 +219,63 @@ export const EventSlider: React.FC<EventSliderProps> = ({ events, onJoin }) => {
                     loading="lazy"
                   />
                 ) : (
-                  <div 
-                    className={styles.fallbackGradient}
-                    style={{ background: getCardGradient(event, index) }}
-                  >
+                  <div className={styles.fallbackGradient}>
                     <div className={styles.fallbackPattern} />
                   </div>
                 )}
               </div>
 
-              <div className={styles.cardContent}>
-                <div className={styles.textGroup}>
-                  <h3 className={styles.title} title={event.title}>
-                    {event.title}
-                  </h3>
-                  
-                  <div className={styles.metaInfo}>
-                    <div className={styles.metaItem}>
-                      <CalendarDays size={14} className={styles.metaIcon} />
-                      <span>{displayDate}</span>
-                    </div>
-                    <div className={styles.metaItem}>
-                      <MapPin size={14} className={styles.metaIcon} />
-                      <span className={styles.locationText}>{locationStr}</span>
-                    </div>
-                    <div className={styles.metaItem}>
-                      <User size={14} className={styles.metaIcon} />
-                      <span>Hosted by {event.organizerName}</span>
+              <div className={`${styles.cardBody} ${styles[getBodyGradientClass(event, index)] || ""}`}>
+                <div className={styles.cardBodyContent}>
+                  <div className={styles.textGroup}>
+                    <h3 className={styles.title} title={event.title}>
+                      {event.title}
+                    </h3>
+                    
+                    <div className={styles.metaInfo}>
+                      <div className={styles.metaItem}>
+                        <CalendarDays size={14} className={styles.metaIcon} />
+                        <span>{displayDate}</span>
+                      </div>
+                      <div className={styles.metaItem}>
+                        <MapPin size={14} className={styles.metaIcon} />
+                        <span className={styles.locationText}>{locationStr}</span>
+                      </div>
+                      <div className={styles.metaItem}>
+                        <User size={14} className={styles.metaIcon} />
+                        <span>Hosted by {event.organizerName}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className={styles.footer}>
-                  <div className={styles.priceGroup}>
-                    <span className={styles.priceLabel}>Admission</span>
-                    <span 
-                      className={styles.priceValue}
-                      style={{
-                        color: event.isFree ? "#4DFFD2" : "#ff7e15"
-                      }}
+                  <div className={styles.footer}>
+                    <div className={styles.priceGroup}>
+                      <span className={styles.priceLabel}>Admission</span>
+                      <span 
+                        className={styles.priceValue}
+                        style={{
+                          color: event.isFree ? "#4DFFD2" : "#ff7e15"
+                        }}
+                      >
+                        {event.isFree ? "Free" : `$${event.price || 0}`}
+                      </span>
+                    </div>
+                    
+                    <button
+                      type="button"
+                      className={styles.moreInfoBtn}
+                      onClick={() => toggleFlip(event.id)}
+                      aria-label={`View more information for ${event.title}`}
                     >
-                      {event.isFree ? "Free" : `$${event.price || 0}`}
-                    </span>
+                      More info
+                    </button>
                   </div>
-                  
-                  <button
-                    type="button"
-                    className={styles.moreInfoBtn}
-                    onClick={() => toggleFlip(event.id)}
-                    aria-label={`View more information for ${event.title}`}
-                  >
-                    More info
-                  </button>
                 </div>
               </div>
             </div>
 
             {/* Back Face of the Card */}
-            <div className={styles.cardBack}>
+            <div className={`${styles.cardBack} ${styles[getBodyGradientClass(event, index)] || ""}`}>
               <div className={styles.cardBackContent}>
                 <div className={styles.backMainContent}>
                   <h4 className={styles.interestsHeading}>Interests</h4>
