@@ -15,19 +15,114 @@ import {
   CalendarDays, 
   MapPin, 
   Maximize2, 
-  X,
-  ChevronLeft,
-  ChevronRight
+  X
 } from "lucide-react";
+import { EventSlider, EventCardItem } from "@/components/EventSlider/EventSlider";
 
-// Mock suggested events/activities
-const mockSuggested = [
-  { id: 1, type: "Event", title: "Neon Startup Night", category: "Tech", time: "Thu, 19:30", place: "Port Baku", members: 18, color: "violet" },
-  { id: 2, type: "Activity", title: "Old City Photo Walk", category: "Art", time: "Fri, 17:00", place: "Icherisheher", members: 9, color: "orange" },
-  { id: 3, type: "Event", title: "Sunset Board Games", category: "Social", time: "Sat, 18:00", place: "Nizami Street", members: 12, color: "teal" },
-  { id: 4, type: "Activity", title: "Late Night Code Session", category: "Tech", time: "Fri, 22:00", place: "Matrix Coffee", members: 5, color: "violet" },
-  { id: 5, type: "Event", title: "Baku Tech Meetup", category: "Tech", time: "Sun, 15:00", place: "Baku Idea Lab", members: 45, color: "teal" },
-  { id: 6, type: "Activity", title: "Bicycle Ride Boulevard", category: "Outdoor", time: "Sat, 09:00", place: "Baku Boulevard", members: 8, color: "orange" },
+// Mock suggested events matching backend JPA structure
+const mockEvents: EventCardItem[] = [
+  {
+    id: 1,
+    title: "Neon Startup Night",
+    description: "Connect with local tech founders, angel investors, and engineers under neon lights. Pitch your startup, find co-founders, or meet mentors.",
+    type: "EVENT",
+    category: "TECH",
+    city: "Baku",
+    address: "Port Baku Mall, Floor 3",
+    startDateTime: "2026-07-16T19:30:00",
+    endDateTime: "2026-07-16T22:30:00",
+    isFree: true,
+    price: 0,
+    organizerName: "Baku Tech Hub",
+    imageUrl: undefined,
+    interestsCount: 28,
+    joinUrl: "/events",
+  },
+  {
+    id: 2,
+    title: "Old City Photo Walk",
+    description: "Capture the golden hour lighting within the historic walls of Old City Baku. Learn shadows, lighting, and composition techniques.",
+    type: "ACTIVITY",
+    category: "ART",
+    city: "Baku",
+    address: "Icherisheher Metro Station",
+    startDateTime: "2026-07-17T17:00:00",
+    endDateTime: "2026-07-17T19:30:00",
+    isFree: false,
+    price: 15,
+    organizerName: "Creative Baku",
+    imageUrl: undefined,
+    interestsCount: 14,
+    joinUrl: "/activities",
+  },
+  {
+    id: 3,
+    title: "Sunset Board Games",
+    description: "Unwind with tabletop classics and modern strategy board games with a view. Great environment to meet new friends.",
+    type: "EVENT",
+    category: "SOCIAL",
+    city: "Baku",
+    address: "Nizami Street Cafe Area",
+    startDateTime: "2026-07-18T18:00:00",
+    endDateTime: "2026-07-18T21:30:00",
+    isFree: true,
+    price: 0,
+    organizerName: "Baku Boardgames Club",
+    imageUrl: undefined,
+    interestsCount: 35,
+    joinUrl: "/events",
+  },
+  {
+    id: 4,
+    title: "Late Night Code Session",
+    description: "Bring your laptop, grab a specialty coffee, and build side projects with peers. Share code, get feedback, and build together.",
+    type: "ACTIVITY",
+    category: "TECH",
+    city: "Baku",
+    address: "Matrix Coffee House",
+    startDateTime: "2026-07-17T22:00:00",
+    endDateTime: "2026-07-18T02:00:00",
+    isFree: false,
+    price: 5,
+    organizerName: "Loopin Devs",
+    imageUrl: undefined,
+    interestsCount: 19,
+    joinUrl: "/activities",
+  },
+  {
+    id: 5,
+    title: "Baku Tech Meetup",
+    description: "Deep dive into web development, cloud computing, and AI technologies. Includes two lightning talks and networking.",
+    type: "EVENT",
+    category: "TECH",
+    city: "Baku",
+    address: "Baku Idea Lab",
+    startDateTime: "2026-07-19T15:00:00",
+    endDateTime: "2026-07-19T18:00:00",
+    isFree: true,
+    price: 0,
+    organizerName: "Tech Meetup Org",
+    imageUrl: undefined,
+    interestsCount: 52,
+    joinUrl: "/events",
+  },
+  {
+    id: 6,
+    title: "Bicycle Ride Boulevard",
+    description: "A scenic morning ride along the Caspian Sea coastline. Bike rentals are available at the site. Open to all fitness levels.",
+    type: "ACTIVITY",
+    category: "OUTDOOR",
+    city: "Baku",
+    address: "Baku Boulevard Clock Tower",
+    startDateTime: "2026-07-18T09:00:00",
+    endDateTime: "2026-07-18T11:30:00",
+    isFree: true,
+    price: 0,
+    organizerName: "Active Baku",
+    imageUrl: undefined,
+    interestsCount: 22,
+    joinUrl: "/activities",
+  }
 ];
 
 function CityScene() {
@@ -145,66 +240,9 @@ export default function PublicHomePage() {
   const [showExploreModal, setShowExploreModal] = useState(false);
   const [isMapExpanded, setIsMapExpanded] = useState(false);
 
-  // Carousel translation
-  const [translateX, setTranslateX] = useState(0);
-  const [isHovered, setIsHovered] = useState(false);
-  const speedRef = useRef(0.5);
-
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  // Continuous auto scroll loop
-  useEffect(() => {
-    if (isHovered) return;
-    let animationFrameId: number;
-    const updateScroll = () => {
-      setTranslateX(prev => {
-        let next = prev - speedRef.current;
-        // loop threshold (width of card + gap) * number of cards
-        // 6 cards * 340px = 2040px approx
-        if (next < -2040) return 0;
-        if (next > 0) return -2040;
-        return next;
-      });
-      animationFrameId = requestAnimationFrame(updateScroll);
-    };
-    animationFrameId = requestAnimationFrame(updateScroll);
-    return () => cancelAnimationFrame(animationFrameId);
-  }, [isHovered]);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const width = rect.width;
-    const relativeX = mouseX / width;
-
-    if (relativeX < 0.15) {
-      // Near left edge, scroll left
-      speedRef.current = -3;
-      setIsHovered(false);
-    } else if (relativeX > 0.85) {
-      // Near right edge, scroll right
-      speedRef.current = 3;
-      setIsHovered(false);
-    } else {
-      // Pause in the middle
-      setIsHovered(true);
-    }
-  };
-
-  const handleMouseLeave = () => {
-    speedRef.current = 0.5; // restore normal slow speed
-    setIsHovered(false);
-  };
-
-  const handlePrev = () => {
-    setTranslateX(prev => Math.min(prev + 340, 0));
-  };
-
-  const handleNext = () => {
-    setTranslateX(prev => Math.max(prev - 340, -2040));
-  };
 
   return (
     <SiteShell>
@@ -284,57 +322,9 @@ export default function PublicHomePage() {
             <span className="text-xs text-orange-500 font-bold tracking-widest uppercase">Suggestions</span>
             <h2 className="text-2xl font-extrabold text-white">Suggested for your interests</h2>
           </div>
-          <div className="flex gap-2">
-            <button className="icon-button" onClick={handlePrev}><ChevronLeft size={18} /></button>
-            <button className="icon-button" onClick={handleNext}><ChevronRight size={18} /></button>
-          </div>
         </div>
 
-        <div 
-          className="carousel-container"
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
-        >
-          <div className="carousel-track-wrapper">
-            <div 
-              className="carousel-track" 
-              style={{ transform: `translateX(${translateX}px)`, transition: isHovered ? 'transform 0.3s ease-out' : 'none' }}
-            >
-              {/* Double items for infinite loop feel */}
-              {[...mockSuggested, ...mockSuggested].map((item, idx) => (
-                <div key={`${item.id}-${idx}`} className="carousel-card">
-                  <div className="flex justify-between items-start">
-                    <span className={`px-2 py-1 text-xs rounded font-bold uppercase ${
-                      item.type === "Event" ? "bg-purple-950 text-purple-300 border border-purple-800" : "bg-cyan-950 text-cyan-300 border border-cyan-800"
-                    }`}>
-                      {item.type}
-                    </span>
-                    <span className="text-xs text-slate-400 font-medium">{item.time}</span>
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-white mb-1 truncate">{item.title}</h3>
-                    <div className="flex items-center gap-1 text-xs text-slate-400">
-                      <MapPin size={12} className="text-orange-500" />
-                      <span>{item.place}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between border-t border-white/5 pt-3 mt-2 text-xs text-slate-400">
-                    <div className="flex items-center gap-1">
-                      <Users size={12} />
-                      <span>{item.members} interested</span>
-                    </div>
-                    <Link 
-                      href={item.type === "Event" ? "/events" : "/activities"}
-                      className="text-orange-400 hover:text-orange-300 font-semibold inline-flex items-center gap-0.5"
-                    >
-                      Join <ArrowUpRight size={12} />
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+        <EventSlider events={mockEvents} />
       </div>
 
       {/* Explore Selection Flow Modal */}
