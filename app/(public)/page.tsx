@@ -37,6 +37,8 @@ const mockEvents: EventCardItem[] = [
     imageUrl: undefined,
     interestsCount: 28,
     joinUrl: "/events",
+    interests: ["AI", "Networking", "Startups"],
+    coverVariant: "coverVariant1",
   },
   {
     id: 2,
@@ -54,6 +56,8 @@ const mockEvents: EventCardItem[] = [
     imageUrl: undefined,
     interestsCount: 14,
     joinUrl: "/activities",
+    interests: ["Photography", "Design", "Fine Art"],
+    coverVariant: "coverVariant2",
   },
   {
     id: 3,
@@ -71,6 +75,8 @@ const mockEvents: EventCardItem[] = [
     imageUrl: undefined,
     interestsCount: 35,
     joinUrl: "/events",
+    interests: ["Board Games", "Coffee", "Networking"],
+    coverVariant: "coverVariant3",
   },
   {
     id: 4,
@@ -88,6 +94,8 @@ const mockEvents: EventCardItem[] = [
     imageUrl: undefined,
     interestsCount: 19,
     joinUrl: "/activities",
+    interests: ["Coding", "Coffee", "Side Projects"],
+    coverVariant: "coverVariant4",
   },
   {
     id: 5,
@@ -105,6 +113,8 @@ const mockEvents: EventCardItem[] = [
     imageUrl: undefined,
     interestsCount: 52,
     joinUrl: "/events",
+    interests: ["Web Dev", "Cloud", "AI"],
+    coverVariant: "coverVariant5",
   },
   {
     id: 6,
@@ -122,6 +132,8 @@ const mockEvents: EventCardItem[] = [
     imageUrl: undefined,
     interestsCount: 22,
     joinUrl: "/activities",
+    interests: ["Outdoor", "Cycling", "Active Lifestyle"],
+    coverVariant: "coverVariant6",
   }
 ];
 
