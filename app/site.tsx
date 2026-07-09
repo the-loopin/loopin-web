@@ -3,62 +3,167 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { clearAuthToken, getAuthRole, getAuthToken } from "@/lib/auth/session";
-
-const navItems = [
-  { href: "/", label: "Home" },
-  { href: "/events", label: "Events" },
-  { href: "/profile", label: "Profile" },
-  { href: "/admin", label: "Admin" },
-];
+import { useEffect, useState } from "react";
+import { Bell, User, LogOut, Settings, HelpCircle, Flag, Users, Award, Shield } from "lucide-react";
 
 export function SiteShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const hasToken = Boolean(getAuthToken());
-  const role = getAuthRole();
+  const [hasToken, setHasToken] = useState(false);
+  const [role, setRole] = useState<string | null>(null);
+
+  // Use useEffect to prevent server/client mismatch during hydration
+  useEffect(() => {
+    setHasToken(Boolean(getAuthToken()));
+    setRole(getAuthRole());
+  }, [pathname]);
+
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+
+  const [notifications, setNotifications] = useState([
+    { id: 1, text: "A new event matching your interests 'Neon Startup Night' was created.", type: "info" },
+    { id: 2, text: "Maya requested to join your group 'Focus builders'.", type: "request", group: "Focus builders", user: "Maya" }
+  ]);
 
   function logout() {
     clearAuthToken();
+    setHasToken(false);
+    setRole(null);
+    setShowProfile(false);
     router.push("/login");
   }
 
+  const handleAccept = (id: number) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+    alert("Accepted join request!");
+  };
+
+  const handleReject = (id: number) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+    alert("Rejected join request!");
+  };
+
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100">
-      <header className="sticky top-0 z-20 border-b border-white/10 bg-slate-950/90 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6 lg:px-8">
-          <Link className="text-xl font-bold tracking-normal text-white" href="/">
-            Loopin
+    <main className="prototype-shell min-h-screen">
+      <nav className="topbar">
+        <Link className="brand-lockup" href="/">
+          <img src="/logo.png" alt="Loopin" />
+          <span>Loopin</span>
+        </Link>
+        <div className="nav-links">
+          <Link href="/" className={pathname === "/" ? "active" : ""}>
+            Home
           </Link>
-          <nav className="flex flex-wrap items-center gap-1">
-            {navItems.map((item) => (
-              <Link
-                className={`rounded-md px-3 py-2 text-sm font-medium ${
-                  pathname === item.href || pathname.startsWith(`${item.href}/`)
-                    ? "bg-cyan-400 text-slate-950"
-                    : "text-slate-300 hover:bg-white/10"
-                }`}
-                href={item.href}
-                key={item.href}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-          <div className="flex items-center gap-2">
-            {role ? <span className="text-xs uppercase text-slate-400">{role}</span> : null}
-            {hasToken ? (
-              <button className="secondary-button" onClick={logout} type="button">
-                Logout
-              </button>
-            ) : (
-              <Link className="primary-link" href="/login">
-                Login
-              </Link>
+          <Link href="/events" className={pathname === "/events" ? "active" : ""}>
+            Events
+          </Link>
+          <Link href="/activities" className={pathname === "/activities" ? "active" : ""}>
+            Activities
+          </Link>
+          {role === "ADMIN" && (
+            <Link href="/admin" className={pathname.startsWith("/admin") ? "active" : ""}>
+              Admin
+            </Link>
+          )}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', position: 'relative' }}>
+          {/* Notifications Dropdown */}
+          <div style={{ position: 'relative' }}>
+            <button 
+              className="icon-button" 
+              onClick={() => { setShowNotifications(!showNotifications); setShowProfile(false); }}
+              aria-label="Notifications"
+            >
+              <Bell size={18} />
+              {notifications.length > 0 && (
+                <span style={{ 
+                  position: 'absolute', 
+                  top: '-2px', 
+                  right: '-2px', 
+                  width: '8px', 
+                  height: '8px', 
+                  background: 'var(--orange)', 
+                  borderRadius: '50%' 
+                }} />
+              )}
+            </button>
+            {showNotifications && (
+              <div className="dropdown-menu notification-dropdown">
+                <div className="dropdown-header">Notifications</div>
+                {notifications.length === 0 ? (
+                  <div className="notification-item">No new notifications</div>
+                ) : (
+                  notifications.map(n => (
+                    <div key={n.id} className="notification-item">
+                      <p className="mb-2">{n.text}</p>
+                      {n.type === "request" && (
+                        <div className="notification-actions">
+                          <button className="notification-btn-accept" onClick={() => handleAccept(n.id)}>Accept</button>
+                          <button className="notification-btn-reject" onClick={() => handleReject(n.id)}>Reject</button>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Profile Dropdown */}
+          <div style={{ position: 'relative' }}>
+            <button 
+              className="icon-button" 
+              onClick={() => { setShowProfile(!showProfile); setShowNotifications(false); }}
+              aria-label="Profile menu"
+            >
+              <User size={18} />
+            </button>
+            {showProfile && (
+              <div className="dropdown-menu">
+                {hasToken ? (
+                  <>
+                    <div className="dropdown-header">
+                      Role: {role || "USER"}
+                    </div>
+                    <button className="dropdown-item" onClick={() => { router.push("/profile"); setShowProfile(false); }}>
+                      <User size={16} /> View Profile
+                    </button>
+                    <button className="dropdown-item" onClick={() => { router.push("/profile#badges"); setShowProfile(false); }}>
+                      <Award size={16} /> View Badges
+                    </button>
+                    <button className="dropdown-item" onClick={() => { router.push("/profile#groups"); setShowProfile(false); }}>
+                      <Users size={16} /> Groups
+                    </button>
+                    <button className="dropdown-item" onClick={() => { router.push("/profile#settings"); setShowProfile(false); }}>
+                      <Settings size={16} /> Settings
+                    </button>
+                    <button className="dropdown-item" onClick={() => { router.push("/help"); setShowProfile(false); }}>
+                      <HelpCircle size={16} /> Help
+                    </button>
+                    <button className="dropdown-item" onClick={() => { router.push("/report"); setShowProfile(false); }}>
+                      <Flag size={16} /> Report
+                    </button>
+                    <button className="dropdown-item" onClick={logout}>
+                      <LogOut size={16} /> Log out
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button className="dropdown-item" onClick={() => { router.push("/login"); setShowProfile(false); }}>
+                      Log in
+                    </button>
+                    <button className="dropdown-item" onClick={() => { router.push("/register"); setShowProfile(false); }}>
+                      Register
+                    </button>
+                  </>
+                )}
+              </div>
             )}
           </div>
         </div>
-      </header>
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">{children}</div>
+      </nav>
+      <div className="mx-auto max-w-[1440px] px-4 py-6 sm:px-6 lg:px-8">{children}</div>
     </main>
   );
 }
@@ -75,7 +180,7 @@ export function PageHeader({
   return (
     <div className="mb-6 flex flex-col justify-between gap-4 border-b border-white/10 pb-6 md:flex-row md:items-end">
       <div>
-        <h1 className="text-3xl font-semibold text-white">{title}</h1>
+        <h1 className="text-3xl font-extrabold tracking-tight text-white">{title}</h1>
         {subtitle ? <p className="mt-2 max-w-2xl text-sm text-slate-400">{subtitle}</p> : null}
       </div>
       {action}

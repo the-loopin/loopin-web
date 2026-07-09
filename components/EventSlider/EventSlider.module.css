@@ -1,0 +1,745 @@
+/* EventSlider.module.css */
+
+.sliderContainer {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  overflow: visible;
+  position: relative;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sliderContainer.ready {
+  opacity: 1;
+}
+
+.trackWrapper {
+  width: 100%;
+  overflow-x: hidden;
+  overflow-y: visible;
+  padding: 40px 0;
+  position: relative;
+  mask-image: linear-gradient(to right, transparent, black 3%, black 97%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 3%, black 97%, transparent);
+}
+
+.track {
+  display: flex;
+  width: max-content;
+  animation: slide 180s linear infinite;
+  padding: 0;
+  margin: 0;
+}
+
+.marqueeGroup {
+  display: flex;
+  gap: 0;
+}
+
+@keyframes slide {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+/* Pause sliding animation when hovering over the slider container */
+@media (hover: hover) {
+  .sliderContainer:hover .track {
+    animation-play-state: paused;
+  }
+}
+
+.cardWrapper {
+  width: 320px;
+  height: 460px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  transition: z-index 0.25s step-start;
+  margin-right: 24px; /* Serves as the gap between cards, allowing seamless percent loop translation */
+}
+
+/* Bring the hovered card to the foreground instantly */
+.cardWrapper:hover {
+  z-index: 20;
+  transition: z-index 0s step-start;
+}
+
+/* Card interactive outer element handles lift, scale, rotation and glow shadow on hover */
+.cardInteractive {
+  width: 100%;
+  height: 100%;
+  perspective: 1200px;
+  transform-style: preserve-3d;
+  transform:
+    translateY(0)
+    scale(1)
+    rotateX(0deg)
+    rotateY(0deg);
+  transition:
+    transform 260ms ease,
+    box-shadow 260ms ease,
+    border-color 260ms ease,
+    filter 260ms ease;
+  will-change: transform;
+  border-radius: 20px;
+  position: relative;
+}
+
+/* Cursor-following light reflection effect inside the card */
+.cardInteractive::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    radial-gradient(
+      circle at var(--mx, 50%) var(--my, 50%),
+      rgba(255, 255, 255, 0.08),
+      transparent 35%
+    );
+  opacity: 0;
+  transition: opacity 220ms ease;
+}
+
+/* Soft glow behind/around the card on hover */
+.cardInteractive::after {
+  content: "";
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: -22px;
+  height: 64px;
+  z-index: -1;
+  border-radius: 999px;
+  background: rgba(139, 92, 246, 0.22);
+  filter: blur(26px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 240ms ease;
+}
+
+.cardInteractive:hover {
+  z-index: 30;
+  transform:
+    translateY(-16px)
+    scale(1.04)
+    rotateX(var(--rx, 0deg))
+    rotateY(var(--ry, 0deg));
+  box-shadow:
+    0 28px 70px rgba(0, 0, 0, 0.48),
+    0 18px 42px rgba(139, 92, 246, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.045);
+  filter: saturate(1.06);
+}
+
+.cardInteractive:hover::before {
+  opacity: 1;
+}
+
+.cardInteractive:hover::after {
+  opacity: 0.55;
+}
+
+.cardInteractive:hover .cardBodyContent {
+  transform: translateY(-4px);
+}
+
+.cardInteractive:hover .moreInfoBtn {
+  transform: translateY(-2px);
+  box-shadow:
+    0 10px 24px rgba(217, 70, 239, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  filter: brightness(1.15);
+}
+
+.cardInteractive:hover .joinBtn {
+  filter: brightness(1.15);
+}
+
+.cardInteractive:hover .categoryBadge {
+  filter: brightness(1.15) saturate(1.1);
+  border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+/* Inner card manages the 3D rotation flip state with a bouncy physics easing */
+.cardInner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  /* Elastic cubic-bezier for a springy premium flip feel */
+  transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.cardInner.flipped {
+  transform: rotateY(180deg);
+}
+
+/* Glassmorphism card faces styling */
+.cardFront,
+.cardBack {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: linear-gradient(135deg, rgba(23, 32, 51, 0.65) 0%, rgba(17, 24, 39, 0.75) 100%);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow:
+    0 18px 42px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  transition: border-color 0.3s ease;
+}
+
+.cardFront {
+  z-index: 2;
+  pointer-events: auto;
+}
+
+.cardBack {
+  transform: rotateY(180deg);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.cardInner.flipped .cardFront {
+  z-index: 1;
+  pointer-events: none;
+}
+
+.cardInner.flipped .cardBack {
+  z-index: 2;
+  pointer-events: auto;
+}
+
+.cardWrapper:hover .cardFront,
+.cardWrapper:hover .cardBack {
+  border-color: rgba(255, 255, 255, 0.09); /* Soft, subtle white highlight on hover */
+}
+
+/* Front Side Layout */
+.imageArea {
+  position: relative;
+  width: 100%;
+  height: 48%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)),
+    #172033;
+}
+
+.imageArea::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 56px;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(7, 10, 15, 0.42)
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.cardWrapper:hover .image {
+  transform: scale(1.06);
+}
+
+.fallbackGradient {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  position: relative;
+}
+
+.fallbackPattern {
+  position: absolute;
+  inset: 0;
+  opacity: 0.12;
+  background-image: radial-gradient(circle at 1px 1px, white 1px, transparent 0);
+  background-size: 16px 16px;
+}
+
+.categoryBadge {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  backdrop-filter: blur(12px);
+  z-index: 2;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.interestsBadge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 750;
+  background: rgba(17, 24, 39, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 2;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.heartIcon {
+  color: #d946ef; /* Pink/Purple */
+}
+
+.cardBody {
+  height: 52%;
+  position: relative;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(139, 92, 246, 0.28), transparent 35%),
+    radial-gradient(circle at 85% 80%, rgba(255, 122, 24, 0.24), transparent 38%),
+    linear-gradient(135deg, #111827 0%, #160b18 45%, #0b1220 100%);
+}
+
+.cardBody::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(7, 10, 15, 0.35);
+  pointer-events: none;
+}
+
+.cardBodyContent {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: space-between;
+  transition: transform 240ms ease;
+}
+
+.bodyGradientTech {
+  background:
+    radial-gradient(circle at 20% 15%, rgba(139, 92, 246, 0.34), transparent 36%),
+    radial-gradient(circle at 90% 85%, rgba(236, 72, 153, 0.24), transparent 40%),
+    linear-gradient(135deg, #111827, #190b2e 50%, #07111f);
+}
+
+.bodyGradientOutdoor {
+  background:
+    radial-gradient(circle at 20% 15%, rgba(77, 255, 210, 0.22), transparent 36%),
+    radial-gradient(circle at 90% 85%, rgba(59, 130, 246, 0.28), transparent 40%),
+    linear-gradient(135deg, #111827, #0b1b2e 50%, #07111f);
+}
+
+.bodyGradientArt {
+  background:
+    radial-gradient(circle at 20% 15%, rgba(251, 146, 60, 0.28), transparent 36%),
+    radial-gradient(circle at 90% 85%, rgba(236, 72, 153, 0.22), transparent 40%),
+    linear-gradient(135deg, #111827, #24100c 50%, #07111f);
+}
+
+.bodyGradientSocial {
+  background:
+    radial-gradient(circle at 20% 15%, rgba(168, 85, 247, 0.3), transparent 36%),
+    radial-gradient(circle at 90% 85%, rgba(244, 114, 182, 0.2), transparent 40%),
+    linear-gradient(135deg, #111827, #1d1030 50%, #07111f);
+}
+
+.bodyGradientMusic {
+  background:
+    radial-gradient(circle at 20% 15%, rgba(236, 72, 153, 0.3), transparent 36%),
+    radial-gradient(circle at 90% 85%, rgba(217, 70, 239, 0.2), transparent 40%),
+    linear-gradient(135deg, #111827, #220b33 50%, #07111f);
+}
+
+.bodyGradientSport {
+  background:
+    radial-gradient(circle at 20% 15%, rgba(20, 184, 166, 0.25), transparent 36%),
+    radial-gradient(circle at 90% 85%, rgba(59, 130, 246, 0.25), transparent 40%),
+    linear-gradient(135deg, #111827, #092021 50%, #07111f);
+}
+
+.textGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #F8FAFC;
+  margin: 0;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.metaInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #94A3B8;
+  font-size: 0.75rem;
+}
+
+.locationText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.metaIcon {
+  color: #d946ef; /* Pink/purple icons */
+  flex-shrink: 0;
+}
+
+.description {
+  font-size: 0.85rem;
+  color: #94A3B8;
+  line-height: 1.5;
+  margin: 8px 0 0 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 14px;
+  margin-top: 14px;
+}
+
+.priceGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.priceLabel {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  color: #94A3B8;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+}
+
+.priceValue {
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.moreInfoBtn {
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #F8FAFC;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.moreInfoBtn:hover {
+  background: rgba(217, 70, 239, 0.15); /* Pink tint on hover */
+  border-color: rgba(217, 70, 239, 0.4);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.moreInfoBtn:active {
+  transform: translateY(0);
+}
+
+/* Back Side Layout */
+.cardBackContent {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: space-between;
+}
+
+.backHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 12px;
+}
+
+.backHeaderTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #F8FAFC;
+  line-height: 1.35;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.backCategoryBadge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  margin-left: 8px;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+}
+
+.backMainContent {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.interestsHeading {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94A3B8;
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.backInterestsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.interestChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+  font-size: 0.72rem;
+  font-weight: 600;
+  backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
+}
+
+.interestChip:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+.detailedDescContainer {
+  flex: 1;
+  overflow-y: auto;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  padding-right: 6px;
+}
+
+/* Custom scrollbar for glass card */
+.detailedDescContainer::-webkit-scrollbar {
+  width: 4px;
+}
+
+.detailedDescContainer::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.detailedDescContainer::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 99px;
+}
+
+.detailedDescContainer::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.detailedDescContainer {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+.detailedDescription {
+  font-size: 0.85rem;
+  color: #94A3B8;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.backActions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 16px;
+}
+
+.joinBtn {
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #d946ef 0%, #ff7e15 100%); /* Primary gradient */
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-align: center;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.joinBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 
+    0 6px 20px rgba(217, 70, 239, 0.3),
+    0 2px 10px rgba(255, 126, 21, 0.2);
+}
+
+.joinBtn:active {
+  transform: translateY(0);
+}
+
+.backBtn {
+  width: 100%;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94A3B8;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.backBtn:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: #F8FAFC;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Reduced Motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .track {
+    animation: none !important;
+    transform: none !important;
+    width: 100% !important;
+    display: block !important;
+  }
+  
+  .marqueeGroup {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 24px !important;
+  }
+  
+  .marqueeGroup[aria-hidden="true"] {
+    display: none !important;
+  }
+  
+  .cardWrapper {
+    margin-right: 0 !important;
+  }
+  
+  .trackWrapper {
+    mask-image: none !important;
+    -webkit-mask-image: none !important;
+    overflow: visible !important;
+    padding: 16px 0;
+  }
+  
+  .sliderContainer {
+    overflow: visible !important;
+    width: auto !important;
+    margin: 0 !important;
+  }
+  
+  .cardInteractive {
+    transition: none !important;
+  }
+  
+  .cardWrapper:hover .cardInteractive {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+  
+  .cardInner {
+    transition: none !important;
+  }
+  
+  .moreInfoBtn,
+  .joinBtn,
+  .backBtn,
+  .image {
+    transition: none !important;
+    transform: none !important;
+  }
+  
+  .joinBtn:hover,
+  .moreInfoBtn:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+}

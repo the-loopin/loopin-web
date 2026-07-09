@@ -4,14 +4,24 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getBadges, getCurrentUser, getProfile, ProfilePayload, UserItem } from "@/lib/api/loopin";
 import { EmptyState, ErrorMessage, PageHeader, Panel, SiteShell } from "../../site";
+import { CheckCircle2, Sparkles, Flag, MapPin, Mail, Shield, User, Settings as SettingsIcon, Users, Calendar, Award } from "lucide-react";
 
 export default function ProfilePage() {
   const [user, setUser] = useState<UserItem | null>(null);
   const [profile, setProfile] = useState<ProfilePayload | null>(null);
   const [badges, setBadges] = useState<string[]>([]);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  // Simple local settings state
+  const [settings, setSettings] = useState({
+    emailNotifications: true,
+    publicProfile: true,
+    activityMatching: true
+  });
 
   async function loadProfile() {
+    setLoading(true);
     setError("");
     try {
       const [nextUser, nextProfile, nextBadges] = await Promise.all([
@@ -24,40 +34,192 @@ export default function ProfilePage() {
       setBadges(nextBadges);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not load profile.");
+    } finally {
+      setLoading(false);
     }
   }
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void loadProfile();
-    }, 0);
-    return () => window.clearTimeout(timer);
+    void loadProfile();
   }, []);
+
+  const getInitials = (name?: string) => {
+    if (!name) return "U";
+    return name.split(" ").map(n => n[0]).join("").toUpperCase().substring(0, 2);
+  };
+
+  // Mock groups for the Groups section
+  const mockMyGroups = [
+    { id: 1, title: "Focus builders", size: "3 / 4", note: "Working on loopin frontend" },
+    { id: 2, title: "Photo walkers", size: "5 / 6", note: "Meeting at Old City gate" }
+  ];
 
   return (
     <SiteShell>
-      <PageHeader title="Profile" subtitle="Your account, profile details and earned badges." action={<Link className="primary-link" href="/profile/edit">Edit profile</Link>} />
+      <PageHeader 
+        title="Profile Workspace" 
+        subtitle="Manage your personal bio, settings, check your unlocked badges, and review active groups." 
+        action={
+          <Link className="primary-link" href="/profile/edit">
+            Edit Profile
+          </Link>
+        } 
+      />
       <ErrorMessage message={error} />
-      <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
-        <Panel title="Account">
-          {user ? (
-            <dl className="grid gap-3 text-sm">
-              <div><dt className="text-slate-500">Name</dt><dd className="text-white">{user.name ?? profile?.name ?? "-"}</dd></div>
-              <div><dt className="text-slate-500">Email</dt><dd className="text-white">{user.email}</dd></div>
-              <div><dt className="text-slate-500">Role</dt><dd className="text-white">{user.role}</dd></div>
-              <div><dt className="text-slate-500">City</dt><dd className="text-white">{profile?.city ?? "-"}</dd></div>
-              <div><dt className="text-slate-500">Bio</dt><dd className="text-white">{profile?.bio ?? "-"}</dd></div>
-            </dl>
-          ) : <EmptyState>No profile loaded.</EmptyState>}
-        </Panel>
-        <Panel title="Badges">
-          {badges.length ? (
-            <div className="flex flex-wrap gap-2">
-              {badges.map((badge) => <span className="rounded-full bg-cyan-400 px-3 py-1 text-sm font-semibold text-slate-950" key={badge}>{badge}</span>)}
+
+      {loading ? (
+        <div className="text-center py-12 text-slate-400">Loading your profile workspace...</div>
+      ) : (
+        <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
+          {/* Left Column: Details, Groups, and Settings */}
+          <div className="flex flex-col gap-6">
+            
+            {/* Main Bio / Details panel */}
+            <div className="sidebar-panel p-6 rounded-xl flex flex-col gap-4">
+              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                <User size={18} className="text-orange-500" />
+                Bio & Identity
+              </h2>
+              {user ? (
+                <div className="grid gap-4">
+                  <div className="p-4 bg-white/[0.02] border border-white/5 rounded-lg flex flex-col gap-2">
+                    <span className="text-xs text-slate-500 uppercase font-semibold">Self-description</span>
+                    <p className="text-sm text-slate-300 italic">
+                      {profile?.bio || "No biography added yet. Update your profile to add your interests and description!"}
+                    </p>
+                  </div>
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="flex items-center gap-2 text-sm text-slate-300">
+                      <MapPin size={16} className="text-orange-500" />
+                      <span><strong>City:</strong> {profile?.city || "Not specified"}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-slate-300">
+                      <Mail size={16} className="text-orange-500" />
+                      <span><strong>Email:</strong> {user.email}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-slate-300">
+                      <Shield size={16} className="text-orange-500" />
+                      <span><strong>Role:</strong> {user.role}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-slate-300">
+                      <Calendar size={16} className="text-orange-500" />
+                      <span><strong>Member since:</strong> 2026</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <EmptyState>No profile loaded.</EmptyState>
+              )}
             </div>
-          ) : <EmptyState>No badges yet.</EmptyState>}
-        </Panel>
-      </div>
+
+            {/* Groups section */}
+            <div id="groups" className="sidebar-panel p-6 rounded-xl flex flex-col gap-4 scroll-mt-24">
+              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                <Users size={18} className="text-orange-500" />
+                My Active Groups
+              </h2>
+              <div className="group-list">
+                {mockMyGroups.map((group) => (
+                  <div className="group-row" key={group.id}>
+                    <div className="avatar-stack">
+                      <span />
+                      <span />
+                      <span />
+                    </div>
+                    <div>
+                      <strong>{group.title}</strong>
+                      <p>{group.note}</p>
+                    </div>
+                    <em className="text-orange-500 font-extrabold not-italic">{group.size}</em>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Settings section */}
+            <div id="settings" className="sidebar-panel p-6 rounded-xl flex flex-col gap-4 scroll-mt-24">
+              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                <SettingsIcon size={18} className="text-orange-500" />
+                Preference Settings
+              </h2>
+              <div className="flex flex-col gap-3 text-sm text-slate-300">
+                <label className="flex items-center justify-between p-3 bg-white/[0.02] border border-white/5 rounded-lg">
+                  <span>Receive email notifications for matched interests</span>
+                  <input 
+                    type="checkbox" 
+                    checked={settings.emailNotifications} 
+                    onChange={(e) => setSettings(s => ({ ...s, emailNotifications: e.target.checked }))}
+                    className="accent-orange-500"
+                  />
+                </label>
+                <label className="flex items-center justify-between p-3 bg-white/[0.02] border border-white/5 rounded-lg">
+                  <span>Make my profile details public to city users</span>
+                  <input 
+                    type="checkbox" 
+                    checked={settings.publicProfile} 
+                    onChange={(e) => setSettings(s => ({ ...s, publicProfile: e.target.checked }))}
+                    className="accent-orange-500"
+                  />
+                </label>
+                <label className="flex items-center justify-between p-3 bg-white/[0.02] border border-white/5 rounded-lg">
+                  <span>Enable auto-matching for suggested activities</span>
+                  <input 
+                    type="checkbox" 
+                    checked={settings.activityMatching} 
+                    onChange={(e) => setSettings(s => ({ ...s, activityMatching: e.target.checked }))}
+                    className="accent-orange-500"
+                  />
+                </label>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Right Column: Visual Profile Card and Badges */}
+          <div className="flex flex-col gap-6">
+            
+            {/* Visual Profile Panel - reference layout */}
+            <div className="profile-panel rounded-xl">
+              <div className="profile-card-top mb-4">
+                <div className="profile-avatar">
+                  {getInitials(user?.name || profile?.name)}
+                </div>
+                <div>
+                  <p className="text-xl font-bold text-white">{user?.name || profile?.name || "Loopin User"}</p>
+                  <span>{profile?.city || "Baku, Azerbaijan"}</span>
+                </div>
+              </div>
+              <p className="text-xs text-slate-400 border-t border-white/5 pt-3 leading-relaxed">
+                Interests: Tech, social gatherings, creative walks, startup networks.
+              </p>
+            </div>
+
+            {/* Badges Panel */}
+            <div id="badges" className="sidebar-panel p-6 rounded-xl flex flex-col gap-4 scroll-mt-24">
+              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                <Award size={18} className="text-orange-500" />
+                Unlocked Badges
+              </h2>
+              <div className="badge-grid">
+                {/* Dynamically check if backend has specific badges, else show visual prototype mock badges */}
+                <div style={{ opacity: badges.includes("ATTENDEE") || badges.length > 0 ? 1 : 0.4 }}>
+                  <CheckCircle2 size={20} className="text-orange-500" />
+                  <span>Attendee</span>
+                </div>
+                <div style={{ opacity: badges.includes("CREATOR") || badges.length > 0 ? 1 : 0.4 }}>
+                  <Sparkles size={20} className="text-orange-500" />
+                  <span>Creator</span>
+                </div>
+                <div style={{ opacity: badges.includes("HELPER") || badges.length > 0 ? 1 : 0.4 }}>
+                  <Flag size={20} className="text-orange-500" />
+                  <span>Helper</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
     </SiteShell>
   );
 }
