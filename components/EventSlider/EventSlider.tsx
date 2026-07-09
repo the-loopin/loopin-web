@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { CalendarDays, MapPin, Heart, User } from "lucide-react";
 import styles from "./EventSlider.module.css";
@@ -156,10 +156,18 @@ const getCategoryColor = (category: string) => {
 
 export const EventSlider: React.FC<EventSliderProps> = ({ events, onJoin }) => {
   const [flippedIds, setFlippedIds] = useState<Record<string | number, boolean>>({});
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    setIsReady(true);
+  }, []);
 
   if (!events || events.length === 0) {
     return null;
   }
+
+  const MIN_REPEAT = 6;
+  const baseEvents = Array.from({ length: MIN_REPEAT }).flatMap(() => events);
 
   const toggleFlip = (id: string | number) => {
     setFlippedIds((prev) => ({
@@ -370,14 +378,17 @@ export const EventSlider: React.FC<EventSliderProps> = ({ events, onJoin }) => {
   };
 
   return (
-    <div className={styles.sliderContainer} id="event-slider-container">
+    <div
+      className={`${styles.sliderContainer} ${isReady ? styles.ready : ""}`}
+      id="event-slider-container"
+    >
       <div className={styles.trackWrapper}>
         <div className={styles.track}>
           <div className={styles.marqueeGroup}>
-            {events.map((event, index) => renderCard(event, index, false))}
+            {baseEvents.map((event, index) => renderCard(event, index, false))}
           </div>
           <div className={styles.marqueeGroup} aria-hidden="true">
-            {events.map((event, index) => renderCard(event, index, true))}
+            {baseEvents.map((event, index) => renderCard(event, index, true))}
           </div>
         </div>
       </div>
