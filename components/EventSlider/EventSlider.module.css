@@ -1,0 +1,533 @@
+/* EventSlider.module.css */
+
+.sliderContainer {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  overflow: visible;
+  position: relative;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+}
+
+.trackWrapper {
+  width: 100%;
+  overflow-x: hidden;
+  overflow-y: visible;
+  padding: 40px 0;
+  position: relative;
+  mask-image: linear-gradient(to right, transparent, black 3%, black 97%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 3%, black 97%, transparent);
+}
+
+.track {
+  display: flex;
+  width: max-content;
+  animation: slide 35s linear infinite;
+  padding: 0;
+  margin: 0;
+}
+
+.marqueeGroup {
+  display: flex;
+  gap: 0;
+}
+
+@keyframes slide {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+/* Pause sliding animation when hovering over the slider container */
+@media (hover: hover) {
+  .sliderContainer:hover .track {
+    animation-play-state: paused;
+  }
+}
+
+.cardWrapper {
+  width: 320px;
+  height: 460px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  transition: z-index 0.25s step-start;
+  margin-right: 24px; /* Serves as the gap between cards, allowing seamless percent loop translation */
+}
+
+/* Bring the hovered card to the foreground instantly */
+.cardWrapper:hover {
+  z-index: 20;
+  transition: z-index 0s step-start;
+}
+
+/* Card interactive outer element handles lift, scale, rotation and glow shadow on hover */
+.cardInteractive {
+  width: 100%;
+  height: 100%;
+  perspective: 1200px;
+  transition: transform 250ms ease, box-shadow 250ms ease;
+  transform-origin: center center;
+  border-radius: 20px;
+}
+
+.cardWrapper:hover .cardInteractive {
+  /* Premium tilt: slide up, scale up, and rotate slightly */
+  transform: translateY(-14px) scale(1.045) rotate(-0.6deg);
+  /* Glowing box shadow utilizing pink/purple and orange, kept visually compact */
+  box-shadow: 
+    0 16px 36px rgba(0, 0, 0, 0.35), 
+    0 4px 12px rgba(217, 70, 239, 0.12);
+}
+
+/* Inner card manages the 3D rotation flip state with a bouncy physics easing */
+.cardInner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  /* Elastic cubic-bezier for a springy premium flip feel */
+  transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.cardInner.flipped {
+  transform: rotateY(180deg);
+}
+
+/* Glassmorphism card faces styling */
+.cardFront,
+.cardBack {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(135deg, rgba(23, 32, 51, 0.65) 0%, rgba(17, 24, 39, 0.75) 100%);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: border-color 0.3s ease;
+}
+
+.cardWrapper:hover .cardFront,
+.cardWrapper:hover .cardBack {
+  border-color: rgba(217, 70, 239, 0.35); /* Subtle pink/purple glowing border on hover */
+}
+
+.cardBack {
+  transform: rotateY(180deg);
+}
+
+/* Front Side Layout */
+.imageArea {
+  position: relative;
+  width: 100%;
+  height: 170px;
+  overflow: hidden;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.cardWrapper:hover .image {
+  transform: scale(1.06);
+}
+
+.fallbackGradient {
+  width: 100%;
+  height: 100%;
+  /* Light gray linear gradient */
+  background: linear-gradient(135deg, #9ca3af 0%, #4b5563 100%);
+  position: relative;
+}
+
+.fallbackPattern {
+  position: absolute;
+  inset: 0;
+  opacity: 0.12;
+  background-image: radial-gradient(circle at 1px 1px, white 1px, transparent 0);
+  background-size: 16px 16px;
+}
+
+.categoryBadge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.7rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 2;
+}
+
+.interestsBadge {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.7rem;
+  font-weight: 750;
+  background: rgba(17, 24, 39, 0.85);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  z-index: 2;
+}
+
+.heartIcon {
+  color: #d946ef; /* Pink/Purple */
+}
+
+.cardContent {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  justify-content: space-between;
+}
+
+.textGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #F8FAFC;
+  margin: 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.metaInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #94A3B8;
+  font-size: 0.8rem;
+}
+
+.locationText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.metaIcon {
+  color: #d946ef; /* Pink/purple icons */
+  flex-shrink: 0;
+}
+
+.description {
+  font-size: 0.85rem;
+  color: #94A3B8;
+  line-height: 1.5;
+  margin: 8px 0 0 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 14px;
+  margin-top: 14px;
+}
+
+.priceGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.priceLabel {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  color: #94A3B8;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+}
+
+.priceValue {
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.moreInfoBtn {
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #F8FAFC;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.moreInfoBtn:hover {
+  background: rgba(217, 70, 239, 0.15); /* Pink tint on hover */
+  border-color: rgba(217, 70, 239, 0.4);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.moreInfoBtn:active {
+  transform: translateY(0);
+}
+
+/* Back Side Layout */
+.cardBackContent {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: space-between;
+}
+
+.backHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 12px;
+}
+
+.backHeaderTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #F8FAFC;
+  line-height: 1.35;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.backCategoryBadge {
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.65rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  margin-left: 8px;
+  flex-shrink: 0;
+  border: 1px solid transparent;
+}
+
+.backMetaList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.backMetaItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #94A3B8;
+  font-size: 0.8rem;
+}
+
+.backMetaIcon {
+  color: #ff7e15; /* Orange accent */
+  flex-shrink: 0;
+}
+
+.detailedDescContainer {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 16px;
+  padding-right: 6px;
+}
+
+/* Custom scrollbar for glass card */
+.detailedDescContainer::-webkit-scrollbar {
+  width: 4px;
+}
+
+.detailedDescContainer::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.detailedDescContainer::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 99px;
+}
+
+.detailedDescContainer::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.detailedDescContainer {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+.detailedDescription {
+  font-size: 0.85rem;
+  color: #94A3B8;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.backActions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 16px;
+}
+
+.joinBtn {
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #d946ef 0%, #ff7e15 100%); /* Primary gradient */
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-align: center;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.joinBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 
+    0 6px 20px rgba(217, 70, 239, 0.3),
+    0 2px 10px rgba(255, 126, 21, 0.2);
+}
+
+.joinBtn:active {
+  transform: translateY(0);
+}
+
+.backBtn {
+  width: 100%;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94A3B8;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.backBtn:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: #F8FAFC;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Reduced Motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .track {
+    animation: none !important;
+    transform: none !important;
+    width: 100% !important;
+    display: block !important;
+  }
+  
+  .marqueeGroup {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 24px !important;
+  }
+  
+  .marqueeGroup[aria-hidden="true"] {
+    display: none !important;
+  }
+  
+  .cardWrapper {
+    margin-right: 0 !important;
+  }
+  
+  .trackWrapper {
+    mask-image: none !important;
+    -webkit-mask-image: none !important;
+    overflow: visible !important;
+    padding: 16px 0;
+  }
+  
+  .sliderContainer {
+    overflow: visible !important;
+    width: auto !important;
+    margin: 0 !important;
+  }
+  
+  .cardInteractive {
+    transition: none !important;
+  }
+  
+  .cardWrapper:hover .cardInteractive {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+  
+  .cardInner {
+    transition: none !important;
+  }
+  
+  .moreInfoBtn,
+  .joinBtn,
+  .backBtn,
+  .image {
+    transition: none !important;
+    transform: none !important;
+  }
+  
+  .joinBtn:hover,
+  .moreInfoBtn:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+}
