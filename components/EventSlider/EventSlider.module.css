@@ -30,7 +30,7 @@
 .track {
   display: flex;
   width: max-content;
-  animation: slide 35s linear infinite;
+  animation: slide 180s linear infinite;
   padding: 0;
   margin: 0;
 }
