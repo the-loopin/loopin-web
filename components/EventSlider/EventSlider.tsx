@@ -24,6 +24,9 @@ export interface EventCardItem {
   status?: string;
   interestsCount?: number;
   joinUrl?: string;
+  tags?: string[];
+  interests?: string[];
+  coverVariant?: string;
 }
 
 export interface EventSliderProps {
@@ -65,22 +68,84 @@ const formatEventDateTime = (startStr: string, endStr?: string) => {
   }
 };
 
+// Reusable gradient mapping representing smooth, rich, moody and slightly vibrant styles
+const GRADIENTS = [
+  "linear-gradient(135deg, #2e1065 0%, #d946ef 50%, #8b5cf6 100%)", // Tech: purple / pink / magenta
+  "linear-gradient(135deg, #0f172a 0%, #06b6d4 50%, #3b82f6 100%)", // Outdoor: blue / cyan / indigo
+  "linear-gradient(135deg, #450a0a 0%, #f97316 50%, #ec4899 100%)", // Art: orange / amber / warm rose
+  "linear-gradient(135deg, #1e1b4b 0%, #a855f7 50%, #f472b6 100%)", // Social: violet / purple / pink
+  "linear-gradient(135deg, #311042 0%, #ec4899 50%, #d946ef 100%)", // Music: indigo / pink / fuchsia
+  "linear-gradient(135deg, #064e3b 0%, #14b8a6 50%, #3b82f6 100%)", // Sport: teal / blue / aqua
+];
+
+// Helper to resolve card cover gradients based on variant, category, or index rotation
+const getCardGradient = (event: EventCardItem, index: number) => {
+  if (event.coverVariant) {
+    const match = event.coverVariant.match(/\d+/);
+    if (match) {
+      const idx = parseInt(match[0], 10) - 1;
+      if (idx >= 0 && idx < GRADIENTS.length) {
+        return GRADIENTS[idx];
+      }
+    }
+  }
+
+  const cat = event.category?.toUpperCase() || "";
+  if (cat.includes("TECH")) return GRADIENTS[0];
+  if (cat.includes("OUTDOOR")) return GRADIENTS[1];
+  if (cat.includes("ART")) return GRADIENTS[2];
+  if (cat.includes("SOCIAL")) return GRADIENTS[3];
+  if (cat.includes("MUSIC")) return GRADIENTS[4];
+  if (cat.includes("SPORT")) return GRADIENTS[5];
+
+  return GRADIENTS[index % GRADIENTS.length];
+};
+
+// Default interests mapping for fallback cases when interests are not explicitly provided
+const DEFAULT_INTERESTS: Record<string, string[]> = {
+  TECH: ["AI", "Networking", "Startups"],
+  ART: ["Photography", "Design", "Fine Art"],
+  SOCIAL: ["Board Games", "Coffee", "Networking"],
+  OUTDOOR: ["Outdoor", "Cycling", "Hiking"],
+  MUSIC: ["Concerts", "Vinyl", "Live Bands"],
+  SPORT: ["Running", "Fitness", "Football"],
+};
+
+const getEventInterests = (event: EventCardItem) => {
+  if (event.interests && event.interests.length > 0) {
+    return event.interests;
+  }
+  const cat = event.category?.toUpperCase() || "";
+  for (const key in DEFAULT_INTERESTS) {
+    if (cat.includes(key)) {
+      return DEFAULT_INTERESTS[key];
+    }
+  }
+  return ["Networking", "Social", "Community"];
+};
+
 // Helper to get category color styling
 const getCategoryColor = (category: string) => {
   const cat = category.toUpperCase();
   if (cat.includes("TECH")) {
-    return { text: "#d946ef", bg: "rgba(217, 70, 239, 0.12)", border: "rgba(217, 70, 239, 0.25)" }; // Pink/Purple
+    return { text: "#f472b6", bg: "rgba(244, 114, 182, 0.08)", border: "rgba(244, 114, 182, 0.3)" };
   }
   if (cat.includes("ART")) {
-    return { text: "#ff9f43", bg: "rgba(255, 159, 67, 0.12)", border: "rgba(255, 159, 67, 0.25)" }; // Orange
+    return { text: "#fb923c", bg: "rgba(251, 146, 60, 0.08)", border: "rgba(251, 146, 60, 0.3)" };
   }
   if (cat.includes("SOCIAL")) {
-    return { text: "#a855f7", bg: "rgba(168, 85, 247, 0.12)", border: "rgba(168, 85, 247, 0.25)" }; // Purple
+    return { text: "#c084fc", bg: "rgba(192, 132, 252, 0.08)", border: "rgba(192, 132, 252, 0.3)" };
   }
   if (cat.includes("OUTDOOR")) {
-    return { text: "#3b82f6", bg: "rgba(59, 130, 246, 0.12)", border: "rgba(59, 130, 246, 0.25)" }; // Blue
+    return { text: "#60a5fa", bg: "rgba(96, 165, 250, 0.08)", border: "rgba(96, 165, 250, 0.3)" };
   }
-  return { text: "#4DFFD2", bg: "rgba(77, 255, 210, 0.12)", border: "rgba(77, 255, 210, 0.25)" }; // Default Mint
+  if (cat.includes("MUSIC")) {
+    return { text: "#f43f5e", bg: "rgba(244, 63, 94, 0.08)", border: "rgba(244, 63, 94, 0.3)" };
+  }
+  if (cat.includes("SPORT")) {
+    return { text: "#2dd4bf", bg: "rgba(45, 212, 191, 0.08)", border: "rgba(45, 212, 191, 0.3)" };
+  }
+  return { text: "#4DFFD2", bg: "rgba(77, 255, 210, 0.08)", border: "rgba(77, 255, 210, 0.3)" };
 };
 
 export const EventSlider: React.FC<EventSliderProps> = ({ events, onJoin }) => {
@@ -148,7 +213,10 @@ export const EventSlider: React.FC<EventSliderProps> = ({ events, onJoin }) => {
                     loading="lazy"
                   />
                 ) : (
-                  <div className={styles.fallbackGradient}>
+                  <div 
+                    className={styles.fallbackGradient}
+                    style={{ background: getCardGradient(event, index) }}
+                  >
                     <div className={styles.fallbackPattern} />
                   </div>
                 )}
@@ -204,40 +272,14 @@ export const EventSlider: React.FC<EventSliderProps> = ({ events, onJoin }) => {
             {/* Back Face of the Card */}
             <div className={styles.cardBack}>
               <div className={styles.cardBackContent}>
-                <div>
-                  <div className={styles.backHeader}>
-                    <h3 className={styles.backHeaderTitle}>{event.title}</h3>
-                    <span 
-                      className={styles.backCategoryBadge}
-                      style={{
-                        color: catColor.text,
-                        backgroundColor: catColor.bg,
-                        borderColor: catColor.border
-                      }}
-                    >
-                      {event.category}
-                    </span>
-                  </div>
-
-                  <div className={styles.backMetaList}>
-                    <div className={styles.backMetaItem}>
-                      <CalendarDays size={14} className={styles.backMetaIcon} />
-                      <span>{displayDate}</span>
-                    </div>
-                    <div className={styles.backMetaItem}>
-                      <MapPin size={14} className={styles.backMetaIcon} />
-                      <span>{locationStr}</span>
-                    </div>
-                    <div className={styles.backMetaItem}>
-                      <User size={14} className={styles.backMetaIcon} />
-                      <span>Organizer: {event.organizerName}</span>
-                    </div>
-                    {event.interestsCount !== undefined && (
-                      <div className={styles.backMetaItem}>
-                        <Heart size={14} className={styles.backMetaIcon} fill="var(--violet)" />
-                        <span>{event.interestsCount} interested members</span>
-                      </div>
-                    )}
+                <div className={styles.backMainContent}>
+                  <h4 className={styles.interestsHeading}>Interests</h4>
+                  <div className={styles.backInterestsList}>
+                    {getEventInterests(event).map((interest, i) => (
+                      <span key={i} className={styles.interestChip}>
+                        {interest}
+                      </span>
+                    ))}
                   </div>
 
                   <div className={styles.detailedDescContainer}>
