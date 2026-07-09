@@ -175,6 +175,35 @@ export const EventSlider: React.FC<EventSliderProps> = ({ events, onJoin }) => {
     }
   };
 
+  const handleCardMouseMove = (id: string | number, event: React.MouseEvent<HTMLElement>) => {
+    const isFlipped = !!flippedIds[id];
+    const card = event.currentTarget;
+    const rect = card.getBoundingClientRect();
+
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
+    const px = x / rect.width;
+    const py = y / rect.height;
+
+    // Subtle 3D tilt: max 8deg, set to 0 when flipped
+    const rotateY = isFlipped ? 0 : (px - 0.5) * 8;
+    const rotateX = isFlipped ? 0 : (0.5 - py) * 6;
+
+    card.style.setProperty('--mx', `${px * 100}%`);
+    card.style.setProperty('--my', `${py * 100}%`);
+    card.style.setProperty('--rx', `${rotateX}deg`);
+    card.style.setProperty('--ry', `${rotateY}deg`);
+  };
+
+  const handleCardMouseLeave = (event: React.MouseEvent<HTMLElement>) => {
+    const card = event.currentTarget;
+    card.style.setProperty('--mx', `50%`);
+    card.style.setProperty('--my', `50%`);
+    card.style.setProperty('--rx', `0deg`);
+    card.style.setProperty('--ry', `0deg`);
+  };
+
   const renderCard = (event: EventCardItem, index: number, isDuplicate: boolean) => {
     const isFlipped = !!flippedIds[event.id];
     const displayDate = formatEventDateTime(event.startDateTime, event.endDateTime);
@@ -187,7 +216,11 @@ export const EventSlider: React.FC<EventSliderProps> = ({ events, onJoin }) => {
         className={styles.cardWrapper}
         data-testid={isDuplicate ? undefined : `event-card-${event.id}`}
       >
-        <div className={styles.cardInteractive}>
+        <div 
+          className={styles.cardInteractive}
+          onMouseMove={(e) => handleCardMouseMove(event.id, e)}
+          onMouseLeave={handleCardMouseLeave}
+        >
           <div className={`${styles.cardInner} ${isFlipped ? styles.flipped : ""}`}>
             
             {/* Front Face of the Card */}
