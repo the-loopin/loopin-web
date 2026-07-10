@@ -114,7 +114,7 @@ button:disabled {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  color: #fff;
+  color: var(--foreground);
   text-decoration: none;
   font-weight: 800;
   font-size: 1.05rem;
@@ -165,17 +165,23 @@ button:disabled {
 .nav-links button:hover,
 .nav-links a.active,
 .nav-links a:hover {
-  color: white;
-  background: rgba(255, 255, 255, 0.09);
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--foreground) 9%, transparent);
 }
 
 .icon-button {
   display: grid;
   place-items: center;
   width: 42px;
-  color: white;
+  color: var(--foreground);
   border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.08);
+  background: color-mix(in srgb, var(--foreground) 8%, transparent);
+  transition: border-color 300ms ease-out, color 300ms ease-out, transform 300ms ease-out;
+}
+
+.icon-button:hover {
+  border-color: var(--color-teal);
+  color: var(--color-teal);
 }
 
 .hero-section {
