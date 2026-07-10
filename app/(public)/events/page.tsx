@@ -110,7 +110,7 @@ export default function EventsPage() {
       {showCreateForm && (
         <div className="mb-8 p-6 bg-white/[0.03] border border-white/10 rounded-xl">
           <h2 className="text-xl font-extrabold text-white mb-4 flex items-center gap-2">
-            <Sparkles size={18} className="text-orange-500" />
+            <Sparkles size={18} className="text-coral" />
             Host a New Event
           </h2>
           <form className="grid gap-3" onSubmit={handleCreate}>
@@ -144,7 +144,7 @@ export default function EventsPage() {
         <button 
           className={`px-4 py-1.5 rounded-full text-xs font-semibold border transition ${
             filters.category === "" 
-              ? "bg-orange-500 border-orange-500 text-black font-extrabold" 
+              ? "bg-accent border-accent text-black font-extrabold" 
               : "bg-white/5 border-white/10 text-slate-300 hover:bg-white/10"
           }`}
           onClick={() => setFilters(c => ({ ...c, category: "" }))}
@@ -156,7 +156,7 @@ export default function EventsPage() {
             key={cat}
             className={`px-4 py-1.5 rounded-full text-xs font-semibold border transition ${
               filters.category === cat 
-                ? "bg-orange-500 border-orange-500 text-black font-extrabold" 
+                ? "bg-accent border-accent text-black font-extrabold" 
                 : "bg-white/5 border-white/10 text-slate-300 hover:bg-white/10"
             }`}
             onClick={() => setFilters(c => ({ ...c, category: cat }))}
@@ -201,7 +201,7 @@ export default function EventsPage() {
                   </div>
                   <div className="event-card-body">
                     <div>
-                      <p className="text-xs text-orange-500 font-bold">{new Date(event.startDateTime).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                      <p className="text-xs text-coral font-bold">{new Date(event.startDateTime).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
                       <h3 className="text-lg font-bold text-white mt-0.5">{event.title}</h3>
                     </div>
                     <div className="flex flex-col gap-1 my-2">
@@ -213,7 +213,7 @@ export default function EventsPage() {
                     </div>
                     <div className="flex justify-between items-center border-t border-white/5 pt-2 mt-1">
                       <span className="text-xs font-semibold">{event.isFree ? "Free" : `${event.price} AZN`}</span>
-                      <Link className="text-xs text-orange-400 font-bold hover:underline" href={`/events/${event.id}`}>
+                      <Link className="text-xs text-accent font-bold hover:underline" href={`/events/${event.id}`}>
                         Open Event &rarr;
                       </Link>
                     </div>
@@ -226,13 +226,13 @@ export default function EventsPage() {
 
         {/* Right Side: Interactive Map */}
         <div className="split-view-map">
-          <div className="p-3 bg-[#0a090e] border-b border-white/10 flex justify-between items-center">
+          <div className="p-3 bg-surface border-b border-white/10 flex justify-between items-center">
             <span className="text-xs text-slate-400 uppercase font-bold tracking-wider">Baku Event Map</span>
             {selectedEventId && (
-              <span className="text-xs text-orange-400 font-semibold animate-pulse">Pin Highlighted</span>
+              <span className="text-xs text-accent font-semibold animate-pulse">Pin Highlighted</span>
             )}
           </div>
-          <div className="relative w-full h-full bg-[#0a0a0f]">
+          <div className="relative w-full h-full bg-paper">
             <svg className="w-full h-full" style={{ minHeight: '400px' }}>
               <pattern id="gridPattern" width="28" height="28" patternUnits="userSpaceOnUse">
                 <path d="M 28 0 L 0 0 0 28" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
@@ -255,18 +255,18 @@ export default function EventsPage() {
                     onClick={() => setSelectedEventId(event.id)}
                   >
                     {isSelected && (
-                      <circle r="22" fill="var(--orange)" opacity="0.2" className="animate-ping" />
+                      <circle r="22" fill="var(--color-accent)" opacity="0.2" className="animate-ping" />
                     )}
                     <circle 
                       r={isSelected ? "9" : "6"} 
-                      fill={isSelected ? "var(--orange)" : "var(--violet)"} 
+                      fill={isSelected ? "var(--color-accent)" : "var(--violet)"} 
                       stroke="rgba(0,0,0,0.5)"
                       strokeWidth="1.5"
                     />
                     <text 
                       y="-12" 
                       textAnchor="middle" 
-                      fill={isSelected ? "var(--orange)" : "white"} 
+                      fill={isSelected ? "var(--color-accent)" : "white"} 
                       fontSize={isSelected ? "11" : "9"} 
                       className="font-extrabold pointer-events-none" 
                       style={{ textShadow: '0 2px 4px black' }}
@@ -283,3 +283,4 @@ export default function EventsPage() {
     </SiteShell>
   );
 }
+

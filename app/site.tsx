@@ -241,7 +241,7 @@ export function Input({
     <label className="grid gap-1 text-sm text-slate-300">
       {label}
       <input
-        className="h-10 rounded-md border border-white/10 bg-slate-950 px-3 text-sm text-white outline-none focus:border-cyan-400"
+        className="h-10 rounded-md border border-white/10 bg-surface px-3 text-sm text-white outline-none focus:border-cyan-400"
         required={required}
         type={type}
         value={value}
@@ -266,7 +266,7 @@ export function Textarea({
     <label className="grid gap-1 text-sm text-slate-300">
       {label}
       <textarea
-        className="min-h-28 rounded-md border border-white/10 bg-slate-950 p-3 text-sm text-white outline-none focus:border-cyan-400"
+        className="min-h-28 rounded-md border border-white/10 bg-surface p-3 text-sm text-white outline-none focus:border-cyan-400"
         required={required}
         value={value}
         onChange={(event) => onChange(event.target.value)}
@@ -290,7 +290,7 @@ export function Select({
     <label className="grid gap-1 text-sm text-slate-300">
       {label}
       <select
-        className="h-10 rounded-md border border-white/10 bg-slate-950 px-3 text-sm text-white outline-none focus:border-cyan-400"
+        className="h-10 rounded-md border border-white/10 bg-surface px-3 text-sm text-white outline-none focus:border-cyan-400"
         value={value}
         onChange={(event) => onChange(event.target.value)}
       >
@@ -306,7 +306,7 @@ export function Select({
 
 export function EmptyState({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-lg border border-dashed border-white/15 bg-slate-900/40 p-6 text-sm text-slate-400">
+    <div className="rounded-lg border border-dashed border-white/15 bg-surface p-6 text-sm text-slate-400">
       {children}
     </div>
   );

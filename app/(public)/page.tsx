@@ -331,7 +331,7 @@ export default function PublicHomePage() {
       <div className="my-16">
         <div className="flex justify-between items-center width-min(1180px, calc(100% - 32px)) mx-auto px-4 mb-4">
           <div>
-            <span className="text-xs text-orange-500 font-bold tracking-widest uppercase">Suggestions</span>
+            <span className="text-xs text-coral font-bold tracking-widest uppercase">Suggestions</span>
             <h2 className="text-2xl font-extrabold text-white">Suggested for your interests</h2>
           </div>
         </div>
@@ -342,14 +342,14 @@ export default function PublicHomePage() {
       {/* Explore Selection Flow Modal */}
       {showExploreModal && (
         <div className="map-modal-overlay">
-          <div className="relative max-w-lg w-full bg-[#0a090e] border border-white/10 rounded-2xl p-8 text-center shadow-2xl">
+          <div className="relative max-w-lg w-full bg-surface border border-white/10 rounded-2xl p-8 text-center shadow-2xl">
             <button 
               className="absolute top-4 right-4 icon-button"
               onClick={() => setShowExploreModal(false)}
             >
               <X size={18} />
             </button>
-            <Sparkles size={32} className="mx-auto text-orange-500 mb-4 animate-pulse" />
+            <Sparkles size={32} className="mx-auto text-coral mb-4 animate-pulse" />
             <h2 className="text-2xl font-extrabold text-white mb-2">Start Exploring</h2>
             <p className="text-sm text-slate-400 mb-8">
               Select what type of plan you are looking for today.
@@ -386,10 +386,10 @@ export default function PublicHomePage() {
       {isMapExpanded && (
         <div className="map-modal-overlay">
           <div className="map-modal-content">
-            <div className="p-4 border-b border-white/10 flex justify-between items-center bg-[#0a090e]">
+            <div className="p-4 border-b border-white/10 flex justify-between items-center bg-surface">
               <div>
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <MapPin size={18} className="text-orange-500" />
+                  <MapPin size={18} className="text-coral" />
                   Expanded Loopin City Map View
                 </h3>
                 <p className="text-xs text-slate-400">View real-time event distributions across Baku</p>
@@ -414,3 +414,4 @@ export default function PublicHomePage() {
     </SiteShell>
   );
 }
+
