@@ -114,7 +114,7 @@ button:disabled {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  color: var(--foreground);
+  color: var(--color-ink);
   text-decoration: none;
   font-weight: 800;
   font-size: 1.05rem;
@@ -165,17 +165,17 @@ button:disabled {
 .nav-links button:hover,
 .nav-links a.active,
 .nav-links a:hover {
-  color: var(--foreground);
-  background: color-mix(in srgb, var(--foreground) 9%, transparent);
+  color: var(--color-ink);
+  background: color-mix(in srgb, var(--color-ink) 9%, transparent);
 }
 
 .icon-button {
   display: grid;
   place-items: center;
   width: 42px;
-  color: var(--foreground);
+  color: var(--color-ink);
   border: 1px solid var(--line);
-  background: color-mix(in srgb, var(--foreground) 8%, transparent);
+  background: color-mix(in srgb, var(--color-ink) 8%, transparent);
   transition: border-color 300ms ease-out, color 300ms ease-out, transform 300ms ease-out;
 }
 
