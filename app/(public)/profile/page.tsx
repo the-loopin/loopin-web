@@ -77,7 +77,7 @@ export default function ProfilePage() {
             {/* Main Bio / Details panel */}
             <div className="sidebar-panel p-6 rounded-xl flex flex-col gap-4">
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                <User size={18} className="text-orange-500" />
+                <User size={18} className="text-coral" />
                 Bio & Identity
               </h2>
               {user ? (
@@ -90,19 +90,19 @@ export default function ProfilePage() {
                   </div>
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="flex items-center gap-2 text-sm text-slate-300">
-                      <MapPin size={16} className="text-orange-500" />
+                      <MapPin size={16} className="text-coral" />
                       <span><strong>City:</strong> {profile?.city || "Not specified"}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-slate-300">
-                      <Mail size={16} className="text-orange-500" />
+                      <Mail size={16} className="text-coral" />
                       <span><strong>Email:</strong> {user.email}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-slate-300">
-                      <Shield size={16} className="text-orange-500" />
+                      <Shield size={16} className="text-coral" />
                       <span><strong>Role:</strong> {user.role}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-slate-300">
-                      <Calendar size={16} className="text-orange-500" />
+                      <Calendar size={16} className="text-coral" />
                       <span><strong>Member since:</strong> 2026</span>
                     </div>
                   </div>
@@ -115,7 +115,7 @@ export default function ProfilePage() {
             {/* Groups section */}
             <div id="groups" className="sidebar-panel p-6 rounded-xl flex flex-col gap-4 scroll-mt-24">
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                <Users size={18} className="text-orange-500" />
+                <Users size={18} className="text-coral" />
                 My Active Groups
               </h2>
               <div className="group-list">
@@ -130,7 +130,7 @@ export default function ProfilePage() {
                       <strong>{group.title}</strong>
                       <p>{group.note}</p>
                     </div>
-                    <em className="text-orange-500 font-extrabold not-italic">{group.size}</em>
+                    <em className="text-coral font-extrabold not-italic">{group.size}</em>
                   </div>
                 ))}
               </div>
@@ -139,7 +139,7 @@ export default function ProfilePage() {
             {/* Settings section */}
             <div id="settings" className="sidebar-panel p-6 rounded-xl flex flex-col gap-4 scroll-mt-24">
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                <SettingsIcon size={18} className="text-orange-500" />
+                <SettingsIcon size={18} className="text-coral" />
                 Preference Settings
               </h2>
               <div className="flex flex-col gap-3 text-sm text-slate-300">
@@ -149,7 +149,7 @@ export default function ProfilePage() {
                     type="checkbox" 
                     checked={settings.emailNotifications} 
                     onChange={(e) => setSettings(s => ({ ...s, emailNotifications: e.target.checked }))}
-                    className="accent-orange-500"
+                    className="accent-accent"
                   />
                 </label>
                 <label className="flex items-center justify-between p-3 bg-white/[0.02] border border-white/5 rounded-lg">
@@ -158,7 +158,7 @@ export default function ProfilePage() {
                     type="checkbox" 
                     checked={settings.publicProfile} 
                     onChange={(e) => setSettings(s => ({ ...s, publicProfile: e.target.checked }))}
-                    className="accent-orange-500"
+                    className="accent-accent"
                   />
                 </label>
                 <label className="flex items-center justify-between p-3 bg-white/[0.02] border border-white/5 rounded-lg">
@@ -167,7 +167,7 @@ export default function ProfilePage() {
                     type="checkbox" 
                     checked={settings.activityMatching} 
                     onChange={(e) => setSettings(s => ({ ...s, activityMatching: e.target.checked }))}
-                    className="accent-orange-500"
+                    className="accent-accent"
                   />
                 </label>
               </div>
@@ -197,21 +197,21 @@ export default function ProfilePage() {
             {/* Badges Panel */}
             <div id="badges" className="sidebar-panel p-6 rounded-xl flex flex-col gap-4 scroll-mt-24">
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                <Award size={18} className="text-orange-500" />
+                <Award size={18} className="text-coral" />
                 Unlocked Badges
               </h2>
               <div className="badge-grid">
                 {/* Dynamically check if backend has specific badges, else show visual prototype mock badges */}
                 <div style={{ opacity: badges.includes("ATTENDEE") || badges.length > 0 ? 1 : 0.4 }}>
-                  <CheckCircle2 size={20} className="text-orange-500" />
+                  <CheckCircle2 size={20} className="text-coral" />
                   <span>Attendee</span>
                 </div>
                 <div style={{ opacity: badges.includes("CREATOR") || badges.length > 0 ? 1 : 0.4 }}>
-                  <Sparkles size={20} className="text-orange-500" />
+                  <Sparkles size={20} className="text-coral" />
                   <span>Creator</span>
                 </div>
                 <div style={{ opacity: badges.includes("HELPER") || badges.length > 0 ? 1 : 0.4 }}>
-                  <Flag size={20} className="text-orange-500" />
+                  <Flag size={20} className="text-coral" />
                   <span>Helper</span>
                 </div>
               </div>
@@ -223,3 +223,4 @@ export default function ProfilePage() {
     </SiteShell>
   );
 }
+

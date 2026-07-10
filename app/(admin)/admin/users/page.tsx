@@ -50,7 +50,7 @@ export default function AdminUsersPage() {
         {users.length ? (
           <div className="grid gap-3">
             {users.map((user) => (
-              <article className="grid gap-3 rounded-md border border-white/10 bg-slate-950 p-4 md:grid-cols-[1fr_180px_auto]" key={user.id}>
+              <article className="grid gap-3 rounded-md border border-white/10 bg-surface p-4 md:grid-cols-[1fr_180px_auto]" key={user.id}>
                 <div>
                   <p className="font-semibold text-white">{user.name ?? user.email}</p>
                   <p className="text-sm text-slate-400">{user.email}</p>

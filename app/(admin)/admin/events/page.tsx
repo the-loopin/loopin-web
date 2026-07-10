@@ -42,7 +42,7 @@ export default function AdminEventsPage() {
         {events.length ? (
           <div className="grid gap-3">
             {events.map((event) => (
-              <article className="flex flex-col justify-between gap-3 rounded-md border border-white/10 bg-slate-950 p-4 md:flex-row md:items-center" key={event.id}>
+              <article className="flex flex-col justify-between gap-3 rounded-md border border-white/10 bg-surface p-4 md:flex-row md:items-center" key={event.id}>
                 <div>
                   <p className="font-semibold text-white">{event.title}</p>
                   <p className="text-sm text-slate-400">{event.city} - {event.status}</p>

@@ -4,19 +4,37 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { clearAuthToken, getAuthRole, getAuthToken } from "@/lib/auth/session";
 import { useEffect, useState } from "react";
-import { Bell, User, LogOut, Settings, HelpCircle, Flag, Users, Award, Shield } from "lucide-react";
+import { Bell, User, LogOut, Settings, HelpCircle, Flag, Users, Award, Shield, Sun, Moon } from "lucide-react";
+import { RollText } from "@/components/ui/RollText";
 
 export function SiteShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [hasToken, setHasToken] = useState(false);
   const [role, setRole] = useState<string | null>(null);
+  const [isDark, setIsDark] = useState(true);
 
   // Use useEffect to prevent server/client mismatch during hydration
   useEffect(() => {
     setHasToken(Boolean(getAuthToken()));
     setRole(getAuthRole());
+
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = savedTheme === 'dark' || (!savedTheme && true);
+    setIsDark(prefersDark);
   }, [pathname]);
+
+  const toggleTheme = () => {
+    const newTheme = !isDark;
+    setIsDark(newTheme);
+    if (newTheme) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  };
 
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -52,39 +70,48 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
           <span>Loopin</span>
         </Link>
         <div className="nav-links">
-          <Link href="/" className={pathname === "/" ? "active" : ""}>
-            Home
+          <Link href="/" className={`group ${pathname === "/" ? "active" : ""}`}>
+            <RollText text="Home" />
           </Link>
-          <Link href="/events" className={pathname === "/events" ? "active" : ""}>
-            Events
+          <Link href="/events" className={`group ${pathname === "/events" ? "active" : ""}`}>
+            <RollText text="Events" />
           </Link>
-          <Link href="/activities" className={pathname === "/activities" ? "active" : ""}>
-            Activities
+          <Link href="/activities" className={`group ${pathname === "/activities" ? "active" : ""}`}>
+            <RollText text="Activities" />
           </Link>
           {role === "ADMIN" && (
-            <Link href="/admin" className={pathname.startsWith("/admin") ? "active" : ""}>
-              Admin
+            <Link href="/admin" className={`group ${pathname.startsWith("/admin") ? "active" : ""}`}>
+              <RollText text="Admin" />
             </Link>
           )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', position: 'relative' }}>
+
+          <button
+            className="icon-button"
+            onClick={toggleTheme}
+            aria-label="Toggle theme"
+          >
+            {isDark ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+
           {/* Notifications Dropdown */}
           <div style={{ position: 'relative' }}>
-            <button 
-              className="icon-button" 
+            <button
+              className="icon-button"
               onClick={() => { setShowNotifications(!showNotifications); setShowProfile(false); }}
               aria-label="Notifications"
             >
               <Bell size={18} />
               {notifications.length > 0 && (
-                <span style={{ 
-                  position: 'absolute', 
-                  top: '-2px', 
-                  right: '-2px', 
-                  width: '8px', 
-                  height: '8px', 
-                  background: 'var(--orange)', 
-                  borderRadius: '50%' 
+                <span style={{
+                  position: 'absolute',
+                  top: '-2px',
+                  right: '-2px',
+                  width: '8px',
+                  height: '8px',
+                  background: 'var(--orange)',
+                  borderRadius: '50%'
                 }} />
               )}
             </button>
@@ -112,8 +139,8 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
 
           {/* Profile Dropdown */}
           <div style={{ position: 'relative' }}>
-            <button 
-              className="icon-button" 
+            <button
+              className="icon-button"
               onClick={() => { setShowProfile(!showProfile); setShowNotifications(false); }}
               aria-label="Profile menu"
             >
@@ -126,35 +153,35 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
                     <div className="dropdown-header">
                       Role: {role || "USER"}
                     </div>
-                    <button className="dropdown-item" onClick={() => { router.push("/profile"); setShowProfile(false); }}>
-                      <User size={16} /> View Profile
+                    <button className="dropdown-item group" onClick={() => { router.push("/profile"); setShowProfile(false); }}>
+                      <User size={16} /> <RollText text="View Profile" />
                     </button>
-                    <button className="dropdown-item" onClick={() => { router.push("/profile#badges"); setShowProfile(false); }}>
-                      <Award size={16} /> View Badges
+                    <button className="dropdown-item group" onClick={() => { router.push("/profile#badges"); setShowProfile(false); }}>
+                      <Award size={16} /> <RollText text="View Badges" />
                     </button>
-                    <button className="dropdown-item" onClick={() => { router.push("/profile#groups"); setShowProfile(false); }}>
-                      <Users size={16} /> Groups
+                    <button className="dropdown-item group" onClick={() => { router.push("/profile#groups"); setShowProfile(false); }}>
+                      <Users size={16} /> <RollText text="Groups" />
                     </button>
-                    <button className="dropdown-item" onClick={() => { router.push("/profile#settings"); setShowProfile(false); }}>
-                      <Settings size={16} /> Settings
+                    <button className="dropdown-item group" onClick={() => { router.push("/profile#settings"); setShowProfile(false); }}>
+                      <Settings size={16} /> <RollText text="Settings" />
                     </button>
-                    <button className="dropdown-item" onClick={() => { router.push("/help"); setShowProfile(false); }}>
-                      <HelpCircle size={16} /> Help
+                    <button className="dropdown-item group" onClick={() => { router.push("/help"); setShowProfile(false); }}>
+                      <HelpCircle size={16} /> <RollText text="Help" />
                     </button>
-                    <button className="dropdown-item" onClick={() => { router.push("/report"); setShowProfile(false); }}>
-                      <Flag size={16} /> Report
+                    <button className="dropdown-item group" onClick={() => { router.push("/report"); setShowProfile(false); }}>
+                      <Flag size={16} /> <RollText text="Report" />
                     </button>
-                    <button className="dropdown-item" onClick={logout}>
-                      <LogOut size={16} /> Log out
+                    <button className="dropdown-item group" onClick={logout}>
+                      <LogOut size={16} /> <RollText text="Log out" />
                     </button>
                   </>
                 ) : (
                   <>
-                    <button className="dropdown-item" onClick={() => { router.push("/login"); setShowProfile(false); }}>
-                      Log in
+                    <button className="dropdown-item group" onClick={() => { router.push("/login"); setShowProfile(false); }}>
+                      <RollText text="Log in" />
                     </button>
-                    <button className="dropdown-item" onClick={() => { router.push("/register"); setShowProfile(false); }}>
-                      Register
+                    <button className="dropdown-item group" onClick={() => { router.push("/register"); setShowProfile(false); }}>
+                      <RollText text="Register" />
                     </button>
                   </>
                 )}

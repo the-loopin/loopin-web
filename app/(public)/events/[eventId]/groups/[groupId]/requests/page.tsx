@@ -68,7 +68,7 @@ export default function GroupRequestsPage() {
           {requests.length ? (
             <div className="grid gap-3">
               {requests.map((request) => (
-                <article className="rounded-md border border-white/10 bg-slate-950 p-4" key={request.id}>
+                <article className="rounded-md border border-white/10 bg-surface p-4" key={request.id}>
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-sm font-semibold text-white">User #{request.userId}</p>
@@ -90,7 +90,7 @@ export default function GroupRequestsPage() {
           {mine.length ? (
             <div className="grid gap-3">
               {mine.map((request) => (
-                <div className="rounded-md border border-white/10 bg-slate-950 p-4 text-sm" key={request.id}>
+                <div className="rounded-md border border-white/10 bg-surface p-4 text-sm" key={request.id}>
                   <p className="font-semibold text-white">Group #{request.groupId}</p>
                   <p className="mt-1 text-slate-400">{request.message || "No message"}</p>
                   <p className="mt-2 text-xs uppercase text-cyan-300">{request.status}</p>

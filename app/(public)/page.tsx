@@ -6,15 +6,15 @@ import { SiteShell } from "../site";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Environment, Float, Line, PerspectiveCamera, Text } from "@react-three/drei";
 import { Group, Mesh } from "three";
-import { 
-  ArrowUpRight, 
-  Sparkles, 
-  Ticket, 
-  Users, 
-  ShieldCheck, 
-  CalendarDays, 
-  MapPin, 
-  Maximize2, 
+import {
+  ArrowUpRight,
+  Sparkles,
+  Ticket,
+  Users,
+  ShieldCheck,
+  CalendarDays,
+  MapPin,
+  Maximize2,
   X
 } from "lucide-react";
 import { EventSlider, EventCardItem } from "@/components/EventSlider/EventSlider";
@@ -261,23 +261,22 @@ export default function PublicHomePage() {
       {/* Hero Section */}
       <section className="hero-section">
         <div className="hero-copy">
-          <div className="eyebrow">
-            <Sparkles size={16} /> Local events, better groups
-          </div>
+
           <h1>Find the plan, build the circle, arrive together.</h1>
           <p>
             A product-first Loopin interface for discovering events, forming groups, chatting in real time, and keeping every local moment organized.
           </p>
           <div className="hero-actions">
-            <button 
-              className="primary-action" 
+            <button
+              className="primary-action relative overflow-hidden group !px-8 !py-4 !text-xl flex items-center justify-center transition-colors"
               onClick={() => setShowExploreModal(true)}
             >
-              Explore <ArrowUpRight size={18} />
+              <span className="absolute inset-0 bg-[var(--violet)] origin-left scale-x-0 transition-transform duration-500 ease-out group-hover:scale-x-100 z-0 motion-reduce:transition-colors motion-reduce:duration-0 motion-reduce:group-hover:bg-[var(--violet)]"></span>
+              <span className="relative z-10 flex items-center gap-2 group-hover:text-white transition-colors">
+                Explore <ArrowUpRight size={22} />
+              </span>
             </button>
-            <Link href="/activities" className="secondary-action">
-              View live activities
-            </Link>
+
           </div>
           <div className="hero-metrics">
             <div className="metric-card">
@@ -300,13 +299,13 @@ export default function PublicHomePage() {
 
         {/* 3D Map Component with expand button */}
         <div className="hero-scene relative" style={{ cursor: 'pointer' }}>
-          <div 
-            style={{ 
-              position: 'absolute', 
-              top: '16px', 
-              right: '16px', 
-              zIndex: 10, 
-              background: 'rgba(10, 9, 14, 0.8)', 
+          <div
+            style={{
+              position: 'absolute',
+              top: '16px',
+              right: '16px',
+              zIndex: 10,
+              background: 'rgba(10, 9, 14, 0.8)',
               borderRadius: '50%',
               padding: '10px',
               border: '1px solid var(--line)',
@@ -331,7 +330,7 @@ export default function PublicHomePage() {
       <div className="my-16">
         <div className="flex justify-between items-center width-min(1180px, calc(100% - 32px)) mx-auto px-4 mb-4">
           <div>
-            <span className="text-xs text-orange-500 font-bold tracking-widest uppercase">Suggestions</span>
+            <span className="text-xs text-coral font-bold tracking-widest uppercase">Suggestions</span>
             <h2 className="text-2xl font-extrabold text-white">Suggested for your interests</h2>
           </div>
         </div>
@@ -342,20 +341,20 @@ export default function PublicHomePage() {
       {/* Explore Selection Flow Modal */}
       {showExploreModal && (
         <div className="map-modal-overlay">
-          <div className="relative max-w-lg w-full bg-[#0a090e] border border-white/10 rounded-2xl p-8 text-center shadow-2xl">
-            <button 
+          <div className="relative max-w-lg w-full bg-surface border border-white/10 rounded-2xl p-8 text-center shadow-2xl">
+            <button
               className="absolute top-4 right-4 icon-button"
               onClick={() => setShowExploreModal(false)}
             >
               <X size={18} />
             </button>
-            <Sparkles size={32} className="mx-auto text-orange-500 mb-4 animate-pulse" />
+            <Sparkles size={32} className="mx-auto text-coral mb-4 animate-pulse" />
             <h2 className="text-2xl font-extrabold text-white mb-2">Start Exploring</h2>
             <p className="text-sm text-slate-400 mb-8">
               Select what type of plan you are looking for today.
             </p>
             <div className="grid grid-cols-2 gap-4">
-              <Link 
+              <Link
                 href="/events"
                 onClick={() => setShowExploreModal(false)}
                 className="flex flex-col items-center justify-center p-6 bg-white/[0.03] border border-white/10 rounded-xl hover:border-purple-500/50 hover:bg-purple-950/10 transition group"
@@ -366,7 +365,7 @@ export default function PublicHomePage() {
                 <strong className="text-white block mb-1">Events</strong>
                 <span className="text-xs text-slate-400">Planned, organized, and public gatherings.</span>
               </Link>
-              <Link 
+              <Link
                 href="/activities"
                 onClick={() => setShowExploreModal(false)}
                 className="flex flex-col items-center justify-center p-6 bg-white/[0.03] border border-white/10 rounded-xl hover:border-cyan-500/50 hover:bg-cyan-950/10 transition group"
@@ -386,15 +385,15 @@ export default function PublicHomePage() {
       {isMapExpanded && (
         <div className="map-modal-overlay">
           <div className="map-modal-content">
-            <div className="p-4 border-b border-white/10 flex justify-between items-center bg-[#0a090e]">
+            <div className="p-4 border-b border-white/10 flex justify-between items-center bg-surface">
               <div>
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <MapPin size={18} className="text-orange-500" />
+                  <MapPin size={18} className="text-coral" />
                   Expanded Loopin City Map View
                 </h3>
                 <p className="text-xs text-slate-400">View real-time event distributions across Baku</p>
               </div>
-              <button 
+              <button
                 className="map-modal-close icon-button"
                 onClick={() => setIsMapExpanded(false)}
               >
@@ -414,3 +413,4 @@ export default function PublicHomePage() {
     </SiteShell>
   );
 }
+

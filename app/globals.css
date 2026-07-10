@@ -1,24 +1,57 @@
 @import "tailwindcss";
 
 :root {
-  --background: #070609;
-  --foreground: #f8f5ff;
-  --panel: rgba(255, 255, 255, 0.075);
-  --panel-strong: rgba(255, 255, 255, 0.12);
-  --line: rgba(255, 255, 255, 0.14);
-  --muted: #b9b0c8;
-  --violet: #d946ef; /* Vibrant pink/purple */
-  --violet-strong: #c084fc;
-  --orange: #ff7e15; /* Rich orange secondary */
-  --teal: #ff9900; /* Map and other accents use orange now */
-  --ink: #100f14;
+  --color-paper: #FBF6EF;
+  --color-surface: #FFFFFF;
+  --color-ink: #2A2130;
+  --color-muted: #7A6F82;
+  --color-border: #E8DFD3;
+  --color-accent: #5A3F8C;
+  --color-teal: #0F9E8E;
+  --color-coral: #E85A24;
+
   --font-geist-sans: Arial, Helvetica, sans-serif;
   --font-geist-mono: monospace;
+
+  /* Legacy variable mappings to prevent breaking unmigrated components */
+  --background: var(--color-paper);
+  --foreground: var(--color-ink);
+  --panel: var(--color-surface);
+  --line: var(--color-border);
+  --muted: var(--color-muted);
+  --violet: #d946ef;
+}
+
+.dark {
+  --color-paper: #1A1420;
+  --color-surface: #241B2E;
+  --color-ink: #F5EFE8;
+  --color-muted: #9C90A6;
+  --color-border: #3A2E42;
+  --color-accent: #F2622A;
+  --color-teal: #2DD4BF;
+  --color-coral: #F2622A;
+
+  --background: var(--color-paper);
+  --foreground: var(--color-ink);
+  --panel: var(--color-surface);
+  --line: var(--color-border);
+  --muted: var(--color-muted);
+  --violet: #d946ef;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-paper: var(--color-paper);
+  --color-surface: var(--color-surface);
+  --color-ink: var(--color-ink);
+  --color-muted: var(--color-muted);
+  --color-border: var(--color-border);
+  --color-accent: var(--color-accent);
+  --color-teal: var(--color-teal);
+  --color-coral: var(--color-coral);
+
+  --color-background: var(--color-paper);
+  --color-foreground: var(--color-ink);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -56,10 +89,7 @@ button:disabled {
 .prototype-shell {
   min-height: 100vh;
   overflow-x: hidden;
-  background:
-    linear-gradient(180deg, rgba(217, 70, 239, 0.06) 0%, rgba(7, 6, 9, 0) 34%),
-    radial-gradient(circle at 90% 8%, rgba(255, 126, 21, 0.08), transparent 28%),
-    #070609;
+  background: var(--color-paper);
 }
 
 .topbar {
@@ -76,7 +106,7 @@ button:disabled {
   padding: 10px 12px;
   border: 1px solid var(--line);
   border-radius: 999px;
-  background: rgba(10, 9, 14, 0.82);
+  background: color-mix(in srgb, var(--color-surface) 82%, transparent);
   backdrop-filter: blur(18px);
 }
 
@@ -84,7 +114,7 @@ button:disabled {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  color: #fff;
+  color: var(--color-ink);
   text-decoration: none;
   font-weight: 800;
   font-size: 1.05rem;
@@ -135,17 +165,23 @@ button:disabled {
 .nav-links button:hover,
 .nav-links a.active,
 .nav-links a:hover {
-  color: white;
-  background: rgba(255, 255, 255, 0.09);
+  color: var(--color-ink);
+  background: color-mix(in srgb, var(--color-ink) 9%, transparent);
 }
 
 .icon-button {
   display: grid;
   place-items: center;
   width: 42px;
-  color: white;
+  color: var(--color-ink);
   border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.08);
+  background: color-mix(in srgb, var(--color-ink) 8%, transparent);
+  transition: border-color 300ms ease-out, color 300ms ease-out, transform 300ms ease-out;
+}
+
+.icon-button:hover {
+  border-color: var(--color-teal);
+  color: var(--color-teal);
 }
 
 .hero-section {
@@ -203,7 +239,7 @@ button:disabled {
   gap: 9px;
   padding: 0 20px;
   color: #130c03;
-  background: var(--orange);
+  background: var(--color-accent);
   font-weight: 800;
 }
 
@@ -263,7 +299,7 @@ button:disabled {
   height: 34px;
   margin-bottom: 14px;
   border-radius: 12px;
-  color: var(--orange);
+  color: var(--color-coral);
   background: rgba(255, 153, 0, 0.12);
 }
 
@@ -362,7 +398,7 @@ button:disabled {
   overflow: hidden;
   border-radius: 8px;
   color: white;
-  background: #11171c;
+  background: var(--color-surface);
 }
 
 .map-grid-lines {
@@ -380,7 +416,7 @@ button:disabled {
 }
 
 .map-card svg {
-  color: var(--orange);
+  color: var(--color-coral);
 }
 
 .map-card strong {
@@ -463,7 +499,7 @@ button:disabled {
 }
 
 .event-card-body p {
-  color: var(--orange);
+  color: var(--color-coral);
   font-size: 0.82rem;
   font-weight: 700;
 }
@@ -517,7 +553,7 @@ button:disabled {
 }
 
 .date-tile span {
-  color: var(--orange);
+  color: var(--color-coral);
   font-size: 0.78rem;
   font-weight: 800;
 }
@@ -605,7 +641,7 @@ button:disabled {
   background: var(--violet);
 }
 
-.avatar-stack span:nth-child(2) { margin-left: -12px; background: var(--orange); }
+.avatar-stack span:nth-child(2) { margin-left: -12px; background: var(--color-accent); }
 .avatar-stack span:nth-child(3) { margin-left: -12px; background: var(--teal); }
 
 .group-row strong,
@@ -623,7 +659,7 @@ button:disabled {
 }
 
 .group-row em {
-  color: var(--orange);
+  color: var(--color-coral);
   font-style: normal;
   font-weight: 800;
 }
@@ -679,7 +715,7 @@ button:disabled {
   height: 36px;
   border-radius: 8px;
   color: #160c00;
-  background: var(--orange);
+  background: var(--color-accent);
 }
 
 .profile-card-top {
@@ -692,7 +728,7 @@ button:disabled {
   border: 0;
   font-size: 1.4rem;
   font-weight: 850;
-  background: linear-gradient(135deg, var(--violet), var(--orange));
+  background: linear-gradient(135deg, var(--violet), var(--color-coral));
 }
 
 .profile-card-top p {
@@ -718,7 +754,7 @@ button:disabled {
 }
 
 .badge-grid svg {
-  color: var(--orange);
+  color: var(--color-coral);
 }
 
 .admin-section {
@@ -751,7 +787,7 @@ button:disabled {
 }
 
 .admin-card svg {
-  color: var(--orange);
+  color: var(--color-coral);
 }
 
 .admin-card strong {
@@ -772,7 +808,7 @@ button:disabled {
   margin-top: 8px;
   width: 220px;
   border: 1px solid var(--line);
-  background: rgba(10, 9, 14, 0.95);
+  background: color-mix(in srgb, var(--color-surface) 95%, transparent);
   backdrop-filter: blur(18px);
   border-radius: 8px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
@@ -891,7 +927,7 @@ button:disabled {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: rgba(10, 9, 14, 0.8);
+  background: color-mix(in srgb, var(--color-surface) 80%, transparent);
   border: 1px solid var(--line);
   color: white;
   display: grid;
@@ -902,7 +938,7 @@ button:disabled {
 }
 
 .carousel-nav-btn:hover {
-  background: var(--orange);
+  background: var(--color-accent);
   color: #100f14;
 }
 
@@ -918,7 +954,7 @@ button:disabled {
 .map-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(7, 6, 9, 0.85);
+  background: color-mix(in srgb, var(--color-surface) 85%, transparent);
   backdrop-filter: blur(8px);
   z-index: 1000;
   display: grid;
@@ -1030,3 +1066,5 @@ button:disabled {
     grid-column: 2;
   }
 }
+
+

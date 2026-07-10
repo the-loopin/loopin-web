@@ -29,7 +29,7 @@ export default function AdminGroupsPage() {
           <button className="primary-button" onClick={loadGroup} type="button">Load group</button>
         </div>
         {group ? (
-          <article className="rounded-md border border-white/10 bg-slate-950 p-4">
+          <article className="rounded-md border border-white/10 bg-surface p-4">
             <h2 className="text-xl font-semibold text-white">{group.title}</h2>
             <p className="mt-1 text-sm text-slate-400">Event #{group.eventId} - {group.memberCount}/{group.maxMembers} members - {group.status}</p>
             <div className="mt-4 flex gap-2">
