@@ -2,23 +2,23 @@
 
 export function RollText({ text }: { text: string }) {
   return (
-    <span className="inline-flex">
+    <span className="roll-text" aria-label={text}>
       {text.split("").map((char, i) => {
         const isSpace = char === " ";
+        const visibleChar = isSpace ? "\u00A0" : char;
+
         return (
-          <span key={i} className="relative inline-flex overflow-hidden">
-            {/* Invisible placeholder to establish the layout width/height */}
-            <span className="invisible">{isSpace ? "\u00A0" : char}</span>
-            
-            {/* Sliding column containing original and duplicate characters */}
+          <span
+            key={`${char}-${i}`}
+            className="roll-letter"
+            data-char={visibleChar}
+            style={{ transitionDelay: `${i * 15}ms` }}
+            aria-hidden="true"
+          >
             <span
-              className="absolute left-0 top-0 flex flex-col transition-transform duration-300 ease-out group-hover:-translate-y-1/2 motion-reduce:transition-none motion-reduce:group-hover:transform-none"
-              style={{ transitionDelay: `${i * 15}ms` }}
+              className="roll-letter-placeholder"
             >
-              <span>{isSpace ? "\u00A0" : char}</span>
-              <span className="text-[var(--color-teal)]" aria-hidden="true">
-                {isSpace ? "\u00A0" : char}
-              </span>
+              {visibleChar}
             </span>
           </span>
         );

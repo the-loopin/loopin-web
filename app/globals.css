@@ -183,6 +183,55 @@ button:disabled {
   background: color-mix(in srgb, var(--color-ink) 9%, transparent);
 }
 
+.roll-text {
+  display: inline-flex;
+}
+
+.roll-letter {
+  position: relative;
+  display: inline-flex;
+  overflow: hidden;
+  line-height: 1.1;
+}
+
+.roll-letter-placeholder {
+  opacity: 0;
+}
+
+.roll-letter::before,
+.roll-letter::after {
+  content: attr(data-char);
+  position: absolute;
+  left: 0;
+  transition: transform 300ms ease-out;
+  transition-delay: inherit;
+}
+
+.roll-letter::before {
+  top: 0;
+  color: currentColor;
+}
+
+.roll-letter::after {
+  top: 100%;
+  color: var(--color-teal);
+}
+
+.group:hover .roll-letter::before {
+  transform: translateY(-100%);
+}
+
+.group:hover .roll-letter::after {
+  transform: translateY(-100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .roll-letter::before,
+  .roll-letter::after {
+    transition: none;
+  }
+}
+
 .icon-button {
   display: grid;
   place-items: center;
