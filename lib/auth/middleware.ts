@@ -6,5 +6,10 @@ export function hasRequiredRole(
     return false;
   }
 
-  return allowedRoles.includes(role);
+  const normalizedRole = role.trim().toUpperCase();
+
+  return allowedRoles.some(
+    (allowedRole) =>
+      allowedRole.trim().toUpperCase() === normalizedRole,
+  );
 }

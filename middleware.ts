@@ -7,7 +7,10 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const token = request.cookies.get(SESSION_TOKEN_COOKIE_NAME)?.value;
+  const token = request.cookies.get(
+    SESSION_TOKEN_COOKIE_NAME,
+  )?.value;
+
   const role = request.cookies.get("loopin-role")?.value;
 
   if (!token) {
@@ -15,7 +18,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  if (!hasRequiredRole(role, ["admin"])) {
+  if (!hasRequiredRole(role, ["ADMIN"])) {
     const loginUrl = new URL("/login", request.url);
     return NextResponse.redirect(loginUrl);
   }
