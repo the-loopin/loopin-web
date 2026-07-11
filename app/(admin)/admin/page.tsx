@@ -30,10 +30,10 @@ export default function AdminDashboardPage() {
       <div className="grid gap-4 md:grid-cols-3">
         {Object.entries(stats).length ? Object.entries(stats).map(([key, value]) => (
           <Panel key={key}>
-            <p className="text-sm uppercase text-slate-500">{key}</p>
-            <p className="mt-2 text-3xl font-semibold text-white">{value}</p>
+            <p className="text-sm uppercase text-[var(--muted)]">{key}</p>
+            <p className="mt-2 text-3xl font-semibold text-[var(--color-ink)]">{value}</p>
           </Panel>
-        )) : <Panel><p className="text-sm text-slate-400">No stats loaded.</p></Panel>}
+        )) : <Panel><p className="text-sm text-[var(--muted)]">No stats loaded.</p></Panel>}
       </div>
       <div className="mt-5 flex flex-wrap gap-2">
         <Link className="primary-link" href="/admin/users">Manage users</Link>

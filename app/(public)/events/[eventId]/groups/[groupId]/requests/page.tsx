@@ -68,13 +68,13 @@ export default function GroupRequestsPage() {
           {requests.length ? (
             <div className="grid gap-3">
               {requests.map((request) => (
-                <article className="rounded-md border border-white/10 bg-surface p-4" key={request.id}>
+                <article className="rounded-md border border-[var(--line)] bg-[var(--color-surface)] p-4" key={request.id}>
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-sm font-semibold text-white">User #{request.userId}</p>
-                      <p className="mt-1 text-sm text-slate-400">{request.message || "No message"}</p>
+                      <p className="text-sm font-semibold text-[var(--color-ink)]">User #{request.userId}</p>
+                      <p className="mt-1 text-sm text-[var(--muted)]">{request.message || "No message"}</p>
                     </div>
-                    <span className="rounded-full bg-white/10 px-2 py-1 text-xs text-slate-300">{request.status}</span>
+                    <span className="rounded-full bg-[color-mix(in_srgb,var(--color-ink)_8%,transparent)] border border-[var(--line)] px-2 py-1 text-xs text-[var(--muted)]">{request.status}</span>
                   </div>
                   <div className="mt-3 flex gap-2">
                     <button className="primary-button" onClick={() => void approve(request.id)} type="button">Approve</button>
@@ -90,10 +90,10 @@ export default function GroupRequestsPage() {
           {mine.length ? (
             <div className="grid gap-3">
               {mine.map((request) => (
-                <div className="rounded-md border border-white/10 bg-surface p-4 text-sm" key={request.id}>
-                  <p className="font-semibold text-white">Group #{request.groupId}</p>
-                  <p className="mt-1 text-slate-400">{request.message || "No message"}</p>
-                  <p className="mt-2 text-xs uppercase text-cyan-300">{request.status}</p>
+                <div className="rounded-md border border-[var(--line)] bg-[var(--color-surface)] p-4 text-sm" key={request.id}>
+                  <p className="font-semibold text-[var(--color-ink)]">Group #{request.groupId}</p>
+                  <p className="mt-1 text-[var(--muted)]">{request.message || "No message"}</p>
+                  <p className="mt-2 text-xs uppercase text-[var(--color-teal)]">{request.status}</p>
                 </div>
               ))}
             </div>

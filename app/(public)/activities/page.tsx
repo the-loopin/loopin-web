@@ -108,9 +108,9 @@ export default function ActivitiesPage() {
       <ErrorMessage message={error} />
 
       {showCreateForm && (
-        <div className="mb-8 p-6 bg-white/[0.03] border border-white/10 rounded-xl">
-          <h2 className="text-xl font-extrabold text-white mb-4 flex items-center gap-2">
-            <Sparkles size={18} className="text-coral" />
+        <div className="mb-8 p-6 bg-[color-mix(in_srgb,var(--color-ink)_4%,transparent)] border border-[var(--line)] rounded-xl">
+          <h2 className="text-xl font-extrabold text-[var(--color-ink)] mb-4 flex items-center gap-2">
+            <Sparkles size={18} className="text-[var(--color-coral)]" />
             Start a New Activity
           </h2>
           <form className="grid gap-3" onSubmit={handleCreate}>
@@ -126,7 +126,7 @@ export default function ActivitiesPage() {
               <Select label="Status" value={form.status} options={statuses} onChange={(status) => setForm((c) => ({ ...c, status }))} />
             </div>
             <Input label="Image URL" value={form.imageUrl} onChange={(imageUrl) => setForm((c) => ({ ...c, imageUrl }))} />
-            <label className="flex items-center gap-2 text-sm text-slate-300">
+            <label className="flex items-center gap-2 text-sm text-[var(--muted)]">
               <input checked={form.isFree} onChange={(e) => setForm((c) => ({ ...c, isFree: e.target.checked, price: e.target.checked ? 0 : c.price }))} type="checkbox" />
               Free activity
             </label>
@@ -144,8 +144,8 @@ export default function ActivitiesPage() {
         <button 
           className={`px-4 py-1.5 rounded-full text-xs font-semibold border transition ${
             filters.category === "" 
-              ? "bg-accent border-accent text-black font-extrabold" 
-              : "bg-white/5 border-white/10 text-slate-300 hover:bg-white/10"
+              ? "bg-[var(--color-accent)] border-[var(--color-accent)] text-white font-extrabold" 
+              : "bg-[color-mix(in_srgb,var(--color-ink)_5%,transparent)] border-[var(--line)] text-[var(--muted)] hover:text-[var(--color-ink)] hover:bg-[color-mix(in_srgb,var(--color-ink)_10%,transparent)]"
           }`}
           onClick={() => setFilters(c => ({ ...c, category: "" }))}
         >
@@ -156,8 +156,8 @@ export default function ActivitiesPage() {
             key={cat}
             className={`px-4 py-1.5 rounded-full text-xs font-semibold border transition ${
               filters.category === cat 
-                ? "bg-accent border-accent text-black font-extrabold" 
-                : "bg-white/5 border-white/10 text-slate-300 hover:bg-white/10"
+                ? "bg-[var(--color-accent)] border-[var(--color-accent)] text-white font-extrabold" 
+                : "bg-[color-mix(in_srgb,var(--color-ink)_5%,transparent)] border-[var(--line)] text-[var(--muted)] hover:text-[var(--color-ink)] hover:bg-[color-mix(in_srgb,var(--color-ink)_10%,transparent)]"
             }`}
             onClick={() => setFilters(c => ({ ...c, category: cat }))}
           >
@@ -170,7 +170,7 @@ export default function ActivitiesPage() {
         {/* Left Side: Activities List */}
         <div className="flex flex-col gap-4">
           {/* Simple Search & Filter Row */}
-          <div className="grid gap-3 sm:grid-cols-3 bg-white/[0.02] border border-white/5 p-4 rounded-xl">
+          <div className="grid gap-3 sm:grid-cols-3 bg-[color-mix(in_srgb,var(--color-ink)_3%,transparent)] border border-[var(--line)] p-4 rounded-xl">
             <Input label="Search" value={filters.search} onChange={(search) => setFilters((c) => ({ ...c, search }))} />
             <Input label="City" value={filters.city} onChange={(city) => setFilters((c) => ({ ...c, city }))} />
             <Select label="Free" value={filters.isFree} options={["", "true", "false"]} onChange={(isFree) => setFilters((c) => ({ ...c, isFree }))} />
@@ -201,19 +201,19 @@ export default function ActivitiesPage() {
                   </div>
                   <div className="event-card-body">
                     <div>
-                      <p className="text-xs text-coral font-bold">{new Date(activity.startDateTime).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
-                      <h3 className="text-lg font-bold text-white mt-0.5">{activity.title}</h3>
+                      <p className="text-xs text-[var(--color-coral)] font-bold">{new Date(activity.startDateTime).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                      <h3 className="text-lg font-bold text-[var(--color-ink)] mt-0.5">{activity.title}</h3>
                     </div>
                     <div className="flex flex-col gap-1 my-2">
-                      <div className="event-meta-row"><MapPin size={13} className="text-slate-500" /> {activity.address || activity.city}</div>
-                      <div className="flex gap-4 mt-1 text-[11px] text-slate-400">
+                      <div className="event-meta-row"><MapPin size={13} className="text-[var(--muted)]" /> {activity.address || activity.city}</div>
+                      <div className="flex gap-4 mt-1 text-[11px] text-[var(--muted)]">
                         <span className="flex items-center gap-1"><Users size={12} /> {mockParticipants} participants</span>
                         <span className="flex items-center gap-1"><Layers size={12} /> {mockGroupsCount} groups forming</span>
                       </div>
                     </div>
-                    <div className="flex justify-between items-center border-t border-white/5 pt-2 mt-1">
-                      <span className="text-xs font-semibold">{activity.isFree ? "Free" : `${activity.price} AZN`}</span>
-                      <Link className="text-xs text-accent font-bold hover:underline" href={`/events/${activity.id}`}>
+                    <div className="flex justify-between items-center border-t border-[var(--line)] pt-2 mt-1">
+                      <span className="text-xs font-semibold text-[var(--color-ink)]">{activity.isFree ? "Free" : `${activity.price} AZN`}</span>
+                      <Link className="text-xs text-[var(--color-accent)] font-bold hover:underline" href={`/events/${activity.id}`}>
                         Open Activity &rarr;
                       </Link>
                     </div>
@@ -226,13 +226,13 @@ export default function ActivitiesPage() {
 
         {/* Right Side: Interactive Map */}
         <div className="split-view-map">
-          <div className="p-3 bg-surface border-b border-white/10 flex justify-between items-center">
-            <span className="text-xs text-slate-400 uppercase font-bold tracking-wider">Baku Activity Map</span>
+          <div className="p-3 bg-[var(--color-surface)] border-b border-[var(--line)] flex justify-between items-center">
+            <span className="text-xs text-[var(--muted)] uppercase font-bold tracking-wider">Baku Activity Map</span>
             {selectedActivityId && (
-              <span className="text-xs text-accent font-semibold animate-pulse">Pin Highlighted</span>
+              <span className="text-xs text-[var(--color-accent)] font-semibold animate-pulse">Pin Highlighted</span>
             )}
           </div>
-          <div className="relative w-full h-full bg-paper">
+          <div className="relative w-full h-full bg-[var(--color-paper)]">
             <svg className="w-full h-full" style={{ minHeight: '400px' }}>
               <pattern id="gridPatternAct" width="28" height="28" patternUnits="userSpaceOnUse">
                 <path d="M 28 0 L 0 0 0 28" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
