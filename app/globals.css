@@ -88,7 +88,6 @@ button:disabled {
 
 .prototype-shell {
   min-height: 100vh;
-  overflow-x: hidden;
   background: var(--color-paper);
 }
 
@@ -106,8 +105,17 @@ button:disabled {
   padding: 10px 12px;
   border: 1px solid var(--line);
   border-radius: 999px;
+  overflow: visible !important;
+}
+
+.topbar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
   background: color-mix(in srgb, var(--color-surface) 82%, transparent);
   backdrop-filter: blur(18px);
+  z-index: -1;
 }
 
 .brand-lockup {
@@ -131,6 +139,12 @@ button:disabled {
   display: flex;
   justify-content: center;
   gap: 6px;
+  scrollbar-width: none; /* Firefox */
+  -webkit-overflow-scrolling: touch; /* iOS momentum */
+}
+
+.nav-links::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
 }
 
 .nav-links button,
@@ -186,30 +200,30 @@ button:disabled {
 
 .hero-section {
   display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(420px, 1.1fr);
-  gap: 34px;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 32px;
   width: min(1180px, calc(100% - 32px));
-  min-height: calc(100vh - 96px);
+  min-height: calc(100svh - 100px);
   margin: 0 auto;
-  padding: 64px 0 42px;
+  padding: 36px 0 28px;
   align-items: center;
 }
 
 .hero-copy h1 {
-  max-width: 660px;
-  margin: 18px 0;
-  font-size: clamp(3rem, 7vw, 6.8rem);
-  line-height: 0.95;
+  max-width: 580px;
+  margin: 12px 0;
+  font-size: clamp(2.4rem, 5vw, 4.6rem);
+  line-height: 1.04;
   font-weight: 850;
-  letter-spacing: 0;
+  letter-spacing: -0.01em;
 }
 
 .hero-copy p {
-  max-width: 590px;
+  max-width: 520px;
   margin: 0;
   color: var(--muted);
-  font-size: 1.06rem;
-  line-height: 1.75;
+  font-size: 1rem;
+  line-height: 1.7;
 }
 
 .eyebrow {
@@ -219,16 +233,16 @@ button:disabled {
   min-height: 36px;
   padding: 0 14px;
   border-radius: 999px;
-  color: #f4e8ff;
-  border: 1px solid rgba(185, 121, 255, 0.28);
-  background: rgba(185, 121, 255, 0.12);
+  color: #c9a0ff;
+  border: 1px solid rgba(185, 121, 255, 0.35);
+  background: rgba(185, 121, 255, 0.15);
 }
 
 .hero-actions,
 .detail-actions {
   display: flex;
   gap: 12px;
-  margin-top: 28px;
+  margin-top: 20px;
   flex-wrap: wrap;
 }
 
@@ -252,8 +266,15 @@ button:disabled {
   justify-content: center;
   gap: 8px;
   padding: 0 18px;
-  color: white;
+  color: var(--color-ink);
   border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--color-ink) 6%, transparent);
+}
+
+.dark .secondary-action,
+.dark .secondary-button,
+.dark .secondary-link,
+.dark .small-action {
   background: rgba(255, 255, 255, 0.075);
 }
 
@@ -268,8 +289,8 @@ button:disabled {
 .hero-metrics {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: 34px;
+  gap: 10px;
+  margin-top: 24px;
 }
 
 .metric-card,
@@ -287,18 +308,18 @@ button:disabled {
 }
 
 .metric-card {
-  min-height: 118px;
-  padding: 16px;
-  border-radius: 18px;
+  min-height: 100px;
+  padding: 14px;
+  border-radius: 16px;
 }
 
 .metric-icon {
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
-  margin-bottom: 14px;
-  border-radius: 12px;
+  width: 32px;
+  height: 32px;
+  margin-bottom: 10px;
+  border-radius: 10px;
   color: var(--color-coral);
   background: rgba(255, 153, 0, 0.12);
 }
@@ -315,26 +336,24 @@ button:disabled {
 
 .metric-card strong {
   display: block;
-  margin-top: 6px;
-  font-size: 1.65rem;
+  margin-top: 4px;
+  font-size: 1.5rem;
 }
 
 .hero-scene {
   position: relative;
-  height: min(660px, 72vh);
-  min-height: 460px;
-  border-radius: 0;
-}
-
-.hero-scene::before {
-  content: "";
-  position: absolute;
-  inset: 8% 4% 8% 0;
-  border: 1px solid rgba(185, 121, 255, 0.2);
-  border-radius: 8px;
-  background: linear-gradient(135deg, rgba(185, 121, 255, 0.14), rgba(255, 153, 0, 0.08));
-  z-index: 0;
-  pointer-events: none;
+  height: min(600px, 68svh);
+  min-height: 420px;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background:
+    radial-gradient(ellipse 80% 60% at 60% 40%, color-mix(in srgb, var(--color-accent) 8%, transparent), transparent),
+    linear-gradient(145deg, color-mix(in srgb, var(--color-ink) 5%, transparent), color-mix(in srgb, var(--color-ink) 2%, transparent));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--color-accent) 18%, transparent),
+    inset 0 0 80px color-mix(in srgb, var(--color-accent) 6%, transparent),
+    0 32px 96px color-mix(in srgb, var(--color-ink) 18%, transparent);
 }
 
 .hero-scene canvas {
@@ -342,6 +361,58 @@ button:disabled {
   z-index: 1;
   width: 100% !important;
   height: 100% !important;
+}
+
+/* Polished placeholder shown before/during 3D load */
+.hero-viz-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.hero-viz-placeholder-ring {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
+  display: grid;
+  place-items: center;
+  color: color-mix(in srgb, var(--color-accent) 50%, transparent);
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+  animation: pulse-ring 3s ease-in-out infinite;
+}
+
+@keyframes pulse-ring {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.06); opacity: 1; }
+}
+
+.hero-viz-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-ink) 35%, transparent);
+}
+
+/* Corner accent lines on the scene */
+.hero-scene::before {
+  content: "";
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  border-radius: 14px;
+  border: 1px dashed color-mix(in srgb, var(--color-accent) 14%, transparent);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .app-grid {
@@ -374,7 +445,8 @@ button:disabled {
   padding: 0 13px;
   border-radius: 8px;
   color: var(--muted);
-  background: rgba(255, 255, 255, 0.08);
+  background: color-mix(in srgb, var(--color-ink) 6%, transparent);
+  border: 1px solid var(--line);
 }
 
 .filter-list {
@@ -385,9 +457,9 @@ button:disabled {
 }
 
 .filter-list button {
-  color: white;
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid transparent;
+  color: var(--color-ink);
+  background: color-mix(in srgb, var(--color-ink) 6%, transparent);
+  border: 1px solid var(--line);
 }
 
 .map-card {
@@ -397,14 +469,15 @@ button:disabled {
   place-items: center;
   overflow: hidden;
   border-radius: 8px;
-  color: white;
+  color: var(--color-ink);
   background: var(--color-surface);
+  border: 1px solid var(--line);
 }
 
 .map-grid-lines {
   position: absolute;
   inset: 0;
-  background-image: linear-gradient(rgba(255,255,255,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.07) 1px, transparent 1px);
+  background-image: linear-gradient(color-mix(in srgb, var(--color-ink) 7%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--color-ink) 7%, transparent) 1px, transparent 1px);
   background-size: 28px 28px;
   transform: rotate(8deg) scale(1.2);
 }
@@ -421,6 +494,7 @@ button:disabled {
 
 .map-card strong {
   font-size: 1.3rem;
+  color: var(--color-ink);
 }
 
 .map-card span {
@@ -462,7 +536,7 @@ button:disabled {
   padding: 10px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.055);
+  background: color-mix(in srgb, var(--color-ink) 4%, transparent);
   cursor: pointer;
   transition: border-color 0.2s, background-color 0.2s;
 }
@@ -617,7 +691,8 @@ button:disabled {
   min-height: 74px;
   padding: 10px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.065);
+  background: color-mix(in srgb, var(--color-ink) 5%, transparent);
+  border: 1px solid var(--line);
 }
 
 .group-row {
@@ -678,8 +753,9 @@ button:disabled {
   min-height: 30px;
   padding: 0 10px;
   border-radius: 999px;
-  color: #c8fff4;
-  background: rgba(34, 214, 182, 0.12);
+  color: var(--color-teal);
+  background: color-mix(in srgb, var(--color-teal) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-teal) 22%, transparent);
 }
 
 .message-row {
@@ -701,7 +777,7 @@ button:disabled {
   border: 1px solid var(--line);
   border-radius: 8px;
   color: var(--muted);
-  background: rgba(255, 255, 255, 0.065);
+  background: color-mix(in srgb, var(--color-ink) 5%, transparent);
 }
 
 .composer span {
@@ -714,7 +790,7 @@ button:disabled {
   width: 36px;
   height: 36px;
   border-radius: 8px;
-  color: #160c00;
+  color: #ffffff;
   background: var(--color-accent);
 }
 
@@ -749,8 +825,9 @@ button:disabled {
   min-height: 52px;
   padding: 0 12px;
   border-radius: 8px;
-  color: white;
-  background: rgba(255, 255, 255, 0.07);
+  color: var(--color-ink);
+  background: color-mix(in srgb, var(--color-ink) 6%, transparent);
+  border: 1px solid var(--line);
 }
 
 .badge-grid svg {
@@ -783,7 +860,8 @@ button:disabled {
   padding: 16px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.065);
+  background: color-mix(in srgb, var(--color-ink) 5%, transparent);
+  color: var(--color-ink);
 }
 
 .admin-card svg {
@@ -834,15 +912,15 @@ button:disabled {
 }
 
 .dropdown-item:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: white;
+  background: color-mix(in srgb, var(--color-ink) 8%, transparent);
+  color: var(--color-ink);
 }
 
 .dropdown-header {
   padding: 12px 16px;
   border-bottom: 1px solid var(--line);
   font-weight: 700;
-  color: white;
+  color: var(--color-ink);
   font-size: 0.85rem;
 }
 
@@ -865,8 +943,8 @@ button:disabled {
 
 .notification-btn-accept {
   flex: 1;
-  background: var(--teal);
-  color: #100f14;
+  background: var(--color-teal);
+  color: #ffffff;
   font-weight: 700;
   padding: 4px 8px;
   border-radius: 4px;
@@ -876,8 +954,8 @@ button:disabled {
 
 .notification-btn-reject {
   flex: 1;
-  background: rgba(255, 255, 255, 0.08);
-  color: white;
+  background: color-mix(in srgb, var(--color-ink) 6%, transparent);
+  color: var(--color-ink);
   border: 1px solid var(--line);
   font-weight: 700;
   padding: 4px 8px;
@@ -929,7 +1007,7 @@ button:disabled {
   border-radius: 50%;
   background: color-mix(in srgb, var(--color-surface) 80%, transparent);
   border: 1px solid var(--line);
-  color: white;
+  color: var(--color-ink);
   display: grid;
   place-items: center;
   cursor: pointer;
@@ -939,7 +1017,7 @@ button:disabled {
 
 .carousel-nav-btn:hover {
   background: var(--color-accent);
-  color: #100f14;
+  color: #ffffff;
 }
 
 .carousel-nav-prev {
@@ -985,7 +1063,7 @@ button:disabled {
 /* Split view layouts */
 .split-view-container {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(400px, 0.8fr);
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
   gap: 24px;
   width: min(1180px, calc(100% - 32px));
   margin: 32px auto;
@@ -1000,74 +1078,7 @@ button:disabled {
   border: 1px solid var(--line);
 }
 
-@media (max-width: 1050px) {
-  .hero-section,
-  .app-grid,
-  .workflow-section,
-  .admin-section,
-  .split-view-container {
-    grid-template-columns: 1fr;
-  }
-
-  .hero-section {
-    padding-top: 44px;
-  }
-
-  .hero-scene {
-    min-height: 420px;
-    height: 52vh;
-  }
-
-  .app-grid {
-    margin-top: 12px;
-  }
-  
-  .split-view-map {
-    position: static;
-    height: 350px;
-  }
-}
-
-@media (max-width: 760px) {
-  .topbar {
-    grid-template-columns: 1fr auto;
-    border-radius: 18px;
-  }
-
-  .nav-links {
-    grid-column: 1 / -1;
-    justify-content: flex-start;
-    overflow-x: auto;
-    padding-bottom: 2px;
-  }
-
-  .hero-copy h1 {
-    font-size: 3.3rem;
-  }
-
-  .hero-metrics,
-  .admin-board {
-    grid-template-columns: 1fr;
-  }
-
-  .event-card {
-    grid-template-columns: 1fr;
-  }
-
-  .event-poster {
-    min-height: 96px;
-  }
-
-  .message-row {
-    grid-template-columns: auto 1fr;
-  }
-
-  .message-row time {
-    grid-column: 2;
-  }
-}
-
-
+/* Laptop / large tablet breakpoint */
 @media (max-width: 1100px) {
   .hero-section {
     grid-template-columns: 1fr 1fr;
