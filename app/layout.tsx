@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Providers from "./providers";
+import Footer from "../components/footer/Footer.jsx"; 
 
 // Mock variables for font classes to bypass build download timeouts in offline environments
 const geistSans = { variable: "font-sans" };
@@ -38,7 +39,12 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col">
-        <Providers>{children}</Providers>
+        <Providers>
+          <main className="flex-grow">
+            {children}
+          </main>
+          <Footer />
+        </Providers>
       </body>
     </html>
   );
