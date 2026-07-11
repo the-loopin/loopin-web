@@ -8,7 +8,6 @@ import { Environment, Float, Line, PerspectiveCamera, Text } from "@react-three/
 import { Group, Mesh } from "three";
 import {
   ArrowUpRight,
-  Sparkles,
   Ticket,
   Users,
   ShieldCheck,
@@ -248,7 +247,6 @@ function CityScene() {
 
 export default function PublicHomePage() {
   const [mounted, setMounted] = useState(false);
-  const [showExploreModal, setShowExploreModal] = useState(false);
   const [isMapExpanded, setIsMapExpanded] = useState(false);
 
   useEffect(() => {
@@ -273,15 +271,15 @@ export default function PublicHomePage() {
             Discover events, form groups, chat in real time, and keep every local moment organized — all in one place.
           </p>
           <div className="hero-actions">
-            <button
+            <Link
+              href="/explore"
               className="primary-action relative overflow-hidden group !px-7 !py-3.5 !text-lg flex items-center justify-center transition-colors"
-              onClick={() => setShowExploreModal(true)}
             >
               <span className="absolute inset-0 bg-[var(--violet)] origin-left scale-x-0 transition-transform duration-500 ease-out group-hover:scale-x-100 z-0 motion-reduce:transition-colors motion-reduce:duration-0 motion-reduce:group-hover:bg-[var(--violet)]"></span>
               <span className="relative z-10 flex items-center gap-2 group-hover:text-white transition-colors">
                 Explore <ArrowUpRight size={20} />
               </span>
-            </button>
+            </Link>
           </div>
           <div className="hero-metrics">
             <div className="metric-card">
@@ -355,50 +353,6 @@ export default function PublicHomePage() {
 
         <EventSlider events={mockEvents} />
       </div>
-
-
-      {/* Explore Selection Flow Modal */}
-      {showExploreModal && (
-        <div className="map-modal-overlay">
-          <div className="relative max-w-lg w-full bg-[var(--color-surface)] border border-[var(--line)] rounded-2xl p-8 text-center shadow-2xl">
-            <button
-              className="absolute top-4 right-4 icon-button"
-              onClick={() => setShowExploreModal(false)}
-            >
-              <X size={18} />
-            </button>
-            <Sparkles size={32} className="mx-auto text-[var(--color-coral)] mb-4 animate-pulse" />
-            <h2 className="text-2xl font-extrabold text-[var(--color-ink)] mb-2">Start Exploring</h2>
-            <p className="text-sm text-[var(--muted)] mb-8">
-              Select what type of plan you are looking for today.
-            </p>
-            <div className="grid grid-cols-2 gap-4">
-              <Link
-                href="/events"
-                onClick={() => setShowExploreModal(false)}
-                className="flex flex-col items-center justify-center p-6 bg-[color-mix(in_srgb,var(--color-ink)_3%,transparent)] border border-[var(--line)] rounded-xl hover:border-purple-500/50 hover:bg-purple-950/10 transition group"
-              >
-                <div className="w-12 h-12 rounded-full bg-purple-950 border border-purple-800 flex items-center justify-center text-purple-400 mb-4 group-hover:scale-110 transition">
-                  <Ticket size={22} />
-                </div>
-                <strong className="text-[var(--color-ink)] block mb-1">Events</strong>
-                <span className="text-xs text-[var(--muted)]">Planned, organized, and public gatherings.</span>
-              </Link>
-              <Link
-                href="/activities"
-                onClick={() => setShowExploreModal(false)}
-                className="flex flex-col items-center justify-center p-6 bg-[color-mix(in_srgb,var(--color-ink)_3%,transparent)] border border-[var(--line)] rounded-xl hover:border-cyan-500/50 hover:bg-cyan-950/10 transition group"
-              >
-                <div className="w-12 h-12 rounded-full bg-cyan-950 border border-cyan-800 flex items-center justify-center text-cyan-400 mb-4 group-hover:scale-110 transition">
-                  <Users size={22} />
-                </div>
-                <strong className="text-[var(--color-ink)] block mb-1">Activities</strong>
-                <span className="text-xs text-[var(--muted)]">Casual, spur-of-the-moment group meetups.</span>
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Expanded 3D Map Modal */}
       {isMapExpanded && (
