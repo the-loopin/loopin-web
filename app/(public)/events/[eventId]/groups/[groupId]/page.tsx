@@ -148,13 +148,13 @@ export default function GroupDetailPage() {
 
           <Panel title="Members">
             <div className="mb-3 flex gap-2">
-              <input className="h-10 min-w-0 flex-1 rounded-md border border-white/10 bg-surface px-3 text-sm text-white outline-none focus:border-cyan-400" placeholder="User ID" value={memberUserId} onChange={(e) => setMemberUserId(e.target.value)} />
+              <input className="h-10 min-w-0 flex-1 rounded-md border border-[var(--line)] bg-[var(--color-paper)] px-3 text-sm text-[var(--color-ink)] outline-none focus:border-[var(--color-teal)] transition-colors" placeholder="User ID" value={memberUserId} onChange={(e) => setMemberUserId(e.target.value)} />
               <button className="primary-button" onClick={handleAddMember} type="button">Add</button>
             </div>
             {members.length ? (
               <div className="grid gap-2">
                 {members.map((member) => (
-                  <div className="flex items-center justify-between rounded-md border border-white/10 bg-surface p-3 text-sm" key={member.id}>
+                  <div className="flex items-center justify-between rounded-md border border-[var(--line)] bg-[var(--color-surface)] p-3 text-sm" key={member.id}>
                     <span>User #{member.userId}</span>
                     <button className="text-red-300 hover:text-red-200" onClick={() => void handleRemoveMember(String(member.userId))} type="button">Remove</button>
                   </div>

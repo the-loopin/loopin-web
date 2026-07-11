@@ -89,12 +89,12 @@ export default function GroupChatPage() {
       <PageHeader
         title="Realtime chat"
         subtitle={`Group #${groupId}`}
-        action={<span className="rounded-full border border-white/10 px-3 py-1 text-sm text-slate-300">{connectionStatus}</span>}
+        action={<span className="rounded-full border border-[var(--line)] px-3 py-1 text-sm text-[var(--muted)]">{connectionStatus}</span>}
       />
 
       <Panel>
         <div className="flex min-h-[520px] flex-col gap-3">
-        {isLoading ? <p className="text-sm text-slate-400">Loading messages...</p> : null}
+        {isLoading ? <p className="text-sm text-[var(--muted)]">Loading messages...</p> : null}
         {isError ? (
           <button
             className="secondary-button self-start"
@@ -107,25 +107,25 @@ export default function GroupChatPage() {
 
         <div className="flex flex-1 flex-col gap-3 overflow-y-auto">
           {messages.length === 0 && !isLoading ? (
-            <p className="text-sm text-slate-500">No messages yet.</p>
+            <p className="text-sm text-[var(--muted)]">No messages yet.</p>
           ) : null}
 
           {messages.map((message) => (
-            <article key={message.id} className="rounded-md border border-white/10 bg-surface p-3">
+            <article key={message.id} className="rounded-md border border-[var(--line)] bg-[var(--color-surface)] p-3">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-medium text-white">{message.senderName}</p>
-                <time className="text-xs text-slate-500">
+                <p className="text-sm font-medium text-[var(--color-ink)]">{message.senderName}</p>
+                <time className="text-xs text-[var(--muted)]">
                   {new Date(message.createdAt).toLocaleString()}
                 </time>
               </div>
-              <p className="mt-2 whitespace-pre-wrap text-sm text-slate-200">{message.messageText}</p>
+              <p className="mt-2 whitespace-pre-wrap text-sm text-[var(--color-ink)]">{message.messageText}</p>
             </article>
           ))}
         </div>
 
-        <form className="flex gap-2 border-t border-white/10 pt-4" onSubmit={handleSubmit}>
+        <form className="flex gap-2 border-t border-[var(--line)] pt-4" onSubmit={handleSubmit}>
           <input
-            className="min-w-0 flex-1 rounded-md border border-white/10 bg-surface px-3 py-2 text-sm text-white outline-none focus:border-cyan-400"
+            className="min-w-0 flex-1 rounded-md border border-[var(--line)] bg-[var(--color-paper)] px-3 py-2 text-sm text-[var(--color-ink)] outline-none focus:border-[var(--color-teal)] transition-colors"
             maxLength={1000}
             onChange={(event) => setMessageText(event.target.value)}
             placeholder="Write a message"

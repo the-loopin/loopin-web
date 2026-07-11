@@ -42,10 +42,10 @@ export default function AdminEventsPage() {
         {events.length ? (
           <div className="grid gap-3">
             {events.map((event) => (
-              <article className="flex flex-col justify-between gap-3 rounded-md border border-white/10 bg-surface p-4 md:flex-row md:items-center" key={event.id}>
+              <article className="flex flex-col justify-between gap-3 rounded-md border border-[var(--line)] bg-[var(--color-surface)] p-4 md:flex-row md:items-center" key={event.id}>
                 <div>
-                  <p className="font-semibold text-white">{event.title}</p>
-                  <p className="text-sm text-slate-400">{event.city} - {event.status}</p>
+                  <p className="font-semibold text-[var(--color-ink)]">{event.title}</p>
+                  <p className="text-sm text-[var(--muted)]">{event.city} - {event.status}</p>
                 </div>
                 <div className="flex gap-2">
                   <Link className="secondary-link" href={`/events/${event.id}`}>Open</Link>
