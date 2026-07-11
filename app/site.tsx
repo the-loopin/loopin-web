@@ -190,7 +190,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </nav>
-      <div className="mx-auto max-w-[1440px] px-4 py-6 sm:px-6 lg:px-8">{children}</div>
+      <div className="mx-auto max-w-[1440px] px-4 pt-2 pb-8 sm:px-6 lg:px-8">{children}</div>
     </main>
   );
 }
@@ -205,10 +205,10 @@ export function PageHeader({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="mb-6 flex flex-col justify-between gap-4 border-b border-white/10 pb-6 md:flex-row md:items-end">
+    <div className="mb-6 flex flex-col justify-between gap-4 border-b border-[var(--line)] pb-6 md:flex-row md:items-end">
       <div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-white">{title}</h1>
-        {subtitle ? <p className="mt-2 max-w-2xl text-sm text-slate-400">{subtitle}</p> : null}
+        <h1 className="text-3xl font-extrabold tracking-tight text-[var(--color-ink)]">{title}</h1>
+        {subtitle ? <p className="mt-2 max-w-2xl text-sm text-[var(--muted)]">{subtitle}</p> : null}
       </div>
       {action}
     </div>
@@ -217,8 +217,8 @@ export function PageHeader({
 
 export function Panel({ children, title }: { children: React.ReactNode; title?: string }) {
   return (
-    <section className="rounded-lg border border-white/10 bg-white/[0.04] p-5">
-      {title ? <h2 className="mb-4 text-lg font-semibold text-white">{title}</h2> : null}
+    <section className="rounded-lg border border-[var(--line)] bg-[color-mix(in_srgb,var(--color-ink)_4%,transparent)] p-5">
+      {title ? <h2 className="mb-4 text-lg font-semibold text-[var(--color-ink)]">{title}</h2> : null}
       {children}
     </section>
   );
@@ -238,10 +238,10 @@ export function Input({
   required?: boolean;
 }) {
   return (
-    <label className="grid gap-1 text-sm text-slate-300">
+    <label className="grid gap-1 text-sm text-[var(--muted)]">
       {label}
       <input
-        className="h-10 rounded-md border border-white/10 bg-slate-950 px-3 text-sm text-white outline-none focus:border-cyan-400"
+        className="h-10 rounded-md border border-[var(--line)] bg-[var(--color-paper)] px-3 text-sm text-[var(--color-ink)] outline-none focus:border-[var(--color-teal)] transition-colors"
         required={required}
         type={type}
         value={value}
@@ -263,10 +263,10 @@ export function Textarea({
   required?: boolean;
 }) {
   return (
-    <label className="grid gap-1 text-sm text-slate-300">
+    <label className="grid gap-1 text-sm text-[var(--muted)]">
       {label}
       <textarea
-        className="min-h-28 rounded-md border border-white/10 bg-slate-950 p-3 text-sm text-white outline-none focus:border-cyan-400"
+        className="min-h-28 rounded-md border border-[var(--line)] bg-[var(--color-paper)] p-3 text-sm text-[var(--color-ink)] outline-none focus:border-[var(--color-teal)] transition-colors"
         required={required}
         value={value}
         onChange={(event) => onChange(event.target.value)}
@@ -287,10 +287,10 @@ export function Select({
   onChange: (value: string) => void;
 }) {
   return (
-    <label className="grid gap-1 text-sm text-slate-300">
+    <label className="grid gap-1 text-sm text-[var(--muted)]">
       {label}
       <select
-        className="h-10 rounded-md border border-white/10 bg-slate-950 px-3 text-sm text-white outline-none focus:border-cyan-400"
+        className="h-10 rounded-md border border-[var(--line)] bg-[var(--color-paper)] px-3 text-sm text-[var(--color-ink)] outline-none focus:border-[var(--color-teal)] transition-colors"
         value={value}
         onChange={(event) => onChange(event.target.value)}
       >
@@ -306,7 +306,7 @@ export function Select({
 
 export function EmptyState({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-lg border border-dashed border-white/15 bg-slate-900/40 p-6 text-sm text-slate-400">
+    <div className="rounded-lg border border-dashed border-[var(--line)] bg-[color-mix(in_srgb,var(--color-ink)_3%,transparent)] p-6 text-sm text-[var(--muted)]">
       {children}
     </div>
   );
@@ -314,5 +314,5 @@ export function EmptyState({ children }: { children: React.ReactNode }) {
 
 export function ErrorMessage({ message }: { message: string }) {
   if (!message) return null;
-  return <p className="rounded-md border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-200">{message}</p>;
+  return <p className="rounded-md border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-500 dark:text-red-200">{message}</p>;
 }

@@ -68,7 +68,7 @@ export default function ProfilePage() {
       <ErrorMessage message={error} />
 
       {loading ? (
-        <div className="text-center py-12 text-slate-400">Loading your profile workspace...</div>
+        <div className="text-center py-12 text-[var(--muted)]">Loading your profile workspace...</div>
       ) : (
         <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
           {/* Left Column: Details, Groups, and Settings */}
@@ -76,33 +76,33 @@ export default function ProfilePage() {
             
             {/* Main Bio / Details panel */}
             <div className="sidebar-panel p-6 rounded-xl flex flex-col gap-4">
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                <User size={18} className="text-coral" />
+              <h2 className="text-lg font-bold text-[var(--color-ink)] flex items-center gap-2">
+                <User size={18} className="text-[var(--color-coral)]" />
                 Bio & Identity
               </h2>
               {user ? (
                 <div className="grid gap-4">
-                  <div className="p-4 bg-white/[0.02] border border-white/5 rounded-lg flex flex-col gap-2">
-                    <span className="text-xs text-slate-500 uppercase font-semibold">Self-description</span>
-                    <p className="text-sm text-slate-300 italic">
+                  <div className="p-4 bg-[color-mix(in_srgb,var(--color-ink)_3%,transparent)] border border-[var(--line)] rounded-lg flex flex-col gap-2">
+                    <span className="text-xs text-[var(--muted)] uppercase font-semibold">Self-description</span>
+                    <p className="text-sm text-[var(--color-ink)] italic">
                       {profile?.bio || "No biography added yet. Update your profile to add your interests and description!"}
                     </p>
                   </div>
                   <div className="grid sm:grid-cols-2 gap-4">
-                    <div className="flex items-center gap-2 text-sm text-slate-300">
-                      <MapPin size={16} className="text-coral" />
+                    <div className="flex items-center gap-2 text-sm text-[var(--color-ink)]">
+                      <MapPin size={16} className="text-[var(--color-coral)]" />
                       <span><strong>City:</strong> {profile?.city || "Not specified"}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-slate-300">
-                      <Mail size={16} className="text-coral" />
+                    <div className="flex items-center gap-2 text-sm text-[var(--color-ink)]">
+                      <Mail size={16} className="text-[var(--color-coral)]" />
                       <span><strong>Email:</strong> {user.email}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-slate-300">
-                      <Shield size={16} className="text-coral" />
+                    <div className="flex items-center gap-2 text-sm text-[var(--color-ink)]">
+                      <Shield size={16} className="text-[var(--color-coral)]" />
                       <span><strong>Role:</strong> {user.role}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-slate-300">
-                      <Calendar size={16} className="text-coral" />
+                    <div className="flex items-center gap-2 text-sm text-[var(--color-ink)]">
+                      <Calendar size={16} className="text-[var(--color-coral)]" />
                       <span><strong>Member since:</strong> 2026</span>
                     </div>
                   </div>
@@ -114,8 +114,8 @@ export default function ProfilePage() {
 
             {/* Groups section */}
             <div id="groups" className="sidebar-panel p-6 rounded-xl flex flex-col gap-4 scroll-mt-24">
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                <Users size={18} className="text-coral" />
+              <h2 className="text-lg font-bold text-[var(--color-ink)] flex items-center gap-2">
+                <Users size={18} className="text-[var(--color-coral)]" />
                 My Active Groups
               </h2>
               <div className="group-list">
@@ -138,12 +138,12 @@ export default function ProfilePage() {
 
             {/* Settings section */}
             <div id="settings" className="sidebar-panel p-6 rounded-xl flex flex-col gap-4 scroll-mt-24">
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                <SettingsIcon size={18} className="text-coral" />
+              <h2 className="text-lg font-bold text-[var(--color-ink)] flex items-center gap-2">
+                <SettingsIcon size={18} className="text-[var(--color-coral)]" />
                 Preference Settings
               </h2>
-              <div className="flex flex-col gap-3 text-sm text-slate-300">
-                <label className="flex items-center justify-between p-3 bg-white/[0.02] border border-white/5 rounded-lg">
+              <div className="flex flex-col gap-3 text-sm text-[var(--color-ink)]">
+                <label className="flex items-center justify-between p-3 bg-[color-mix(in_srgb,var(--color-ink)_3%,transparent)] border border-[var(--line)] rounded-lg">
                   <span>Receive email notifications for matched interests</span>
                   <input 
                     type="checkbox" 
@@ -152,7 +152,7 @@ export default function ProfilePage() {
                     className="accent-accent"
                   />
                 </label>
-                <label className="flex items-center justify-between p-3 bg-white/[0.02] border border-white/5 rounded-lg">
+                <label className="flex items-center justify-between p-3 bg-[color-mix(in_srgb,var(--color-ink)_3%,transparent)] border border-[var(--line)] rounded-lg">
                   <span>Make my profile details public to city users</span>
                   <input 
                     type="checkbox" 
@@ -161,7 +161,7 @@ export default function ProfilePage() {
                     className="accent-accent"
                   />
                 </label>
-                <label className="flex items-center justify-between p-3 bg-white/[0.02] border border-white/5 rounded-lg">
+                <label className="flex items-center justify-between p-3 bg-[color-mix(in_srgb,var(--color-ink)_3%,transparent)] border border-[var(--line)] rounded-lg">
                   <span>Enable auto-matching for suggested activities</span>
                   <input 
                     type="checkbox" 
@@ -185,19 +185,19 @@ export default function ProfilePage() {
                   {getInitials(user?.name || profile?.name)}
                 </div>
                 <div>
-                  <p className="text-xl font-bold text-white">{user?.name || profile?.name || "Loopin User"}</p>
+                  <p className="text-xl font-bold text-[var(--color-ink)]">{user?.name || profile?.name || "Loopin User"}</p>
                   <span>{profile?.city || "Baku, Azerbaijan"}</span>
                 </div>
               </div>
-              <p className="text-xs text-slate-400 border-t border-white/5 pt-3 leading-relaxed">
+              <p className="text-xs text-[var(--muted)] border-t border-[var(--line)] pt-3 leading-relaxed">
                 Interests: Tech, social gatherings, creative walks, startup networks.
               </p>
             </div>
 
             {/* Badges Panel */}
             <div id="badges" className="sidebar-panel p-6 rounded-xl flex flex-col gap-4 scroll-mt-24">
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                <Award size={18} className="text-coral" />
+              <h2 className="text-lg font-bold text-[var(--color-ink)] flex items-center gap-2">
+                <Award size={18} className="text-[var(--color-coral)]" />
                 Unlocked Badges
               </h2>
               <div className="badge-grid">
