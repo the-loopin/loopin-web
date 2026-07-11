@@ -21,7 +21,7 @@ export default function NewGroupPage() {
     setError("");
     try {
       const group = await createGroup({
-        eventId: Number(params.eventId),
+        eventId: params.eventId,
         title: form.title,
         groupSize: form.groupSize,
         maxMembers: Number(form.maxMembers),
