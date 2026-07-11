@@ -12,7 +12,6 @@ import {
   Ticket,
   Users,
   ShieldCheck,
-  CalendarDays,
   MapPin,
   Maximize2,
   X
@@ -253,6 +252,7 @@ export default function PublicHomePage() {
   const [isMapExpanded, setIsMapExpanded] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
