@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { clearAuthToken, getAuthRole, getAuthToken } from "@/lib/auth/session";
 import { useEffect, useState } from "react";
-import { Bell, User, LogOut, Settings, HelpCircle, Flag, Users, Award, Shield, Sun, Moon } from "lucide-react";
+import { Bell, User, LogOut, Settings, HelpCircle, Flag, Users, Award, Sun, Moon } from "lucide-react";
 import { RollText } from "@/components/ui/RollText";
 
 export function SiteShell({ children }: { children: React.ReactNode }) {
@@ -16,6 +16,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
 
   // Use useEffect to prevent server/client mismatch during hydration
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHasToken(Boolean(getAuthToken()));
     setRole(getAuthRole());
 
@@ -286,6 +287,18 @@ export function Select({
   options: string[];
   onChange: (value: string) => void;
 }) {
+  function formatOptionLabel(option: string) {
+    if (option === "") return "Any";
+    if (option === "true") return "Free";
+    if (option === "false") return "Paid";
+
+    return option
+      .toLowerCase()
+      .split("_")
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ");
+  }
+
   return (
     <label className="grid gap-1 text-sm text-[var(--muted)]">
       {label}
@@ -296,7 +309,7 @@ export function Select({
       >
         {options.map((option) => (
           <option key={option} value={option}>
-            {option || "Any"}
+            {formatOptionLabel(option)}
           </option>
         ))}
       </select>
