@@ -40,22 +40,29 @@ export function setAuthRole(role: string): void {
     return;
   }
 
-  document.cookie = `loopin-role=${encodeURIComponent(role.toLowerCase())}; path=/; samesite=lax`;
-  window.localStorage.setItem("role", role);
+  const normalizedRole = role.trim().toUpperCase();
+
+  document.cookie =
+    `loopin-role=${encodeURIComponent(normalizedRole)}; path=/; samesite=lax`;
+
+  window.localStorage.setItem("role", normalizedRole);
 }
 
 export function getAuthRole(): string | null {
   const cookieRole = getDocumentCookieValue("loopin-role");
 
   if (cookieRole) {
-    return cookieRole;
+    return cookieRole.trim().toUpperCase();
   }
 
   if (typeof window === "undefined") {
     return null;
   }
 
-  return window.localStorage.getItem("role");
+  return window.localStorage
+    .getItem("role")
+    ?.trim()
+    .toUpperCase() ?? null;
 }
 
 export function clearAuthToken(): void {
