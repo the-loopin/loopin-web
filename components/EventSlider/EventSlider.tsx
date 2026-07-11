@@ -63,7 +63,7 @@ const formatEventDateTime = (startStr: string, endStr?: string) => {
       }
     }
     return startFormatted;
-  } catch (e) {
+  } catch {
     return startStr;
   }
 };
@@ -159,6 +159,7 @@ export const EventSlider: React.FC<EventSliderProps> = ({ events, onJoin }) => {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsReady(true);
   }, []);
 
@@ -348,7 +349,7 @@ export const EventSlider: React.FC<EventSliderProps> = ({ events, onJoin }) => {
                     <button
                       type="button"
                       className={styles.joinBtn}
-                      onClick={(e) => {
+                      onClick={() => {
                         if (onJoin) {
                           onJoin(event);
                         } else {

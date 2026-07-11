@@ -36,18 +36,18 @@ export default function GroupRequestsPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.groupId]);
 
-  async function approve(id: number) {
+  async function approve(id: string) {
     try {
-      await approveJoinRequest(params.groupId, String(id));
+      await approveJoinRequest(params.groupId, id);
       await loadRequests();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not approve request.");
     }
   }
 
-  async function reject(id: number) {
+  async function reject(id: string) {
     try {
-      await rejectJoinRequest(params.groupId, String(id));
+      await rejectJoinRequest(params.groupId, id);
       await loadRequests();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not reject request.");

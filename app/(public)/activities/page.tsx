@@ -1,13 +1,34 @@
 "use client";
 
-import Link from "next/link";
-import { FormEvent, useEffect, useState } from "react";
-import { createEvent, EventItem, EventPayload, getEvents } from "@/lib/api/loopin";
-import { EmptyState, ErrorMessage, Input, PageHeader, Panel, Select, SiteShell, Textarea } from "../../site";
-import { MapPin, CalendarDays, Users, Layers, Tag, Plus, Filter, Sparkles } from "lucide-react";
+import { FormEvent, MouseEvent, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  createEvent,
+  EventItem,
+  EventPayload,
+  getEvents,
+  getMyLoopedEvents,
+  loopInEvent,
+  unloopEvent,
+} from "@/lib/api/loopin";
+import { getAuthToken } from "@/lib/auth/session";
+import { EmptyState, ErrorMessage, Input, PageHeader, Select, SiteShell, Textarea } from "../../site";
+import { ArrowLeft, CalendarDays, CheckCircle2, CircleMinus, Info, MapPin, Navigation, Plus, RefreshCw, Sparkles, Users } from "lucide-react";
 
 const categories = ["TECH", "STARTUP", "HR", "EDUCATION", "TRAVEL", "SPORT", "SOCIAL", "LANGUAGE", "CREATIVE", "OTHER"];
 const statuses = ["DRAFT", "PUBLISHED", "COMPLETED", "CANCELLED"];
+const bakuBounds = {
+  north: 40.47,
+  south: 40.3,
+  east: 50.02,
+  west: 49.78,
+};
+const bakuCenter = { latitude: 40.3777, longitude: 49.892 };
+
+function formatCategoryName(category: string) {
+  if (!category) return "All Categories";
+  return category.charAt(0) + category.slice(1).toLowerCase();
+}
 
 const initialForm: EventPayload = {
   title: "Casual Photography Walk",
@@ -16,6 +37,8 @@ const initialForm: EventPayload = {
   category: "CREATIVE",
   city: "Baku",
   address: "Old City Gate",
+  latitude: bakuCenter.latitude,
+  longitude: bakuCenter.longitude,
   startDateTime: "2026-07-13T17:00:00",
   endDateTime: "2026-07-13T19:00:00",
   isFree: true,
@@ -25,14 +48,60 @@ const initialForm: EventPayload = {
   status: "PUBLISHED",
 };
 
+const initialFilters = { city: "Baku", category: "", search: "", isFree: "" };
+const loopedEventsStorageKey = "loopin-looped-event-ids";
+type ActionToast = {
+  type: "added" | "removed";
+  title: string;
+  message: string;
+};
+
+function getStoredLoopedIds() {
+  if (typeof window === "undefined") {
+    return {};
+  }
+
+  try {
+    const ids = JSON.parse(window.localStorage.getItem(loopedEventsStorageKey) ?? "[]") as string[];
+    return Object.fromEntries(ids.map((id) => [id, true]));
+  } catch {
+    return {};
+  }
+}
+
+function saveStoredLoopedIds(loopedIds: Record<string, boolean>) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.setItem(loopedEventsStorageKey, JSON.stringify(Object.keys(loopedIds)));
+}
+
+function getMapUrl(latitude: number, longitude: number, span = 0.018) {
+  return `https://www.openstreetmap.org/export/embed.html?bbox=${longitude - span}%2C${latitude - span * 0.66}%2C${longitude + span}%2C${latitude + span * 0.66}&layer=mapnik&marker=${latitude}%2C${longitude}`;
+}
+
+function getPickerMarkerPosition(latitude?: number | null, longitude?: number | null) {
+  const lat = latitude ?? bakuCenter.latitude;
+  const lon = longitude ?? bakuCenter.longitude;
+  return {
+    left: `${Math.min(96, Math.max(4, ((lon - bakuBounds.west) / (bakuBounds.east - bakuBounds.west)) * 100))}%`,
+    top: `${Math.min(96, Math.max(4, ((bakuBounds.north - lat) / (bakuBounds.north - bakuBounds.south)) * 100))}%`,
+  };
+}
+
 export default function ActivitiesPage() {
+  const router = useRouter();
   const [activities, setActivities] = useState<EventItem[]>([]);
   const [form, setForm] = useState(initialForm);
-  const [filters, setFilters] = useState({ city: "Baku", category: "", search: "", isFree: "" });
+  const [filters, setFilters] = useState(initialFilters);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [selectedActivityId, setSelectedActivityId] = useState<number | null>(null);
+  const [selectedActivityId, setSelectedActivityId] = useState<EventItem["id"] | null>(null);
+  const [flippedActivityIds, setFlippedActivityIds] = useState<Record<string, boolean>>({});
+  const [loopedActivityIds, setLoopedActivityIds] = useState<Record<string, boolean>>({});
+  const [actionToast, setActionToast] = useState<ActionToast | null>(null);
 
   async function loadActivities() {
     setLoading(true);
@@ -42,9 +111,6 @@ export default function ActivitiesPage() {
       // Filter client-side to only show events of type ACTIVITY
       const filtered = data.filter(e => e.type === "ACTIVITY");
       setActivities(filtered);
-      if (filtered.length > 0 && !selectedActivityId) {
-        setSelectedActivityId(filtered[0].id);
-      }
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not load activities.");
     } finally {
@@ -53,9 +119,40 @@ export default function ActivitiesPage() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadActivities();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.category, filters.city, filters.isFree]); // auto-trigger on simple filters
+  }, [filters.category, filters.city, filters.isFree, filters.search]); // auto-trigger on simple filters
+
+  useEffect(() => {
+    if (!getAuthToken()) {
+      return;
+    }
+
+    setLoopedActivityIds(getStoredLoopedIds());
+
+    async function loadLoopedActivities() {
+      try {
+        const loopedEvents = await getMyLoopedEvents();
+        const loopedIds = Object.fromEntries(loopedEvents.map((event) => [String(event.id), true]));
+        setLoopedActivityIds(loopedIds);
+        saveStoredLoopedIds(loopedIds);
+      } catch {
+        // Keep the locally stored state if the sync request is temporarily unavailable.
+      }
+    }
+
+    void loadLoopedActivities();
+  }, []);
+
+  useEffect(() => {
+    if (!actionToast) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => setActionToast(null), 6000);
+    return () => window.clearTimeout(timeoutId);
+  }, [actionToast]);
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -77,8 +174,15 @@ export default function ActivitiesPage() {
     }
   }
 
-  // Consistent coordinate mapper based on string hashing
-  const getCoordsForActivity = (activity: EventItem) => {
+  const getLocationForActivity = (activity: EventItem) => {
+    if (activity.latitude != null && activity.longitude != null) {
+      return {
+        latitude: activity.latitude,
+        longitude: activity.longitude,
+        precise: true,
+      };
+    }
+
     let hash1 = 0;
     let hash2 = 0;
     const str = activity.title + (activity.address || "");
@@ -86,26 +190,131 @@ export default function ActivitiesPage() {
       hash1 = str.charCodeAt(i) + ((hash1 << 5) - hash1);
       hash2 = str.charCodeAt(i) * 31 + ((hash2 << 7) - hash2);
     }
-    const x = 15 + Math.abs(hash1 % 70); // 15% to 85%
-    const y = 15 + Math.abs(hash2 % 70); // 15% to 85%
-    return { x, y };
+    return {
+      latitude: 40.35 + Math.abs(hash2 % 800) / 10000,
+      longitude: 49.79 + Math.abs(hash1 % 1300) / 10000,
+      precise: false,
+    };
   };
+
+  const selectedActivity = activities.find((activity) => activity.id === selectedActivityId) ?? null;
+  const selectedLocation = selectedActivity ? getLocationForActivity(selectedActivity) : { latitude: 40.3777, longitude: 49.892, precise: false };
+  const selectedMapUrl = getMapUrl(selectedLocation.latitude, selectedLocation.longitude);
+  const pickerLatitude = form.latitude ?? bakuCenter.latitude;
+  const pickerLongitude = form.longitude ?? bakuCenter.longitude;
+  const pickerMapUrl = getMapUrl(pickerLatitude, pickerLongitude, 0.12);
+  const pickerMarkerPosition = getPickerMarkerPosition(form.latitude, form.longitude);
+
+  function toggleMoreInfo(activityId: EventItem["id"]) {
+    setFlippedActivityIds((current) => ({ ...current, [String(activityId)]: !current[String(activityId)] }));
+  }
+
+  function resetFilters() {
+    setFilters(initialFilters);
+    setFlippedActivityIds({});
+    setSelectedActivityId(null);
+  }
+
+  function handleLocationPick(event: MouseEvent<HTMLDivElement>) {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const x = Math.min(1, Math.max(0, (event.clientX - bounds.left) / bounds.width));
+    const y = Math.min(1, Math.max(0, (event.clientY - bounds.top) / bounds.height));
+    const longitude = bakuBounds.west + x * (bakuBounds.east - bakuBounds.west);
+    const latitude = bakuBounds.north - y * (bakuBounds.north - bakuBounds.south);
+
+    setForm((current) => ({
+      ...current,
+      latitude: Number(latitude.toFixed(6)),
+      longitude: Number(longitude.toFixed(6)),
+    }));
+  }
+
+  async function handleLoopIn(activity: EventItem) {
+    if (!getAuthToken()) {
+      setError("Please sign in before using Loopin.");
+      return;
+    }
+
+    const activityId = String(activity.id);
+    setError("");
+    setActionToast(null);
+    try {
+      if (loopedActivityIds[activityId]) {
+        await unloopEvent(activityId);
+        setLoopedActivityIds((current) => {
+          const next = { ...current };
+          delete next[activityId];
+          saveStoredLoopedIds(next);
+          return next;
+        });
+        setActivities((current) =>
+          current.map((item) =>
+            String(item.id) === activityId
+              ? { ...item, loopedCount: Math.max(0, (item.loopedCount ?? 1) - 1) }
+              : item,
+          ),
+        );
+        setActionToast({
+          type: "removed",
+          title: "Removed from Loopin",
+          message: activity.title,
+        });
+      } else {
+        const updated = await loopInEvent(activityId);
+        setLoopedActivityIds((current) => {
+          const next = { ...current, [activityId]: true };
+          saveStoredLoopedIds(next);
+          return next;
+        });
+        setActivities((current) =>
+          current.map((item) =>
+            String(item.id) === activityId
+              ? { ...item, loopedCount: updated.loopedCount ?? (item.loopedCount ?? 0) + 1 }
+              : item,
+          ),
+        );
+        setActionToast({
+          type: "added",
+          title: "Added to Loopin",
+          message: activity.title,
+        });
+      }
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Could not Loopin this activity.");
+    }
+  }
+
+  function openGroups(activity: EventItem) {
+    router.push(`/events/${activity.id}/groups`);
+  }
 
   return (
     <SiteShell>
-      <PageHeader 
-        title="Explore Activities" 
-        subtitle="Browse casual user-created meetups, board games tables, coffee chat circles, and outdoor runs."
-        action={
-          <button 
-            className="primary-button" 
-            onClick={() => setShowCreateForm(!showCreateForm)}
-          >
-            <Plus size={16} /> Create Activity
-          </button>
-        }
-      />
-      <ErrorMessage message={error} />
+      <div className="listing-page listing-page-activities">
+        <PageHeader 
+          title="Explore Activities" 
+          subtitle="Browse casual user-created meetups, board games tables, coffee chat circles, and outdoor runs."
+          action={
+            <button 
+              className="primary-button" 
+              onClick={() => setShowCreateForm(!showCreateForm)}
+            >
+              <Plus size={16} className="create-icon" /> Create Activity
+            </button>
+          }
+        />
+        <ErrorMessage message={error} />
+        {actionToast ? (
+          <div className={`action-toast action-toast-${actionToast.type}`} role="status">
+            <span className="action-toast-icon">
+              {actionToast.type === "added" ? <CheckCircle2 size={18} /> : <CircleMinus size={18} />}
+            </span>
+            <span>
+              <strong>{actionToast.title}</strong>
+              <span className="action-toast-message">{actionToast.message}</span>
+            </span>
+          </div>
+        ) : null}
 
       {showCreateForm && (
         <div className="mb-8 p-6 bg-[color-mix(in_srgb,var(--color-ink)_4%,transparent)] border border-[var(--line)] rounded-xl">
@@ -120,10 +329,25 @@ export default function ActivitiesPage() {
               <Select label="Category" value={form.category} options={categories} onChange={(category) => setForm((c) => ({ ...c, category }))} />
               <Input label="City" value={form.city} onChange={(city) => setForm((c) => ({ ...c, city }))} required />
               <Input label="Address" value={form.address} onChange={(address) => setForm((c) => ({ ...c, address }))} />
+              <Input label="Latitude" value={String(form.latitude ?? "")} onChange={(latitude) => setForm((c) => ({ ...c, latitude: Number(latitude) }))} />
+              <Input label="Longitude" value={String(form.longitude ?? "")} onChange={(longitude) => setForm((c) => ({ ...c, longitude: Number(longitude) }))} />
               <Input label="Start" value={form.startDateTime} onChange={(startDateTime) => setForm((c) => ({ ...c, startDateTime }))} />
               <Input label="End" value={form.endDateTime} onChange={(endDateTime) => setForm((c) => ({ ...c, endDateTime }))} />
               <Input label="Organizer" value={form.organizerName} onChange={(organizerName) => setForm((c) => ({ ...c, organizerName }))} />
               <Select label="Status" value={form.status} options={statuses} onChange={(status) => setForm((c) => ({ ...c, status }))} />
+            </div>
+            <div className="location-picker-panel">
+              <div className="location-picker-copy">
+                <strong>Activity location</strong>
+                <span>Click the map to place the activity marker. Older activities without coordinates use an approximate Baku fallback.</span>
+              </div>
+              <div className="location-picker-map" onClick={handleLocationPick}>
+                <iframe className="real-map-frame" src={pickerMapUrl} title="Pick activity location" />
+                <div className="location-picker-hitbox" />
+                <div className="location-picker-marker" style={pickerMarkerPosition}>
+                  <MapPin size={22} />
+                </div>
+              </div>
             </div>
             <Input label="Image URL" value={form.imageUrl} onChange={(imageUrl) => setForm((c) => ({ ...c, imageUrl }))} />
             <label className="flex items-center gap-2 text-sm text-[var(--muted)]">
@@ -139,146 +363,151 @@ export default function ActivitiesPage() {
         </div>
       )}
 
-      {/* Category Selection Filter pills */}
-      <div className="mb-6 flex flex-wrap gap-2">
-        <button 
-          className={`px-4 py-1.5 rounded-full text-xs font-semibold border transition ${
-            filters.category === "" 
-              ? "bg-[var(--color-accent)] border-[var(--color-accent)] text-white font-extrabold" 
-              : "bg-[color-mix(in_srgb,var(--color-ink)_5%,transparent)] border-[var(--line)] text-[var(--muted)] hover:text-[var(--color-ink)] hover:bg-[color-mix(in_srgb,var(--color-ink)_10%,transparent)]"
-          }`}
-          onClick={() => setFilters(c => ({ ...c, category: "" }))}
-        >
-          All Categories
-        </button>
-        {categories.map(cat => (
-          <button 
-            key={cat}
-            className={`px-4 py-1.5 rounded-full text-xs font-semibold border transition ${
-              filters.category === cat 
-                ? "bg-[var(--color-accent)] border-[var(--color-accent)] text-white font-extrabold" 
-                : "bg-[color-mix(in_srgb,var(--color-ink)_5%,transparent)] border-[var(--line)] text-[var(--muted)] hover:text-[var(--color-ink)] hover:bg-[color-mix(in_srgb,var(--color-ink)_10%,transparent)]"
-            }`}
-            onClick={() => setFilters(c => ({ ...c, category: cat }))}
-          >
-            {cat}
-          </button>
-        ))}
-      </div>
-
-      <div className="split-view-container">
-        {/* Left Side: Activities List */}
-        <div className="flex flex-col gap-4">
-          {/* Simple Search & Filter Row */}
-          <div className="grid gap-3 sm:grid-cols-3 bg-[color-mix(in_srgb,var(--color-ink)_3%,transparent)] border border-[var(--line)] p-4 rounded-xl">
+      <div className={`split-view-container listing-layout-clean ${selectedActivity ? "is-map-open" : ""}`}>
+        <div className="listing-results">
+          <div className="listing-filter-bar">
             <Input label="Search" value={filters.search} onChange={(search) => setFilters((c) => ({ ...c, search }))} />
             <Input label="City" value={filters.city} onChange={(city) => setFilters((c) => ({ ...c, city }))} />
-            <Select label="Free" value={filters.isFree} options={["", "true", "false"]} onChange={(isFree) => setFilters((c) => ({ ...c, isFree }))} />
+            <Select label="Category" value={filters.category} options={["", ...categories]} onChange={(category) => setFilters((c) => ({ ...c, category }))} />
+            <Select label="Price" value={filters.isFree} options={["", "true", "false"]} onChange={(isFree) => setFilters((c) => ({ ...c, isFree }))} />
           </div>
-
-          <div className="flex justify-end">
-            <button className="small-action inline-flex items-center gap-1" onClick={loadActivities}>
-              <Filter size={14} /> {loading ? "Syncing..." : "Apply Filters"}
+          <div className="filter-summary-strip">
+            <span>{activities.length} activities</span>
+            <strong>{filters.category ? formatCategoryName(filters.category) : "All categories"}</strong>
+            <em>{filters.isFree === "true" ? "Free only" : filters.isFree === "false" ? "Paid only" : "Any price"}</em>
+            <button className="small-action sync-action" onClick={resetFilters}>
+              <RefreshCw size={15} /> {loading ? "Syncing..." : "Reset"}
             </button>
           </div>
 
-          <div className="grid gap-4">
+          <div className="listing-card-list">
             {activities.length ? activities.map((activity) => {
               const isSelected = selectedActivityId === activity.id;
-              // Mock participants & groups
-              const mockParticipants = Math.floor((activity.id || 1) * 3.5) % 25 + 5;
-              const mockGroupsCount = (activity.id || 1) % 3 + 1;
+              const isFlipped = Boolean(flippedActivityIds[String(activity.id)]);
+
+              const activityId = String(activity.id);
+              const isLooped = Boolean(loopedActivityIds[activityId]);
 
               return (
-                <article 
-                  className={`event-card ${isSelected ? "event-card-active" : ""}`} 
-                  key={activity.id}
-                  onClick={() => setSelectedActivityId(activity.id)}
-                >
-                  <div className="event-poster poster-orange">
-                    <CalendarDays size={20} />
-                    <span className="text-[10px] font-bold tracking-wider">{activity.category}</span>
-                  </div>
-                  <div className="event-card-body">
-                    <div>
-                      <p className="text-xs text-[var(--color-coral)] font-bold">{new Date(activity.startDateTime).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
-                      <h3 className="text-lg font-bold text-[var(--color-ink)] mt-0.5">{activity.title}</h3>
-                    </div>
-                    <div className="flex flex-col gap-1 my-2">
-                      <div className="event-meta-row"><MapPin size={13} className="text-[var(--muted)]" /> {activity.address || activity.city}</div>
-                      <div className="flex gap-4 mt-1 text-[11px] text-[var(--muted)]">
-                        <span className="flex items-center gap-1"><Users size={12} /> {mockParticipants} participants</span>
-                        <span className="flex items-center gap-1"><Layers size={12} /> {mockGroupsCount} groups forming</span>
+                <div className="event-card-stack" key={activity.id}>
+                  <article 
+                    className={`event-card event-card-flip ${isSelected ? "event-card-active" : ""} ${isFlipped ? "is-flipped" : ""}`}
+                    onClick={() => setSelectedActivityId((current) => current === activity.id ? null : activity.id)}
+                  >
+                    <div className="event-card-inner">
+                      <div className="event-card-face event-card-front">
+                        <div className="event-poster poster-orange">
+                          <CalendarDays size={20} />
+                          <span>{formatCategoryName(activity.category)}</span>
+                        </div>
+                        <div className="event-card-body">
+                          <div>
+                            <p>{new Date(activity.startDateTime).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                            <h3>{activity.title}</h3>
+                          </div>
+                          <div className="event-meta-row"><MapPin size={13} /> {activity.address || activity.city}</div>
+                          <div className="event-card-stats">
+                            <div className="event-price-pill">{activity.isFree ? "Free" : `${activity.price} AZN`}</div>
+                            <div className="event-looped-count"><Users size={13} /> {activity.loopedCount ?? 0} looped</div>
+                          </div>
+                          <div className="event-card-actions">
+                            <button
+                              className={`loopin-button ${isLooped ? "is-looped" : ""}`}
+                              type="button"
+                              onClick={(clickEvent) => { clickEvent.stopPropagation(); void handleLoopIn(activity); }}
+                            >
+                              <Users size={14} /> {isLooped ? "Looped" : "Loopin"}
+                            </button>
+                            {isLooped ? (
+                              <button
+                                className="groups-button"
+                                type="button"
+                                onClick={(clickEvent) => { clickEvent.stopPropagation(); openGroups(activity); }}
+                              >
+                                <Users size={14} /> Groups
+                              </button>
+                            ) : null}
+                            <button className="more-info-button" type="button" onClick={(clickEvent) => { clickEvent.stopPropagation(); toggleMoreInfo(activity.id); }}>
+                              <Info size={14} /> More info
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="event-card-face event-card-back">
+                        <button className="card-back-button" type="button" onClick={(clickEvent) => { clickEvent.stopPropagation(); toggleMoreInfo(activity.id); }}>
+                          <ArrowLeft size={14} /> Back
+                        </button>
+                        <div className="event-back-main">
+                          <div className="event-back-copy">
+                            <strong>{activity.title}</strong>
+                            <p>{activity.description || "No description added yet."}</p>
+                          </div>
+                          <div className="event-back-details">
+                            <span><CalendarDays size={13} /> {new Date(activity.startDateTime).toLocaleString()} - {new Date(activity.endDateTime).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}</span>
+                            <span><MapPin size={13} /> {activity.address || activity.city}</span>
+                          </div>
+                        </div>
+                        <div className="event-back-footer">
+                          <div className="detail-chip-row">
+                            <span>{activity.isFree ? "Free" : `${activity.price} AZN`}</span>
+                            <span>{formatCategoryName(activity.category)}</span>
+                            <span>{activity.organizerName}</span>
+                          </div>
+                          <div className="event-card-actions event-back-actions">
+                            <button
+                              className={`loopin-button ${isLooped ? "is-looped" : ""}`}
+                              type="button"
+                              onClick={(clickEvent) => { clickEvent.stopPropagation(); void handleLoopIn(activity); }}
+                            >
+                              <Users size={14} /> {isLooped ? "Looped" : "Loopin"}
+                            </button>
+                            {isLooped ? (
+                              <button
+                                className="groups-button"
+                                type="button"
+                                onClick={(clickEvent) => { clickEvent.stopPropagation(); openGroups(activity); }}
+                              >
+                                <Users size={14} /> Groups
+                              </button>
+                            ) : null}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex justify-between items-center border-t border-[var(--line)] pt-2 mt-1">
-                      <span className="text-xs font-semibold text-[var(--color-ink)]">{activity.isFree ? "Free" : `${activity.price} AZN`}</span>
-                      <Link className="text-xs text-[var(--color-accent)] font-bold hover:underline" href={`/events/${activity.id}`}>
-                        Open Activity &rarr;
-                      </Link>
-                    </div>
-                  </div>
-                </article>
+                  </article>
+                </div>
               );
             }) : <EmptyState>No activities matched your filters.</EmptyState>}
           </div>
         </div>
 
-        {/* Right Side: Interactive Map */}
-        <div className="split-view-map">
-          <div className="p-3 bg-[var(--color-surface)] border-b border-[var(--line)] flex justify-between items-center">
-            <span className="text-xs text-[var(--muted)] uppercase font-bold tracking-wider">Baku Activity Map</span>
-            {selectedActivityId && (
-              <span className="text-xs text-[var(--color-accent)] font-semibold animate-pulse">Pin Highlighted</span>
-            )}
+        {selectedActivity && (
+          <div className="split-view-map listing-map-panel">
+            <div className="map-panel-header">
+              <span>Baku Activity Map</span>
+              <em>Location focused</em>
+            </div>
+            <div className="map-stage">
+              <iframe
+                className="real-map-frame"
+                key={`${selectedLocation.latitude}-${selectedLocation.longitude}`}
+                src={selectedMapUrl}
+                title={`${selectedActivity.title} map`}
+              />
+              <div className="selected-location-card">
+                <span><Navigation size={14} /> Selected location</span>
+                <strong>{selectedActivity.title}</strong>
+                <p>{selectedActivity.address || selectedActivity.city}</p>
+                <em>
+                  {selectedLocation.precise
+                    ? `${selectedLocation.latitude.toFixed(4)}, ${selectedLocation.longitude.toFixed(4)}`
+                    : "Approximate pin from address"}
+                </em>
+              </div>
+            </div>
           </div>
-          <div className="relative w-full h-full bg-[var(--color-paper)]">
-            <svg className="w-full h-full" style={{ minHeight: '400px' }}>
-              <pattern id="gridPatternAct" width="28" height="28" patternUnits="userSpaceOnUse">
-                <path d="M 28 0 L 0 0 0 28" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
-              </pattern>
-              <rect width="100%" height="100%" fill="url(#gridPatternAct)" />
-              
-              {/* Baku contours representation */}
-              <path d="M 50,200 C 150,150 250,300 450,200 S 650,100 850,250" fill="none" stroke="rgba(185,121,255,0.08)" strokeWidth="8" />
-              <path d="M 100,100 C 300,300 500,50 700,200" fill="none" stroke="rgba(34,214,182,0.05)" strokeWidth="5" />
-
-              {activities.map((activity) => {
-                const { x, y } = getCoordsForActivity(activity);
-                const isSelected = selectedActivityId === activity.id;
-
-                return (
-                  <g 
-                    key={activity.id} 
-                    transform={`translate(${x}%, ${y}%)`} 
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => setSelectedActivityId(activity.id)}
-                  >
-                    {isSelected && (
-                      <circle r="22" fill="var(--color-accent)" opacity="0.2" className="animate-ping" />
-                    )}
-                    <circle 
-                      r={isSelected ? "9" : "6"} 
-                      fill={isSelected ? "var(--color-accent)" : "var(--violet)"} 
-                      stroke="rgba(0,0,0,0.5)"
-                      strokeWidth="1.5"
-                    />
-                    <text 
-                      y="-12" 
-                      textAnchor="middle" 
-                      fill={isSelected ? "var(--color-accent)" : "white"} 
-                      fontSize={isSelected ? "11" : "9"} 
-                      className="font-extrabold pointer-events-none" 
-                      style={{ textShadow: '0 2px 4px black' }}
-                    >
-                      {activity.title.length > 15 ? `${activity.title.substring(0, 15)}...` : activity.title}
-                    </text>
-                  </g>
-                );
-              })}
-            </svg>
-          </div>
-        </div>
+        )}
+      </div>
       </div>
     </SiteShell>
   );

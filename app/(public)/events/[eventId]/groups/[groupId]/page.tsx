@@ -68,7 +68,7 @@ export default function GroupDetailPage() {
     event.preventDefault();
     try {
       setGroup(await updateGroup(params.groupId, {
-        eventId: Number(params.eventId),
+        eventId: params.eventId,
         title: form.title,
         groupSize: form.groupSize,
         maxMembers: Number(form.maxMembers),

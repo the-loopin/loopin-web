@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getBadges, getCurrentUser, getProfile, ProfilePayload, UserItem } from "@/lib/api/loopin";
-import { EmptyState, ErrorMessage, PageHeader, Panel, SiteShell } from "../../site";
+import { EmptyState, ErrorMessage, PageHeader, SiteShell } from "../../site";
 import { CheckCircle2, Sparkles, Flag, MapPin, Mail, Shield, User, Settings as SettingsIcon, Users, Calendar, Award } from "lucide-react";
 
 export default function ProfilePage() {
@@ -40,6 +40,7 @@ export default function ProfilePage() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadProfile();
   }, []);
 

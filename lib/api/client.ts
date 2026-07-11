@@ -4,6 +4,9 @@ import {
   getAuthToken,
 } from "../auth/session";
 
+const configuredBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "/api";
+const apiBaseUrl = configuredBaseUrl.endsWith("/api") ? `${configuredBaseUrl}/v1` : configuredBaseUrl;
+
 function isAuthenticationRequest(
   requestUrl: string | undefined,
 ): boolean {
@@ -15,10 +18,7 @@ function isAuthenticationRequest(
 }
 
 const apiClient = axios.create({
-  baseURL:
-    process.env.NEXT_PUBLIC_API_BASE_URL ??
-    process.env.NEXT_PUBLIC_API_URL ??
-    "/api",
+  baseURL: apiBaseUrl,
 });
 
 apiClient.interceptors.request.use((config) => {

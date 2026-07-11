@@ -7,6 +7,8 @@ export type EventPayload = {
   category: string;
   city: string;
   address: string;
+  latitude?: number | null;
+  longitude?: number | null;
   startDateTime: string;
   endDateTime: string;
   isFree: boolean;
@@ -17,13 +19,18 @@ export type EventPayload = {
 };
 
 export type EventItem = EventPayload & {
-  id: number;
+  id: string | number;
+  loopedCount?: number;
   createdAt?: string;
   updatedAt?: string;
 };
 
+type PageResponse<T> = {
+  content?: T[];
+};
+
 export type GroupPayload = {
-  eventId: number;
+  eventId: string;
   title: string;
   groupSize: string;
   maxMembers: number;
@@ -31,8 +38,8 @@ export type GroupPayload = {
 };
 
 export type GroupItem = GroupPayload & {
-  id: number;
-  adminId: number;
+  id: string;
+  adminId: string;
   adminUsername: string;
   status: string;
   memberCount: number;
@@ -50,9 +57,9 @@ export type UserItem = {
 };
 
 export type JoinRequestItem = {
-  id: number;
-  groupId: number;
-  userId: number;
+  id: string;
+  groupId: string;
+  userId: string;
   status: string;
   message: string | null;
   createdAt?: string;
@@ -79,14 +86,24 @@ export async function googleLogin(idToken: string) {
   return response.data;
 }
 
+export async function devLogin(payload: { email: string; name: string; role: string }) {
+  const response = await apiClient.post<{
+    token: string;
+    email: string;
+    name: string;
+    role: string;
+  }>("/auth/dev-login", payload);
+  return response.data;
+}
+
 export async function getCurrentUser() {
   const response = await apiClient.get<UserItem>("/users/me");
   return response.data;
 }
 
 export async function getEvents(params?: Record<string, string>) {
-  const response = await apiClient.get<EventItem[]>("/events", { params });
-  return response.data;
+  const response = await apiClient.get<EventItem[] | PageResponse<EventItem>>("/events", { params });
+  return Array.isArray(response.data) ? response.data : response.data.content ?? [];
 }
 
 export async function getEvent(id: string) {
@@ -110,6 +127,11 @@ export async function deleteEvent(id: string) {
 
 export async function createGroup(payload: GroupPayload) {
   const response = await apiClient.post<GroupItem>("/groups", payload);
+  return response.data;
+}
+
+export async function getGroupsByEvent(eventId: string) {
+  const response = await apiClient.get<GroupItem[]>(`/groups/by-event/${eventId}`);
   return response.data;
 }
 
@@ -214,4 +236,18 @@ export async function deleteAdminUser(userId: string) {
 
 export async function deleteAdminEvent(eventId: string) {
   await apiClient.delete(`/admin/events/${eventId}`);
+}
+
+export async function loopInEvent(eventId: string) {
+  const response = await apiClient.post<EventItem>(`/events/${eventId}/loopin`);
+  return response.data;
+}
+
+export async function unloopEvent(eventId: string) {
+  await apiClient.delete(`/events/${eventId}/loopin`);
+}
+
+export async function getMyLoopedEvents() {
+  const response = await apiClient.get<EventItem[]>("/me/looped-events");
+  return response.data;
 }

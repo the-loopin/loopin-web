@@ -25,7 +25,7 @@ export default function AdminEventsPage() {
     return () => window.clearTimeout(timer);
   }, []);
 
-  async function deleteEvent(eventId: number) {
+  async function deleteEvent(eventId: EventItem["id"]) {
     try {
       await deleteAdminEvent(String(eventId));
       await loadEvents();
