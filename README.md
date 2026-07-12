@@ -1,111 +1,23 @@
-# Loopin Web
+# Loopin Chat Page Patch
 
-A modern web application built with [Next.js](https://nextjs.org), bootstrapped using [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Replace the matching files in `the-loopin/loopin-web` with the files in this archive:
 
-## Tech Stack
+- `app/(public)/events/[eventId]/groups/[groupId]/chat/page.tsx`
+- `lib/api/messages.ts`
+- `lib/api/realtimeMessages.ts`
 
-- Next.js
-- React
-- TypeScript
-- App Router
-- Geist Font
-
----
-
-## Getting Started
-
-### Prerequisites
-
-Make sure you have one of the following installed:
-
-- Node.js (recommended)
-- npm / yarn / pnpm / bun
-
-### Installation
-
-Clone the repository and install dependencies:
+Then run:
 
 ```bash
-git clone <repository-url>
-cd <project-name>
 npm install
+npm run lint
+npm run build
 ```
 
-### Run Development Server
+The implementation matches the current backend contract:
 
-```bash
-npm run dev
-```
-
-Alternatively:
-
-```bash
-yarn dev
-pnpm dev
-bun dev
-```
-
-Open your browser and navigate to:
-
-```text
-http://localhost:3000
-```
-
-The application will automatically reload when you make changes.
-
----
-
-## Project Structure
-
-```text
-app/
-├── page.tsx        # Main page
-├── layout.tsx      # Root layout
-├── globals.css     # Global styles
-```
-
-You can start editing the application by modifying:
-
-```text
-app/page.tsx
-```
-
----
-
-## Fonts
-
-This project uses the built-in Next.js font optimization system via:
-
-- Geist Sans
-- Geist Mono
-
-Fonts are loaded automatically using `next/font`.
-
----
-
-## Available Scripts
-
-```bash
-npm run dev      # Start development server
-npm run build    # Create production build
-npm run start    # Start production server
-npm run lint     # Run ESLint
-```
-
----
-
-## Learn More
-
-Useful resources:
-
-- https://nextjs.org/docs
-- https://nextjs.org/learn
-- https://github.com/vercel/next.js
-
----
-
-Example:
-
-```text
-MIT License
-```
+- REST history: `GET /v1/groups/{groupId}/messages` (Spring Page response)
+- SockJS endpoint: `/ws`
+- STOMP subscribe: `/topic/groups/{groupId}/messages`
+- STOMP publish: `/app/groups/{groupId}/messages`
+- Payload: `{ "messageText": "..." }`
