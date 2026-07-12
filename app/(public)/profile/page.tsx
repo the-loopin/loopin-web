@@ -226,21 +226,14 @@ export default function CompleteProfilePage() {
             {/* Unlocked Badges Workspace Module with redirection hook */}
             <div id="badges" className="sidebar-panel p-6 rounded-xl flex flex-col gap-4 scroll-mt-24">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-bold flex items-center gap-2" style={{ color: "var(--color-ink)" }}>
-                  <Award size={18} style={{ color: "var(--color-coral)" }} />
+                <h2 className="text-lg font-bold text-[var(--color-ink)] flex items-center gap-2">
+                  <Award size={18} className="text-[var(--color-coral)]" />
                   Unlocked Badges
                 </h2>
-                {/* Navigation Link connecting directly to your /profile/badges view */}
-                <Link 
-                  href="/profile/badges" 
-                  className="text-xs font-semibold hover:underline transition-all flex items-center gap-1 no-underline"
-                  style={{ color: "var(--color-coral)" }}
-                >
-                  View All →
+                <Link href="/profile/my-badges" className="primary-link text-sm font-semibold">
+                  My Badges →
                 </Link>
               </div>
-              
-              {/* Dynamic opacity grid mapping state arrays against server database states */}
               <div className="badge-grid">
                 {/* Badge 1 */}
                 <div className="flex items-center gap-3 p-2 rounded-lg transition-opacity" style={{ background: "color-mix(in srgb, var(--color-ink) 2%, transparent)", opacity: badges.includes("ATTENDEE") ? 1 : 0.35 }}>

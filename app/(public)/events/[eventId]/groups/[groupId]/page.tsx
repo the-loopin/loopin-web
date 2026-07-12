@@ -9,6 +9,7 @@ import {
   getGroup,
   getGroupMembers,
   GroupItem,
+  GroupMemberItem,
   removeGroupMember,
   updateGroup,
   updateGroupStatus,
@@ -18,7 +19,7 @@ import { EmptyState, ErrorMessage, Input, PageHeader, Panel, Select, SiteShell, 
 export default function GroupDetailPage() {
   const params = useParams<{ eventId: string; groupId: string }>();
   const [group, setGroup] = useState<GroupItem | null>(null);
-  const [members, setMembers] = useState<Array<{ id: number; userId: number; joinedAt: string }>>([]);
+  const [members, setMembers] = useState<GroupMemberItem[]>([]);
   const [memberUserId, setMemberUserId] = useState("");
   const [joinMessage, setJoinMessage] = useState("I would like to join this group.");
   const [error, setError] = useState("");
