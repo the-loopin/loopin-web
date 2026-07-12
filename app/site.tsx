@@ -157,7 +157,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
                     <button className="dropdown-item group" onClick={() => { router.push("/profile"); setShowProfile(false); }}>
                       <User size={16} /> <RollText text="View Profile" />
                     </button>
-                    <button className="dropdown-item group" onClick={() => { router.push("/profile#badges"); setShowProfile(false); }}>
+                    <button className="dropdown-item group" onClick={() => { router.push("/profile/my-badges"); setShowProfile(false); }}>
                       <Award size={16} /> <RollText text="View Badges" />
                     </button>
                     <button className="dropdown-item group" onClick={() => { router.push("/profile#groups"); setShowProfile(false); }}>
