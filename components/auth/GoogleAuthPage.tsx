@@ -13,8 +13,10 @@ type AuthMode = "login" | "register";
 
 export function GoogleAuthPage({
   mode,
+  warning,
 }: {
   mode: AuthMode;
+  warning?: string;
 }) {
   const isRegister = mode === "register";
 
@@ -133,6 +135,12 @@ export function GoogleAuthPage({
                 ? "Create your profile with your Google account and start discovering local events."
                 : "Continue with your Google account to access your events, groups and messages."}
             </p>
+
+            {warning ? (
+              <p className="mb-5 rounded-xl border border-[#FF4FA3]/35 bg-[#FF4FA3]/10 p-3 text-sm text-pink-100">
+                {warning}
+              </p>
+            ) : null}
 
             <GoogleIdentityButton mode={mode} />
 
