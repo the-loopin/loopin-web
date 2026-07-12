@@ -197,10 +197,15 @@ export default function ProfilePage() {
 
             {/* Badges Panel */}
             <div id="badges" className="sidebar-panel p-6 rounded-xl flex flex-col gap-4 scroll-mt-24">
-              <h2 className="text-lg font-bold text-[var(--color-ink)] flex items-center gap-2">
-                <Award size={18} className="text-[var(--color-coral)]" />
-                Unlocked Badges
-              </h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-bold text-[var(--color-ink)] flex items-center gap-2">
+                  <Award size={18} className="text-[var(--color-coral)]" />
+                  Unlocked Badges
+                </h2>
+                <Link href="/profile/my-badges" className="primary-link text-sm font-semibold">
+                  My Badges →
+                </Link>
+              </div>
               <div className="badge-grid">
                 {/* Dynamically check if backend has specific badges, else show visual prototype mock badges */}
                 <div style={{ opacity: badges.includes("ATTENDEE") || badges.length > 0 ? 1 : 0.4 }}>
