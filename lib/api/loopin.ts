@@ -71,6 +71,13 @@ export type ProfilePayload = {
   bio: string;
 };
 
+export type GroupMemberItem = {
+  id: string;
+  groupId: string;
+  userId: string;
+  joinedAt: string;
+};
+
 export async function registerUser(payload: { email: string; name: string }) {
   const response = await apiClient.post<UserItem>("/users/register", payload);
   return response.data;
@@ -150,15 +157,27 @@ export async function updateGroupStatus(id: string, status: string) {
   return response.data;
 }
 
-export async function getGroupMembers(groupId: string) {
-  const response = await apiClient.get<Array<{ id: number; groupId: number; userId: number; joinedAt: string }>>(
+export async function getGroupMembers(
+  groupId: string,
+): Promise<GroupMemberItem[]> {
+  const response = await apiClient.get<GroupMemberItem[]>(
     `/groups/${groupId}/members`,
   );
+
   return response.data;
 }
 
-export async function addGroupMember(groupId: string, userId: string) {
-  const response = await apiClient.post(`/groups/${groupId}/members`, { userId: Number(userId) });
+export async function addGroupMember(
+  groupId: string,
+  userPublicId: string,
+) {
+  const response = await apiClient.post(
+    `/groups/${groupId}/members`,
+    {
+      userId: userPublicId,
+    },
+  );
+
   return response.data;
 }
 
