@@ -20,6 +20,7 @@ export type EventPayload = {
 
 export type EventItem = EventPayload & {
   id: string | number;
+  displayCategory?: string;
   loopedCount?: number;
   createdAt?: string;
   updatedAt?: string;
@@ -258,15 +259,39 @@ export async function deleteAdminEvent(eventId: string) {
 }
 
 export async function loopInEvent(eventId: string) {
-  const response = await apiClient.post<EventItem>(`/events/${eventId}/loopin`);
+  const response = await apiClient.post<EventItem>(`/events/${eventId}/loop-in`);
   return response.data;
 }
 
 export async function unloopEvent(eventId: string) {
-  await apiClient.delete(`/events/${eventId}/loopin`);
+  await apiClient.delete(`/events/${eventId}/loop-in`);
 }
 
 export async function getMyLoopedEvents() {
   const response = await apiClient.get<EventItem[]>("/me/looped-events");
+  return response.data;
+}
+
+export type MediaUploadRequest = {
+  purpose: "EVENT_IMAGE" | "PROFILE_AVATAR" | "GROUP_IMAGE";
+  fileName: string;
+  contentType: string;
+  sizeBytes: number;
+};
+
+export type MediaUploadResponse = {
+  mediaId: string;
+  uploadUrl: string;
+  expiresAt: string;
+  requiredHeaders?: Record<string, string>;
+};
+
+export async function requestMediaUpload(payload: MediaUploadRequest) {
+  const response = await apiClient.post<MediaUploadResponse>("/media/uploads", payload);
+  return response.data;
+}
+
+export async function completeMediaUpload(mediaId: string) {
+  const response = await apiClient.post<{ mediaId: string; status: string }>(`/media/uploads/${mediaId}/complete`);
   return response.data;
 }

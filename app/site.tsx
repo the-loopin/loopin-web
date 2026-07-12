@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { clearAuthToken, getAuthRole, getAuthToken } from "@/lib/auth/session";
-import { useEffect, useState } from "react";
-import { Bell, User, LogOut, Settings, HelpCircle, Flag, Users, Award, Sun, Moon } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Bell, User, LogOut, Settings, HelpCircle, Flag, Users, Award, Sun, Moon, ChevronDown } from "lucide-react";
 import { RollText } from "@/components/ui/RollText";
 
 export function SiteShell({ children }: { children: React.ReactNode }) {
@@ -287,6 +287,9 @@ export function Select({
   options: string[];
   onChange: (value: string) => void;
 }) {
+  const [open, setOpen] = useState(false);
+  const selectRef = useRef<HTMLDivElement | null>(null);
+
   function formatOptionLabel(option: string) {
     if (option === "") return "Any";
     if (option === "true") return "Free";
@@ -299,21 +302,58 @@ export function Select({
       .join(" ");
   }
 
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (!selectRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const selectedLabel = formatOptionLabel(value);
+
   return (
-    <label className="grid gap-1 text-sm text-[var(--muted)]">
-      {label}
-      <select
-        className="h-10 rounded-md border border-[var(--line)] bg-[var(--color-paper)] px-3 text-sm text-[var(--color-ink)] outline-none focus:border-[var(--color-teal)] transition-colors"
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
+    <div className="custom-select-field" ref={selectRef}>
+      <span>{label}</span>
+      <button
+        className="custom-select-trigger"
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={() => setOpen((current) => !current)}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") setOpen(false);
+        }}
       >
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {formatOptionLabel(option)}
-          </option>
-        ))}
-      </select>
-    </label>
+        <strong>{selectedLabel}</strong>
+        <ChevronDown size={16} />
+      </button>
+      {open ? (
+        <div className="custom-select-menu" role="listbox">
+          {options.map((option) => {
+            const selected = option === value;
+            return (
+              <button
+                className={selected ? "is-selected" : ""}
+                key={option}
+                type="button"
+                role="option"
+                aria-selected={selected}
+                onClick={() => {
+                  onChange(option);
+                  setOpen(false);
+                }}
+              >
+                {formatOptionLabel(option)}
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
+    </div>
   );
 }
 
