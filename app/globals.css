@@ -252,9 +252,9 @@ button:disabled {
   grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
   gap: 32px;
   width: min(1180px, calc(100% - 32px));
-  min-height: calc(100svh - 100px);
+  min-height: calc(100svh - 180px);
   margin: 0 auto;
-  padding: 36px 0 28px;
+  padding: 24px 0 24px;
   align-items: center;
 }
 
@@ -2601,5 +2601,189 @@ button:disabled {
     height: 460px;
   }
 }
+
+/* Define the main content wrapper layout for fluid growth */
+.main-content-wrapper {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+@media (min-width: 640px) {
+  .main-content-wrapper {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .main-content-wrapper {
+    max-width: 1200px !important;
+    padding-left: 48px;
+    padding-right: 48px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .main-content-wrapper {
+    max-width: 1450px !important;
+    padding-left: 64px;
+    padding-right: 64px;
+  }
+}
+
+@media (min-width: 1920px) {
+  .main-content-wrapper {
+    max-width: 1750px !important;
+    padding-left: 80px;
+    padding-right: 80px;
+  }
+}
+
+@media (min-width: 2560px) {
+  .main-content-wrapper {
+    max-width: 2100px !important;
+    padding-left: 96px;
+    padding-right: 96px;
+  }
+}
+
+/* Define the responsive-container utility */
+.responsive-container {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+@media (min-width: 1024px) {
+  .responsive-container {
+    max-width: 1200px;
+    padding-left: 48px;
+    padding-right: 48px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .responsive-container {
+    max-width: 1450px;
+    padding-left: 64px;
+    padding-right: 64px;
+  }
+}
+
+@media (min-width: 1920px) {
+  .responsive-container {
+    max-width: 1750px;
+    padding-left: 80px;
+    padding-right: 80px;
+  }
+}
+
+@media (min-width: 2560px) {
+  .responsive-container {
+    max-width: 2100px;
+    padding-left: 96px;
+    padding-right: 96px;
+  }
+}
+
+/* Apply fluid container widths and paddings to all main layouts */
+@media (min-width: 1024px) {
+  .hero-section,
+  .topbar,
+  .app-grid,
+  .workflow-section,
+  .admin-section,
+  .carousel-container {
+    width: 100% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: 48px !important;
+    padding-right: 48px !important;
+    max-width: 1200px !important;
+  }
+  .hero-section {
+    grid-template-columns: 46% 54% !important;
+    gap: 48px !important;
+  }
+  .hero-copy h1,
+  .hero-copy p {
+    max-width: none !important;
+  }
+}
+
+@media (min-width: 1440px) {
+  .hero-section,
+  .topbar,
+  .app-grid,
+  .workflow-section,
+  .admin-section,
+  .carousel-container {
+    padding-left: 64px !important;
+    padding-right: 64px !important;
+    max-width: 1450px !important;
+  }
+  .hero-section {
+    gap: 64px !important;
+  }
+  .hero-scene {
+    height: min(750px, 72svh) !important;
+  }
+}
+
+@media (min-width: 1920px) {
+  .hero-section,
+  .topbar,
+  .app-grid,
+  .workflow-section,
+  .admin-section,
+  .carousel-container {
+    padding-left: 80px !important;
+    padding-right: 80px !important;
+    max-width: 1750px !important;
+  }
+  .hero-section {
+    gap: 80px !important;
+  }
+  .hero-scene {
+    height: min(900px, 75svh) !important;
+  }
+  .hero-copy h1 {
+    font-size: 5rem !important;
+  }
+  .hero-copy p {
+    font-size: 1.125rem !important;
+  }
+}
+
+@media (min-width: 2560px) {
+  .hero-section,
+  .topbar,
+  .app-grid,
+  .workflow-section,
+  .admin-section,
+  .carousel-container {
+    padding-left: 96px !important;
+    padding-right: 96px !important;
+    max-width: 2100px !important;
+  }
+  .hero-section {
+    gap: 96px !important;
+  }
+  .hero-scene {
+    height: min(1100px, 78svh) !important;
+  }
+  .hero-copy h1 {
+    font-size: 5.8rem !important;
+  }
+  .hero-copy p {
+    font-size: 1.25rem !important;
+  }
+}
+
 
 
