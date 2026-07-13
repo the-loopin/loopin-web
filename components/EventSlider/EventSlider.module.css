@@ -103,21 +103,34 @@
   }
 }
 
-/* Pause sliding animation when hovering over the slider container */
-@media (hover: hover) {
-  .sliderContainer:hover .track {
-    animation-play-state: paused;
-  }
+.marqueeGroup {
+  display: flex;
+  gap: 24px;
+  padding-right: 24px;
 }
 
 .cardWrapper {
-  width: 320px;
-  height: 460px;
+  width: 360px;
+  height: 330px;
   flex-shrink: 0;
   position: relative;
   z-index: 1;
   transition: z-index 0.25s step-start;
-  margin-right: 24px; /* Serves as the gap between cards, allowing seamless percent loop translation */
+  margin-right: 0;
+}
+
+.eventCard {
+  --card-accent: #b66dff;
+  --card-accent-soft: rgba(182, 109, 255, 0.18);
+  --card-accent-border: rgba(182, 109, 255, 0.34);
+  --card-accent-dark: #20102f;
+}
+
+.activityCard {
+  --card-accent: #ff7e15;
+  --card-accent-soft: rgba(255, 126, 21, 0.18);
+  --card-accent-border: rgba(255, 126, 21, 0.36);
+  --card-accent-dark: #2a1208;
 }
 
 /* Bring the hovered card to the foreground instantly */
