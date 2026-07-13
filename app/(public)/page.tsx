@@ -4,6 +4,11 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowUpRight, MapPin } from "lucide-react";
 import { SiteShell } from "../site";
+
+import {
+  ArrowUpRight,
+  MapPin,
+} from "lucide-react";
 import { EventSlider, EventCardItem } from "@/components/EventSlider/EventSlider";
 import BakuHeroMap from "@/components/ui/BakuHeroMap";
 import { EventItem, getEvents } from "@/lib/api/loopin";
@@ -24,6 +29,7 @@ function normalizeOpportunity(item: EventItem): EventCardItem {
     interests: [item.displayCategory || item.category, item.city].filter(Boolean),
   };
 }
+
 
 export default function PublicHomePage() {
   const [mounted, setMounted] = useState(false);
