@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { CalendarDays, MapPin, Heart, User } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { CalendarDays, ChevronLeft, ChevronRight, Heart, MapPin, User } from "lucide-react";
 import styles from "./EventSlider.module.css";
 
 export interface EventCardItem {
@@ -155,6 +156,8 @@ const getCategoryColor = (category: string) => {
 };
 
 export const EventSlider: React.FC<EventSliderProps> = ({ events, onJoin }) => {
+  const router = useRouter();
+  const trackWrapperRef = useRef<HTMLDivElement | null>(null);
   const [flippedIds, setFlippedIds] = useState<Record<string | number, boolean>>({});
   const [isReady, setIsReady] = useState(false);
 
@@ -164,11 +167,20 @@ export const EventSlider: React.FC<EventSliderProps> = ({ events, onJoin }) => {
   }, []);
 
   if (!events || events.length === 0) {
-    return null;
+    return (
+      <div className={styles.emptyState}>
+        No opportunities are published yet.
+      </div>
+    );
   }
 
-  const MIN_REPEAT = 6;
-  const baseEvents = Array.from({ length: MIN_REPEAT }).flatMap(() => events);
+  const goToNext = () => {
+    trackWrapperRef.current?.scrollBy({ left: 380, behavior: "smooth" });
+  };
+
+  const goToPrevious = () => {
+    trackWrapperRef.current?.scrollBy({ left: -380, behavior: "smooth" });
+  };
 
   const toggleFlip = (id: string | number) => {
     setFlippedIds((prev) => ({
@@ -182,6 +194,13 @@ export const EventSlider: React.FC<EventSliderProps> = ({ events, onJoin }) => {
       e.preventDefault();
       onJoin(event);
     }
+  };
+
+  const openOpportunityPage = (event: EventCardItem, e: React.MouseEvent<HTMLElement>) => {
+    const target = e.target as HTMLElement;
+    if (target.closest("button") || target.closest("a")) return;
+
+    router.push(event.joinUrl || (event.type === "ACTIVITY" ? "/activities" : "/events"));
   };
 
   const handleCardMouseMove = (id: string | number, event: React.MouseEvent<HTMLElement>) => {
@@ -217,18 +236,24 @@ export const EventSlider: React.FC<EventSliderProps> = ({ events, onJoin }) => {
     const isFlipped = !!flippedIds[event.id];
     const displayDate = formatEventDateTime(event.startDateTime, event.endDateTime);
     const locationStr = `${event.city}${event.address ? `, ${event.address}` : ""}`;
-    const catColor = getCategoryColor(event.category);
+    const isActivity = event.type === "ACTIVITY";
+    const catColor = isActivity
+      ? { text: "#ff9f4a", bg: "rgba(255, 126, 21, 0.12)", border: "rgba(255, 126, 21, 0.34)" }
+      : { text: "#c58cff", bg: "rgba(182, 109, 255, 0.12)", border: "rgba(182, 109, 255, 0.34)" };
 
     return (
       <div
         key={`${event.id}-${isDuplicate ? "dup" : "orig"}-${index}`}
-        className={styles.cardWrapper}
+        className={`${styles.cardWrapper} ${isActivity ? styles.activityCard : styles.eventCard}`}
         data-testid={isDuplicate ? undefined : `event-card-${event.id}`}
       >
         <div 
           className={styles.cardInteractive}
           onMouseMove={(e) => handleCardMouseMove(event.id, e)}
           onMouseLeave={handleCardMouseLeave}
+          onClick={(e) => openOpportunityPage(event, e)}
+          role="link"
+          tabIndex={0}
         >
           <div className={`${styles.cardInner} ${isFlipped ? styles.flipped : ""}`}>
             
@@ -267,7 +292,7 @@ export const EventSlider: React.FC<EventSliderProps> = ({ events, onJoin }) => {
                 )}
               </div>
 
-              <div className={`${styles.cardBody} ${styles[getBodyGradientClass(event, index)] || ""}`}>
+              <div className={styles.cardBody}>
                 <div className={styles.cardBodyContent}>
                   <div className={styles.textGroup}>
                     <h3 className={styles.title} title={event.title}>
@@ -295,9 +320,6 @@ export const EventSlider: React.FC<EventSliderProps> = ({ events, onJoin }) => {
                       <span className={styles.priceLabel}>Admission</span>
                       <span 
                         className={styles.priceValue}
-                        style={{
-                          color: event.isFree ? "#4DFFD2" : "#ff7e15"
-                        }}
                       >
                         {event.isFree ? "Free" : `$${event.price || 0}`}
                       </span>
@@ -317,7 +339,7 @@ export const EventSlider: React.FC<EventSliderProps> = ({ events, onJoin }) => {
             </div>
 
             {/* Back Face of the Card */}
-            <div className={`${styles.cardBack} ${styles[getBodyGradientClass(event, index)] || ""}`}>
+            <div className={styles.cardBack}>
               <div className={styles.cardBackContent}>
                 <div className={styles.backMainContent}>
                   <h4 className={styles.interestsHeading}>Interests</h4>
@@ -343,7 +365,7 @@ export const EventSlider: React.FC<EventSliderProps> = ({ events, onJoin }) => {
                       className={styles.joinBtn}
                       onClick={(e) => handleJoinClick(event, e)}
                     >
-                      Join event
+                      Loopin
                     </Link>
                   ) : (
                     <button
@@ -357,7 +379,7 @@ export const EventSlider: React.FC<EventSliderProps> = ({ events, onJoin }) => {
                         }
                       }}
                     >
-                      Join event
+                      Loopin
                     </button>
                   )}
 
@@ -383,13 +405,21 @@ export const EventSlider: React.FC<EventSliderProps> = ({ events, onJoin }) => {
       className={`${styles.sliderContainer} ${isReady ? styles.ready : ""}`}
       id="event-slider-container"
     >
-      <div className={styles.trackWrapper}>
+      <div className={styles.controls}>
+        <button type="button" onClick={goToPrevious} aria-label="Show previous opportunity">
+          <ChevronLeft size={18} />
+        </button>
+        <button type="button" onClick={goToNext} aria-label="Show next opportunity">
+          <ChevronRight size={18} />
+        </button>
+      </div>
+      <div className={styles.trackWrapper} ref={trackWrapperRef}>
         <div className={styles.track}>
           <div className={styles.marqueeGroup}>
-            {baseEvents.map((event, index) => renderCard(event, index, false))}
+            {events.concat(events, events).map((event, index) => renderCard(event, index, false))}
           </div>
           <div className={styles.marqueeGroup} aria-hidden="true">
-            {baseEvents.map((event, index) => renderCard(event, index, true))}
+            {events.concat(events, events).map((event, index) => renderCard(event, index, true))}
           </div>
         </div>
       </div>
