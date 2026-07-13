@@ -1,152 +1,258 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, AlignLeft, MapPin, User } from "lucide-react";
+
 import { getProfile, updateProfile } from "@/lib/api/loopin";
-import { User, MapPin, AlignLeft, ArrowLeft } from "lucide-react";
-import { ErrorMessage, Input, PageHeader, Panel, SiteShell, Textarea } from "../../../site";
+
+import {
+  ErrorMessage,
+  Input,
+  SiteShell,
+  Textarea,
+} from "../../../site";
+
+type ProfileForm = {
+  name: string;
+  city: string;
+  bio: string;
+};
 
 export default function EditProfilePage() {
   const router = useRouter();
-  const [form, setForm] = useState({ name: "Test User", city: "Baku", bio: "" });
-  const [error, setError] = useState("");
+
+  const [form, setForm] = useState<ProfileForm>({
+    name: "",
+    city: "",
+    bio: "",
+  });
+
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    async function load() {
+    async function loadProfile() {
       try {
         const profile = await getProfile();
+
         setForm({
-          name: profile.name ?? "Test User",
-          city: profile.city ?? "Baku",
+          name: profile.name ?? "",
+          city: profile.city ?? "",
           bio: profile.bio ?? "",
         });
-      } catch {
-        setError("Could not load profile. You can still try saving.");
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Failed to load profile."
+        );
+      } finally {
+        setLoading(false);
       }
     }
-    void load();
+
+    void loadProfile();
   }, []);
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(
+    event: FormEvent<HTMLFormElement>
+  ) {
     event.preventDefault();
-    setError("");
+
     setSaving(true);
+    setError("");
+
     try {
       await updateProfile(form);
       router.push("/profile");
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Could not update profile.");
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to update profile."
+      );
     } finally {
       setSaving(false);
     }
   }
 
+  if (loading) {
+    return (
+      <SiteShell>
+        <div className="prototype-shell flex min-h-screen items-center justify-center">
+          <p
+            className="text-lg font-semibold"
+            style={{ color: "var(--color-muted)" }}
+          >
+            Loading profile...
+          </p>
+        </div>
+      </SiteShell>
+    );
+  }
+
   return (
     <SiteShell>
-      <div className="prototype-shell p-6 min-h-screen">
-        
-        {/* Səhifə Başlığı və Geri Qayıtmaq Linki */}
-        <div className="max-w-3xl mx-auto mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b pb-6" style={{ borderColor: "var(--color-border)" }}>
+      <div className="prototype-shell min-h-screen p-6">
+
+        <div
+          className="mx-auto mb-8 flex max-w-3xl flex-col gap-4 border-b pb-6 sm:flex-row sm:items-center sm:justify-between"
+          style={{ borderColor: "var(--color-border)" }}
+        >
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Link 
-                href="/profile" 
-                className="inline-flex items-center gap-1 text-xs font-bold no-underline hover:underline transition-all"
-                style={{ color: "var(--color-coral)" }}
-              >
-                <ArrowLeft size={14} /> Back to Workspace
-              </Link>
-            </div>
-            <h1 className="text-3xl font-black tracking-tight" style={{ color: "var(--color-ink)" }}>Edit Profile</h1>
-            <p className="text-sm mt-1" style={{ color: "var(--color-muted)" }}>
-              Update your identity details, location, and write something about yourself.
+            <Link
+              href="/profile"
+              className="mb-2 inline-flex items-center gap-2 text-xs font-bold hover:underline"
+              style={{ color: "var(--color-coral)" }}
+            >
+              <ArrowLeft size={14} />
+              Back to Profile
+            </Link>
+
+            <h1
+              className="text-3xl font-black"
+              style={{ color: "var(--color-ink)" }}
+            >
+              Edit Profile
+            </h1>
+
+            <p
+              className="mt-1 text-sm"
+              style={{ color: "var(--color-muted)" }}
+            >
+              Update your personal information.
             </p>
           </div>
         </div>
 
-        {/* Xəta Mesajı Paneli */}
         {error && (
-          <div className="max-w-3xl mx-auto mb-6">
+          <div className="mx-auto mb-6 max-w-3xl">
             <ErrorMessage message={error} />
           </div>
         )}
 
-        {/* Redaktə Formu Paneli */}
-        <div className="max-w-3xl mx-auto">
-          <div className="sidebar-panel p-6 rounded-xl">
-            <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
-              
-              {/* Ad və Şəhər Girişləri (İki sütunlu yan-yana düzülüş) */}
+        <div className="mx-auto max-w-3xl">
+          <div className="sidebar-panel rounded-xl p-6">
+            <form
+              className="flex flex-col gap-6"
+              onSubmit={handleSubmit}
+            >
               <div className="grid gap-6 md:grid-cols-2">
                 <div className="flex flex-col gap-2">
-                  <label className="text-sm font-bold flex items-center gap-2" style={{ color: "var(--color-ink)" }}>
-                    <User size={16} style={{ color: "var(--color-coral)" }} />
+                  <label
+                    className="flex items-center gap-2 text-sm font-bold"
+                    style={{ color: "var(--color-ink)" }}
+                  >
+                    <User
+                      size={16}
+                      style={{ color: "var(--color-coral)" }}
+                    />
                     Full Name
                   </label>
-                  <Input 
-                    label="" 
-                    value={form.name} 
-                    onChange={(name) => setForm((c) => ({ ...c, name }))} 
-                    required 
+
+                  <Input
+                    label=""
+                    value={form.name}
+                    required
+                    onChange={(name) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        name,
+                      }))
+                    }
                   />
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <label className="text-sm font-bold flex items-center gap-2" style={{ color: "var(--color-ink)" }}>
-                    <MapPin size={16} style={{ color: "var(--color-coral)" }} />
-                    City / Location
+                  <label
+                    className="flex items-center gap-2 text-sm font-bold"
+                    style={{ color: "var(--color-ink)" }}
+                  >
+                    <MapPin
+                      size={16}
+                      style={{ color: "var(--color-coral)" }}
+                    />
+                    City
                   </label>
-                  <Input 
-                    label="" 
-                    value={form.city} 
-                    onChange={(city) => setForm((c) => ({ ...c, city }))} 
-                    required 
+
+                  <Input
+                    label=""
+                    value={form.city}
+                    required
+                    onChange={(city) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        city,
+                      }))
+                    }
                   />
                 </div>
               </div>
 
-              {/* Bioqrafiya Girişi */}
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-bold flex items-center gap-2" style={{ color: "var(--color-ink)" }}>
-                  <AlignLeft size={16} style={{ color: "var(--color-coral)" }} />
+                <label
+                  className="flex items-center gap-2 text-sm font-bold"
+                  style={{ color: "var(--color-ink)" }}
+                >
+                  <AlignLeft
+                    size={16}
+                    style={{ color: "var(--color-coral)" }}
+                  />
                   Biography
                 </label>
-                <Textarea 
-                  label="" 
-                  value={form.bio} 
-                  onChange={(bio) => setForm((c) => ({ ...c, bio }))} 
+
+                <Textarea
+                  label=""
+                  value={form.bio}
+                  onChange={(bio) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      bio,
+                    }))
+                  }
                 />
-                <span className="text-xs" style={{ color: "var(--color-muted)" }}>
-                  Briefly describe your goals, interests, or what you work on.
+
+                <span
+                  className="text-xs"
+                  style={{ color: "var(--color-muted)" }}
+                >
+                  Tell other users something about yourself.
                 </span>
               </div>
 
-              {/* Hərəkət Düymələri (Yadda Saxla və İmtina) */}
-              <div className="flex items-center justify-end gap-4 border-t pt-6 mt-2" style={{ borderColor: "var(--color-border)" }}>
-                <Link 
-                  href="/profile" 
-                  className="px-5 py-2.5 rounded-lg text-sm font-bold no-underline transition-colors"
-                  style={{ color: "var(--color-ink)", background: "color-mix(in srgb, var(--color-ink) 5%, transparent)" }}
+              <div
+                className="mt-2 flex items-center justify-end gap-4 border-t pt-6"
+                style={{ borderColor: "var(--color-border)" }}
+              >
+                <Link
+                  href="/profile"
+                  className="rounded-lg px-5 py-2.5 text-sm font-bold no-underline transition-colors"
+                  style={{
+                    color: "var(--color-ink)",
+                    background:
+                      "color-mix(in srgb, var(--color-ink) 5%, transparent)",
+                  }}
                 >
                   Cancel
                 </Link>
-                
-                <button 
+
+                <button
                   type="submit"
                   disabled={saving}
-                  className="px-6 py-2.5 rounded-lg text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50 cursor-pointer" 
-                  style={{ background: "var(--color-coral)" }}
+                  className="cursor-pointer rounded-lg px-6 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                  style={{
+                    background: "var(--color-coral)",
+                  }}
                 >
-                  {saving ? "Saving Changes..." : "Save Profile"}
+                  {saving ? "Saving..." : "Save Profile"}
                 </button>
               </div>
-
             </form>
           </div>
         </div>
-
       </div>
     </SiteShell>
   );
