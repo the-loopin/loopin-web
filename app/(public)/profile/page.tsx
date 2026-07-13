@@ -1,457 +1,431 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useMemo } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import {
-  getBadges,
-  getCurrentUser,
-  getProfile,
-  getMyGroups,
-  getSettings,
-  updateSettings,
-  getAvailableInterests,
-  getMyInterests,
-  updateMyInterests,
-  ProfilePayload,
-  UserItem,
-  GroupItem,
-  UserSettings,
-  InterestItem,
-} from "@/lib/api/loopin";
-import { User, MapPin, Mail, Calendar, Award, Users, CheckCircle2, Sparkles, Flag, Settings, Bell, Eye } from "lucide-react";
-import { SiteShell } from "../../site";
+import { motion } from "framer-motion";
+import { 
+  MapPin, 
+  Share, 
+  Edit3, 
+  Calendar, 
+  Users, 
+  Award,
+  ChevronRight,
+  Clock,
+  CheckCircle2,
+  Sparkles,
+  ArrowRight,
+  AlertCircle
+} from "lucide-react";
+import { SiteShell } from "@/app/site";
+
+// Proper modular hooks based on existing API architecture
+import { useProfile } from "@/hooks/useProfile";
+import { useMyLoopedEvents, useEvents } from "@/hooks/useEvents";
+import { useBadges } from "@/hooks/useBadges";
+
+// Animation Variants
+const containerVariants = {
+  hidden: { },
+  visible: {
+    transition: { staggerChildren: 0.1, delayChildren: 0.1 }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 1, y: 0 },
+  visible: { opacity: 1, y: 0 }
+};
+
+const SkeletonCard = ({ className = "" }: { className?: string }) => (
+  <div className={`animate-pulse bg-[var(--line)] rounded-[20px] opacity-20 ${className}`} />
+);
 
 export default function CompleteProfilePage() {
-  const router = useRouter();
+  const { data: userData, isPending: userPending, isError: userError } = useProfile();
+  const { data: upcomingEvents, isPending: eventsPending, isError: eventsError } = useMyLoopedEvents();
+  const { data: allEvents, isPending: suggEventsPending } = useEvents();
+  const { data: myBadges, isPending: badgesPending, isError: badgesError } = useBadges();
 
-  // States for live database data
-  const [user, setUser] = useState<UserItem | null>(null);
-  const [profile, setProfile] = useState<ProfilePayload | null>(null);
-  const [badges, setBadges] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const user = userData?.user;
+  const profile = userData?.profile;
 
-  // Preference settings - loaded from the database
-  const [settings, setSettings] = useState<UserSettings>({
-    emailNotifications: true,
-    publicProfile: true,
-  });
-  const [savingSetting, setSavingSetting] = useState<keyof UserSettings | null>(null);
+  // Suggested events derived from general events endpoint
+  const suggestedEvents = allEvents ? allEvents.slice(0, 3) : [];
 
-  // Active Groups - loaded from the database
-  const [groups, setGroups] = useState<GroupItem[]>([]);
+  // Derive initial/display name
+  const displayName = user?.name || profile?.name || "Anonymous User";
+  const initials = displayName.split(" ").map((n: string) => n[0]).join("").toUpperCase().substring(0, 2);
+  const location = profile?.city || "Unknown Location";
+  const onlineStatus = profile?.onlineStatus === "online" || true;
 
-  // Interests - loaded from the database
-  const [availableInterests, setAvailableInterests] = useState<InterestItem[]>([]);
-  const [myInterestIds, setMyInterestIds] = useState<string[]>([]);
-  const [savingInterestId, setSavingInterestId] = useState<string | null>(null);
+  // Dynamic Profile Completion
+  const { completionPercentage, missingFields } = useMemo(() => {
+    if (!profile) return { completionPercentage: 0, missingFields: [] };
+    const fields = [
+      { name: "avatar", label: "Upload profile avatar", complete: !!profile.avatar },
+      { name: "bio", label: "Write a short bio", complete: !!profile.bio },
+      { name: "city", label: "Add your city", complete: !!profile.city },
+      { name: "interests", label: "Complete your interests", complete: !!(profile.interests && profile.interests.length > 0) },
+      { name: "name", label: "Set your full name", complete: !!profile.name },
+    ];
+    
+    const completed = fields.filter(f => f.complete).length;
+    return {
+      completionPercentage: Math.round((completed / fields.length) * 100),
+      missingFields: fields
+    };
+  }, [profile]);
 
-  // Fetch real data from database on mount
-  async function loadProfileData() {
-    setLoading(true);
-    setError("");
-    try {
-      const [nextUser, nextProfile, nextBadges, nextGroups, nextSettings, nextAvailableInterests, nextMyInterests] = await Promise.all([
-        getCurrentUser(),
-        getProfile(),
-        getBadges(),
-        getMyGroups(),
-        getSettings(),
-        getAvailableInterests(),
-        getMyInterests(),
-      ]);
-      setUser(nextUser);
-      setProfile(nextProfile);
-      setBadges(nextBadges);
-      setGroups(nextGroups);
-      setSettings(nextSettings);
-      setAvailableInterests(nextAvailableInterests);
-      setMyInterestIds(nextMyInterests);
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Could not load profile data.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  // Toggle a single interest on/off
-  async function handleInterestToggle(interestId: string) {
-    const wasSelected = myInterestIds.includes(interestId);
-    const next = wasSelected
-      ? myInterestIds.filter((id) => id !== interestId)
-      : [...myInterestIds, interestId];
-    setMyInterestIds(next);
-    setSavingInterestId(interestId);
-    try {
-      await updateMyInterests(next);
-    } catch (caught) {
-      setMyInterestIds(myInterestIds);
-      setError(caught instanceof Error ? caught.message : "Could not save interests.");
-    } finally {
-      setSavingInterestId(null);
-    }
-  }
-
-  // Toggle a single preference
-  async function handleSettingChange(key: keyof UserSettings, value: boolean) {
-    const previous = settings[key];
-    setSettings((s) => ({ ...s, [key]: value }));
-    setSavingSetting(key);
-    try {
-      await updateSettings({ [key]: value });
-    } catch (caught) {
-      setSettings((s) => ({ ...s, [key]: previous }));
-      setError(caught instanceof Error ? caught.message : "Could not save preference.");
-    } finally {
-      setSavingSetting(null);
-    }
-  }
-
-  useEffect(() => {
-    void loadProfileData();
-  }, []);
-
-  // Helper to extract initials for the avatar component
-  const getInitials = (name?: string) => {
-    if (!name) return "LU";
-    return name.split(" ").map(n => n[0]).join("").toUpperCase().substring(0, 2);
-  };
-
-  // Preference row component
-  const PreferenceRow = ({
-    icon,
-    label,
-    description,
-    checked,
-    saving,
-    onChange,
-  }: {
-    icon: React.ReactNode;
-    label: string;
-    description: string;
-    checked: boolean;
-    saving: boolean;
-    onChange: (v: boolean) => void;
-  }) => (
-    <div
-      className="flex items-center justify-between gap-4 p-3.5 rounded-xl transition-colors"
-      style={{
-        background: checked
-          ? "color-mix(in srgb, var(--color-coral) 6%, transparent)"
-          : "color-mix(in srgb, var(--color-ink) 2%, transparent)",
-        border: "1px solid",
-        borderColor: checked ? "color-mix(in srgb, var(--color-coral) 30%, transparent)" : "var(--color-border)",
-      }}
-    >
-      <div className="flex items-center gap-3 min-w-0">
-        <span
-          className="shrink-0 flex items-center justify-center rounded-lg"
-          style={{
-            width: "36px",
-            height: "36px",
-            background: checked ? "var(--color-coral)" : "color-mix(in srgb, var(--color-ink) 10%, transparent)",
-            color: checked ? "#fff" : "var(--color-muted)",
-            transition: "background 0.2s ease, color 0.2s ease",
-          }}
-        >
-          {icon}
-        </span>
-        <div className="min-w-0">
-          <p className="text-sm font-semibold truncate" style={{ color: "var(--color-ink)" }}>{label}</p>
-          <p className="text-xs truncate" style={{ color: "var(--color-muted)" }}>{description}</p>
+  if (userPending) {
+    return (
+      <SiteShell>
+        <div className="min-h-[70vh] flex items-center justify-center text-[var(--muted)]">
+          <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ repeat: Infinity, duration: 1.5 }}>
+            Loading your dashboard...
+          </motion.div>
         </div>
-      </div>
+      </SiteShell>
+    );
+  }
 
-      <button
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        disabled={saving}
-        onClick={() => onChange(!checked)}
-        className="relative inline-flex shrink-0 items-center rounded-full transition-colors duration-200 focus:outline-none disabled:opacity-60"
-        style={{
-          width: "44px",
-          height: "26px",
-          background: checked ? "var(--color-coral)" : "color-mix(in srgb, var(--color-ink) 18%, transparent)",
-          boxShadow: checked ? "0 0 0 3px color-mix(in srgb, var(--color-coral) 18%, transparent)" : "none",
-        }}
-      >
-        <span
-          className="inline-flex items-center justify-center rounded-full bg-white shadow transition-transform duration-200"
-          style={{
-            width: "20px",
-            height: "20px",
-            transform: checked ? "translateX(21px)" : "translateX(3px)",
-          }}
-        >
-          {saving && (
-            <span
-              className="block rounded-full animate-spin"
-              style={{
-                width: "10px",
-                height: "10px",
-                border: "2px solid color-mix(in srgb, var(--color-coral) 40%, transparent)",
-                borderTopColor: "var(--color-coral)",
-              }}
-            />
-          )}
-        </span>
-      </button>
-    </div>
-  );
+  if (userError) {
+    return (
+      <SiteShell>
+        <div className="min-h-[70vh] flex flex-col gap-4 items-center justify-center text-red-400">
+          <AlertCircle size={48} className="opacity-50" />
+          <p>Failed to load profile. Please try again later.</p>
+        </div>
+      </SiteShell>
+    );
+  }
 
   return (
     <SiteShell>
-      <div className="prototype-shell p-4 sm:p-6 min-h-screen">
-        {/* Page Header Area */}
-        <div className="max-w-6xl mx-auto mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b pb-6" style={{ borderColor: "var(--color-border)" }}>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight" style={{ color: "var(--color-ink)" }}>Profile Workspace</h1>
-            <p className="text-sm mt-1" style={{ color: "var(--color-muted)" }}>
-              Manage your personal bio, check your unlocked badges, and review active groups.
-            </p>
-          </div>
+      <div className="pb-24 selection:bg-[var(--color-coral)]/30 relative">
+        <div className="absolute top-0 left-0 w-full h-[400px] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[var(--color-accent)]/15 via-transparent to-transparent pointer-events-none -z-10" />
 
-          {/* Navigation Link to the Edit Profile Page */}
-          <Link
-            href="/profile/edit"
-            className="px-5 py-2.5 rounded-lg text-sm font-bold text-white transition-opacity hover:opacity-90 self-start sm:self-center text-center no-underline inline-block w-full sm:w-auto"
-            style={{ background: "var(--color-coral)" }}
-          >
-            Edit Profile
-          </Link>
-        </div>
-
-        {/* Error feedback if API request fails */}
-        {error && (
-          <div className="max-w-6xl mx-auto mb-4 p-4 rounded-lg bg-red-500/10 border border-red-500 text-red-500 text-sm">
-            {error}
-          </div>
-        )}
-
-        {loading ? (
-          <div className="text-center py-12" style={{ color: "var(--color-muted)" }}>
-            Loading your custom profile workspace...
-          </div>
-        ) : (
-          /* Grid Layout: Main workspace view split into two dynamic columns */
-          <div className="max-w-6xl mx-auto grid gap-6 grid-cols-1 lg:grid-cols-[1fr_380px]">
-
-            {/* LEFT COLUMN: Contains Biography, Interests, Active Groups, and Personal Settings */}
-            <div className="flex flex-col gap-6 min-w-0">
-
-              {/* Bio & Identity Panel */}
-              <div className="sidebar-panel p-4 sm:p-6 rounded-xl flex flex-col gap-4">
-                <h2 className="text-lg font-bold flex items-center gap-2" style={{ color: "var(--color-ink)" }}>
-                  <User size={18} style={{ color: "var(--color-coral)" }} />
-                  Bio & Identity
-                </h2>
-
-                <div className="grid gap-4">
-                  <div className="p-4 rounded-lg flex flex-col gap-2" style={{ background: "color-mix(in srgb, var(--color-ink) 3%, transparent)", border: "1px solid var(--color-border)" }}>
-                    <span className="text-xs uppercase font-semibold" style={{ color: "var(--color-muted)" }}>About Me</span>
-                    <p className="text-sm italic leading-relaxed break-words" style={{ color: "var(--color-ink)" }}>
-                      {profile?.bio || "No biography added yet. Click 'Edit Profile' to update your description!"}
-                    </p>
+        <motion.div className="max-w-5xl mx-auto px-4 sm:px-6 pt-12">
+          
+          {/* SECTION 1 — PROFILE HERO */}
+          <motion.section variants={itemVariants} className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
+            <div className="flex items-center gap-6">
+              <div className="relative">
+                {profile?.avatar ? (
+                  <img src={profile.avatar} alt={displayName} className="w-24 h-24 rounded-[24px] object-cover shadow-xl shadow-[var(--color-accent)]/20 border border-[var(--line)]" />
+                ) : (
+                  <div className="w-24 h-24 rounded-[24px] bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-coral)] flex items-center justify-center text-3xl font-black text-white shadow-xl shadow-[var(--color-accent)]/20 border border-white/10 overflow-hidden">
+                    {initials}
                   </div>
-
-                  {/* Meta details from the database */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm" style={{ color: "var(--color-ink)" }}>
-                    <div className="flex items-center gap-2 min-w-0">
-                      <MapPin size={16} className="shrink-0" style={{ color: "var(--color-coral)" }} />
-                      <span className="truncate"><strong>Location:</strong> {profile?.city || "Not specified"}</span>
-                    </div>
-                    <div className="flex items-center gap-2 min-w-0">
-                      <Mail size={16} className="shrink-0" style={{ color: "var(--color-coral)" }} />
-                      <span className="truncate"><strong>Email:</strong> {user?.email || "N/A"}</span>
-                    </div>
-                    <div className="flex items-center gap-2 min-w-0">
-                      <Calendar size={16} className="shrink-0" style={{ color: "var(--color-coral)" }} />
-                      <span className="truncate"><strong>Registered:</strong> {user?.createdAt ? new Date(user.createdAt).getFullYear() : "N/A"}</span>
-                    </div>
+                )}
+                {onlineStatus && (
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-[var(--background)] rounded-full flex items-center justify-center transition-colors">
+                    <div className="w-3.5 h-3.5 bg-green-500 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
                   </div>
+                )}
+              </div>
+              
+              <div className="flex flex-col">
+                <h1 className="text-3xl font-bold tracking-tight text-[var(--color-ink)] mb-1">{displayName}</h1>
+                <p className="text-[var(--muted)] text-sm font-medium mb-3">{user?.role === "ADMIN" ? "Administrator" : "Member"}</p>
+                
+                <div className="flex items-center gap-4 text-sm text-[var(--muted)] mb-3">
+                  <div className="flex items-center gap-1.5">
+                    <MapPin size={14} className="text-[var(--color-coral)]" />
+                    <span>{location}</span>
+                  </div>
+                  {onlineStatus && (
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                      <span>Online</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 text-xs font-semibold text-[var(--color-ink)]/70 flex-wrap">
+                  {profile?.interests?.map((interest, idx) => (
+                    <React.Fragment key={interest}>
+                      <span>{interest}</span>
+                      {idx < profile.interests!.length - 1 && <span className="w-1 h-1 rounded-full bg-[var(--color-accent)]" />}
+                    </React.Fragment>
+                  ))}
+                  {(!profile?.interests || profile.interests.length === 0) && (
+                    <span className="text-[var(--muted)] opacity-70">No interests added</span>
+                  )}
                 </div>
               </div>
+            </div>
 
-              {/* User Interests Panel */}
-              <div className="sidebar-panel p-4 sm:p-6 rounded-xl flex flex-col gap-4">
-                <h2 className="text-lg font-bold flex items-center gap-2" style={{ color: "var(--color-ink)" }}>
-                  <Award size={18} style={{ color: "var(--color-coral)" }} />
-                  Interests
+            <div className="flex items-center gap-3 self-start md:self-center">
+              <Link href="/profile/edit">
+                <button className="flex items-center gap-2 px-5 py-2.5 rounded-[16px] bg-[color-mix(in_srgb,var(--color-ink)_6%,transparent)] hover:bg-[color-mix(in_srgb,var(--color-ink)_9%,transparent)] border border-[var(--line)] text-[var(--color-ink)] text-sm font-semibold transition-colors duration-200">
+                  <Edit3 size={16} />
+                  Edit Profile
+                </button>
+              </Link>
+              <button className="flex items-center gap-2 px-5 py-2.5 rounded-[16px] bg-[var(--color-coral)] hover:opacity-90 text-white text-sm font-semibold shadow-lg shadow-[var(--color-coral)]/20 transition-all duration-200 hover:-translate-y-0.5">
+                <Share size={16} />
+                Share
+              </button>
+            </div>
+          </motion.section>
+
+          {/* SECTION 2 — QUICK STATS */}
+          <motion.section variants={containerVariants} className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
+            {[
+              { label: "Events Joined", value: upcomingEvents?.length ?? 0, icon: Calendar, pending: eventsPending },
+              { label: "Active Groups", value: "-", icon: Users, pending: false }, // Explicitly missing backend endpoint
+              { label: "Badges Earned", value: myBadges?.length ?? 0, icon: Award, pending: badgesPending },
+            ].map((stat, i) => (
+              <motion.div 
+                key={i} 
+                variants={itemVariants}
+                whileHover={{ y: -2, scale: 1.02 }}
+                className="group flex flex-col p-5 rounded-[20px] bg-[var(--panel)] border border-[var(--line)] hover:border-[var(--color-accent)]/50 transition-all duration-300 relative overflow-hidden shadow-sm"
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-accent)]/0 to-[var(--color-coral)]/0 group-hover:from-[var(--color-accent)]/5 group-hover:to-[var(--color-coral)]/5 transition-colors duration-500" />
+                <stat.icon size={20} className="text-[var(--muted)] group-hover:text-[var(--color-coral)] transition-colors mb-4 relative z-10" />
+                {stat.pending ? (
+                  <SkeletonCard className="h-8 w-16 mb-1 relative z-10" />
+                ) : (
+                  <div className="text-2xl font-bold text-[var(--color-ink)] mb-1 relative z-10">{stat.value}</div>
+                )}
+                <div className="text-xs font-medium text-[var(--muted)] relative z-10">{stat.label}</div>
+              </motion.div>
+            ))}
+          </motion.section>
+
+          {/* SECTION 3 — MAIN DASHBOARD */}
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
+            
+            {/* LEFT COLUMN */}
+            <div className="flex flex-col gap-8">
+              
+              {/* Upcoming Events */}
+              <motion.section variants={itemVariants}>
+                <h2 className="text-sm font-bold text-[var(--muted)] uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <Calendar size={14} /> Upcoming Events
                 </h2>
-                <div className="category-pill-row flex flex-wrap gap-2">
-                  {availableInterests.length === 0 && (
-                    <p className="text-sm" style={{ color: "var(--color-muted)" }}>
-                      No interests available yet.
-                    </p>
-                  )}
-                  {availableInterests.map((interest) => {
-                    const active = myInterestIds.includes(interest.id);
-                    const saving = savingInterestId === interest.id;
-                    return (
-                      <button
-                        type="button"
-                        key={interest.id}
-                        onClick={() => handleInterestToggle(interest.id)}
-                        disabled={saving}
-                        className={`category-pill inline-flex items-center transition-opacity disabled:opacity-60 ${active ? "active" : ""}`}
-                        style={{ border: "none", cursor: "pointer", font: "inherit" }}
-                      >
-                        {interest.label}
-                      </button>
-                    );
-                  })}
+                
+                {eventsPending && (
+                  <div className="flex flex-col gap-3">
+                    <SkeletonCard className="h-24 w-full" />
+                    <SkeletonCard className="h-24 w-full" />
+                  </div>
+                )}
+                
+                {eventsError && (
+                  <div className="p-6 rounded-[20px] border border-red-500/20 bg-red-500/5 text-sm text-red-500">
+                    Unable to load upcoming events.
+                  </div>
+                )}
+
+                {upcomingEvents?.length === 0 && (
+                  <div className="p-8 rounded-[20px] border border-[var(--line)] border-dashed bg-[var(--panel)] text-center text-[var(--muted)] text-sm">
+                    No upcoming events yet. <Link href="/events" className="text-[var(--color-coral)] hover:underline">Explore events to join one!</Link>
+                  </div>
+                )}
+
+                {upcomingEvents && upcomingEvents.length > 0 && (
+                  <div className="flex flex-col gap-3">
+                    {upcomingEvents.map((event: any) => {
+                      const dateObj = new Date(event.startDateTime || Date.now());
+                      const month = dateObj.toLocaleString('en-US', { month: 'short' });
+                      const day = dateObj.getDate();
+                      const time = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                      return (
+                        <motion.div 
+                          key={event.id}
+                          whileHover={{ scale: 1.01 }}
+                          className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-[20px] bg-[var(--panel)] border border-[var(--line)] hover:border-[var(--color-coral)]/50 transition-colors gap-4 shadow-sm"
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className="w-14 h-14 rounded-[14px] bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/20 flex flex-col items-center justify-center text-[var(--color-coral)] shrink-0">
+                              <span className="text-[10px] font-bold uppercase">{month}</span>
+                              <span className="text-lg font-black leading-none mt-0.5">{day}</span>
+                            </div>
+                            <div>
+                              <div className="text-xs font-semibold text-[var(--color-coral)] mb-1">{time} • {event.city || "Online"}</div>
+                              <h3 className="text-base font-bold text-[var(--color-ink)]">{event.title}</h3>
+                              <div className="text-xs text-[var(--muted)] mt-1">{event.loopedCount || 0} Participants</div>
+                            </div>
+                          </div>
+                          <Link href={`/events/${event.id}`}>
+                            <button className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-[color-mix(in_srgb,var(--color-ink)_6%,transparent)] hover:bg-[color-mix(in_srgb,var(--color-ink)_9%,transparent)] text-[var(--color-ink)] text-sm font-semibold transition-colors self-start sm:self-auto shrink-0 border border-[var(--line)]">
+                              View Event <ArrowRight size={14} />
+                            </button>
+                          </Link>
+                        </motion.div>
+                      )
+                    })}
+                  </div>
+                )}
+              </motion.section>
+
+              {/* My Groups (MISSING ENDPOINT) */}
+              <motion.section variants={itemVariants}>
+                <h2 className="text-sm font-bold text-[var(--muted)] uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <Users size={14} /> My Groups
+                </h2>
+                <div className="p-8 rounded-[20px] border border-[var(--line)] border-dashed bg-[var(--panel)] flex flex-col items-center justify-center text-center">
+                  <Users size={32} className="text-[var(--muted)]/50 mb-3" />
+                  <h3 className="text-[var(--color-ink)] font-bold mb-1">Coming Soon</h3>
+                  <p className="text-[var(--muted)] text-sm max-w-sm">Group syncing is currently being rolled out. Check back soon to see your active groups.</p>
                 </div>
-                <p className="text-xs" style={{ color: "var(--color-muted)" }}>
-                  Tap an interest to add or remove it from your profile.
-                </p>
-              </div>
+              </motion.section>
 
-              {/* Active Connected Groups Panel */}
-              <div className="sidebar-panel p-4 sm:p-6 rounded-xl flex flex-col gap-4">
-                <h2 className="text-lg font-bold flex items-center gap-2" style={{ color: "var(--color-ink)" }}>
-                  <Users size={18} style={{ color: "var(--color-coral)" }} />
-                  My Active Groups
+              {/* Recent Activity (MISSING ENDPOINT) */}
+              <motion.section variants={itemVariants}>
+                <h2 className="text-sm font-bold text-[var(--muted)] uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <Clock size={14} /> Recent Activity
                 </h2>
+                <div className="p-8 rounded-[20px] border border-[var(--line)] border-dashed bg-[var(--panel)] flex flex-col items-center justify-center text-center">
+                  <Clock size={32} className="text-[var(--muted)]/50 mb-3" />
+                  <h3 className="text-[var(--color-ink)] font-bold mb-1">Coming Soon</h3>
+                  <p className="text-[var(--muted)] text-sm max-w-sm">Your activity feed will be available here in a future update.</p>
+                </div>
+              </motion.section>
 
-                <div className="group-list flex flex-col gap-3">
-                  {groups.length === 0 && (
-                    <p className="text-sm" style={{ color: "var(--color-muted)" }}>
-                      You haven&apos;t joined any groups yet.
-                    </p>
+              {/* About Me */}
+              <motion.section variants={itemVariants}>
+                <h2 className="text-sm font-bold text-[var(--muted)] uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <MapPin size={14} /> About Me
+                </h2>
+                <div className="p-6 rounded-[20px] bg-[var(--panel)] border border-[var(--line)] text-sm leading-relaxed text-[var(--color-ink)]/90 shadow-sm">
+                  {profile?.bio ? (
+                    <p>{profile.bio}</p>
+                  ) : (
+                    <p className="text-[var(--muted)] italic">No bio provided. Update your profile to tell others about yourself!</p>
                   )}
-                  {groups.map((group) => (
-                    <div className="group-row flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg" style={{ border: "1px solid var(--color-border)" }} key={group.id}>
-                      <div className="avatar-stack flex -space-x-2 shrink-0">
-                        {Array.from({ length: Math.min(group.memberCount, 3) }).map((_, i) => (
-                          <span
-                            key={i}
-                            className="w-6 h-6 rounded-full border-2"
-                            style={{ background: `color-mix(in srgb, var(--color-ink) ${15 + i * 10}%, transparent)`, borderColor: "var(--color-bg, #fff)" }}
-                          />
-                        ))}
-                        {group.memberCount > 3 && (
-                          <span
-                            className="w-6 h-6 rounded-full border-2 flex items-center justify-center text-[10px] font-bold"
-                            style={{ background: "var(--color-coral)", color: "#fff", borderColor: "var(--color-bg, #fff)" }}
-                          >
-                            +{group.memberCount - 3}
-                          </span>
-                        )}
+                </div>
+              </motion.section>
+
+            </div>
+
+            {/* RIGHT COLUMN */}
+            <div className="flex flex-col gap-8">
+              
+              {/* Profile Completion */}
+              <motion.section variants={itemVariants} className="p-6 rounded-[20px] bg-gradient-to-b from-[var(--color-accent)]/5 to-[var(--panel)] border border-[var(--color-accent)]/20 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold text-[var(--color-ink)]">Profile {completionPercentage}% Complete</h3>
+                  <span className="text-xs font-black text-[var(--color-coral)]">{completionPercentage}%</span>
+                </div>
+                <div className="w-full h-2 rounded-full bg-[var(--line)] mb-6 overflow-hidden">
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${completionPercentage}%` }}
+                    transition={{ duration: 1, ease: "easeOut" }}
+                    className="h-full bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-coral)] rounded-full"
+                  />
+                </div>
+                <div className="flex flex-col gap-3 text-sm">
+                  {missingFields.map((field) => (
+                    <label key={field.name} className="flex items-center gap-3 cursor-pointer group">
+                      <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-colors ${
+                        field.complete 
+                          ? "border-[var(--color-coral)]/50 bg-[var(--color-coral)]/10" 
+                          : "border-[var(--line)] bg-[color-mix(in_srgb,var(--color-ink)_4%,transparent)] group-hover:border-[var(--color-ink)]"
+                      }`}>
+                        <CheckCircle2 size={field.complete ? 14 : 12} className={field.complete ? "text-[var(--color-coral)]" : "text-[var(--color-coral)] opacity-0"} />
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <strong style={{ color: "var(--color-ink)" }}>{group.title}</strong>
-                        <p className="text-sm" style={{ color: "var(--color-muted)" }}>{group.groupNote}</p>
-                      </div>
-                      <em className="shrink-0" style={{ color: "var(--color-coral)", fontStyle: "normal", fontWeight: 800 }}>{group.maxMembers}</em>
-                    </div>
+                      <span className={`transition-colors ${
+                        field.complete ? "text-[var(--color-ink)] line-through opacity-50" : "text-[var(--muted)] group-hover:text-[var(--color-ink)]"
+                      }`}>
+                        {field.label}
+                      </span>
+                    </label>
                   ))}
                 </div>
-              </div>
+              </motion.section>
 
-              {/* Notification and Context Settings Panel */}
-              <div className="sidebar-panel p-4 sm:p-6 rounded-xl flex flex-col gap-4">
-                <h2 className="text-lg font-bold flex items-center gap-2" style={{ color: "var(--color-ink)" }}>
-                  <Settings size={18} style={{ color: "var(--color-coral)" }} />
-                  Preferences & Settings
-                </h2>
-                <div className="flex flex-col gap-3">
-                  <PreferenceRow
-                    icon={<Bell size={18} />}
-                    label="Email notifications"
-                    description="Get notified when someone matches your interests"
-                    checked={settings.emailNotifications}
-                    saving={savingSetting === "emailNotifications"}
-                    onChange={(v) => handleSettingChange("emailNotifications", v)}
-                  />
-                  <PreferenceRow
-                    icon={<Eye size={18} />}
-                    label="Public profile"
-                    description="Make your profile details visible to city users"
-                    checked={settings.publicProfile}
-                    saving={savingSetting === "publicProfile"}
-                    onChange={(v) => handleSettingChange("publicProfile", v)}
-                  />
-                </div>
-              </div>
-
-            </div>
-
-            {/* RIGHT COLUMN: Interactive Visual Profile Card and Badge System Links */}
-            <div className="flex flex-col gap-6 min-w-0">
-
-              {/* Visual Identity Profile Card - Kliklədikdə Profil Redaktə səhifəsinə aparır */}
-              <Link href="/profile/edit" className="no-underline block group">
-                <div className="profile-panel p-4 sm:p-6 rounded-xl cursor-pointer transition-transform duration-150 ease-out group-hover:scale-[1.02] active:scale-105">
-                  <div className="profile-card-top flex items-center gap-3">
-                    <div className="profile-avatar shrink-0 flex items-center justify-center text-white font-black text-xl">
-                      {getInitials(user?.name || profile?.name)}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xl font-bold truncate" style={{ color: "var(--color-ink)" }}>{user?.name || profile?.name || "Loopin User"}</p>
-                      <span className="truncate block" style={{ color: "var(--color-muted)", fontSize: "0.84rem" }}>{profile?.city || "Baku, Azerbaijan"}</span>
-                    </div>
-                  </div>
-
-                  <div className="border-t pt-3 mt-4 text-xs" style={{ borderColor: "var(--color-border)", color: "var(--color-muted)" }}>
-                    <p className="leading-relaxed">Active Status: {user?.isActive === false ? "Inactive" : "Connected"}</p>
-                  </div>
-                </div>
-              </Link>
-
-              {/* Unlocked Badges Workspace Module - Bütün keçidlər bu blokun daxilindədir */}
-              <div id="badges" className="sidebar-panel p-4 sm:p-6 rounded-xl flex flex-col gap-4 scroll-mt-24">
-                <div className="flex items-center justify-between gap-2 border-b pb-2" style={{ borderColor: "var(--color-border)" }}>
-                  <h2 className="text-sm font-bold flex items-center gap-2" style={{ color: "var(--color-ink)" }}>
-                    <Award size={18} style={{ color: "var(--color-coral)" }} />
-                    Nişanlar Sistemi
+              {/* Top Badges */}
+              <motion.section variants={itemVariants}>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-sm font-bold text-[var(--muted)] uppercase tracking-wider flex items-center gap-2">
+                    <Award size={14} /> Top Badges
                   </h2>
-                  
-                  {/* Hər iki fərqli nişan səhifəsinin keçidi bura yığıldı */}
-                  <div className="flex gap-2.5 text-xs font-semibold shrink-0">
-                    <Link
-                      href="/profile/my-badges"
-                      className="hover:underline transition-all"
-                      style={{ color: "var(--color-coral)" }}
-                    >
-                      mine
+                  {myBadges && myBadges.length > 0 && (
+                    <Link href="/profile/badges" className="text-xs font-semibold text-[var(--color-coral)] hover:underline flex items-center gap-1">
+                      View All <ChevronRight size={12} />
                     </Link>
-                    <span style={{ color: "var(--color-border)" }}>|</span>
-                    <Link
-                      href="/profile/badges"
-                      className="hover:underline transition-all"
-                      style={{ color: "var(--color-muted)" }}
-                    >
-                      view all →
-                    </Link>
-                  </div>
+                  )}
                 </div>
 
-                {/* Badges list dynamic grid */}
-                <div className="badge-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2">
-                  {/* Badge 1 */}
-                  <div className="flex items-center gap-3 p-2 rounded-lg transition-opacity" style={{ background: "color-mix(in srgb, var(--color-ink) 2%, transparent)", opacity: badges.includes("ATTENDEE") ? 1 : 0.35 }}>
-                    <CheckCircle2 size={20} style={{ color: "var(--color-coral)" }} />
-                    <span style={{ color: "var(--color-ink)", fontWeight: 600, fontSize: "0.9rem" }}>Attendee</span>
+                {badgesPending && <SkeletonCard className="h-24 w-full" />}
+                {badgesError && <p className="text-red-500 text-xs">Failed to load badges</p>}
+                
+                {myBadges?.length === 0 && (
+                  <div className="p-4 rounded-[16px] border border-[var(--line)] border-dashed bg-[var(--panel)] text-center text-[var(--muted)] text-xs">
+                    No badges earned yet.
                   </div>
-                  {/* Badge 2 */}
-                  <div className="flex items-center gap-3 p-2 rounded-lg transition-opacity" style={{ background: "color-mix(in srgb, var(--color-ink) 2%, transparent)", opacity: badges.includes("CREATOR") ? 1 : 0.35 }}>
-                    <Sparkles size={20} style={{ color: "var(--color-coral)" }} />
-                    <span style={{ color: "var(--color-ink)", fontWeight: 600, fontSize: "0.9rem" }}>Creator</span>
+                )}
+
+                {myBadges && myBadges.length > 0 && (
+                  <div className="grid grid-cols-3 gap-3">
+                    {myBadges.slice(0, 3).map((badge: string, idx: number) => (
+                      <div key={idx} className="aspect-square rounded-[16px] bg-[var(--panel)] border border-[var(--line)] flex flex-col items-center justify-center gap-2 hover:border-[var(--color-coral)]/50 transition-colors cursor-pointer group shadow-sm p-2 text-center">
+                        <Sparkles size={20} className="text-[var(--color-accent)] group-hover:scale-110 transition-transform" />
+                        <span className="text-[10px] font-bold text-[var(--muted)] group-hover:text-[var(--color-ink)] line-clamp-2 leading-tight">{badge}</span>
+                      </div>
+                    ))}
                   </div>
-                  {/* Badge 3 */}
-                  <div className="flex items-center gap-3 p-2 rounded-lg transition-opacity" style={{ background: "color-mix(in srgb, var(--color-ink) 2%, transparent)", opacity: badges.includes("HELPER") ? 1 : 0.35 }}>
-                    <Flag size={20} style={{ color: "var(--color-coral)" }} />
-                    <span style={{ color: "var(--color-ink)", fontWeight: 600, fontSize: "0.9rem" }}>Helper</span>
+                )}
+              </motion.section>
+
+              {/* Suggested Events */}
+              <motion.section variants={itemVariants}>
+                <h2 className="text-sm font-bold text-[var(--muted)] uppercase tracking-wider mb-4">
+                  Explore Events
+                </h2>
+                
+                {suggEventsPending && (
+                  <div className="flex flex-col gap-3">
+                    <SkeletonCard className="h-20 w-full" />
+                    <SkeletonCard className="h-20 w-full" />
                   </div>
+                )}
+
+                {suggestedEvents?.length === 0 && (
+                  <p className="text-xs text-[var(--muted)]">No events available right now.</p>
+                )}
+
+                {suggestedEvents && suggestedEvents.length > 0 && (
+                  <div className="flex flex-col gap-3">
+                    {suggestedEvents.map((event: any) => {
+                      const dateObj = new Date(event.startDateTime || Date.now());
+                      return (
+                        <div key={event.id} className="p-4 rounded-[16px] bg-[var(--panel)] border border-[var(--line)] hover:border-[var(--color-coral)]/50 transition-colors group shadow-sm flex flex-col justify-between">
+                          <h4 className="text-sm font-bold text-[var(--color-ink)] mb-1 group-hover:text-[var(--color-coral)] transition-colors line-clamp-1">{event.title}</h4>
+                          <div className="text-xs text-[var(--muted)] flex justify-between items-center mt-1">
+                            <span className="line-clamp-1 mr-2">{dateObj.toLocaleDateString()} • {event.category || "General"}</span>
+                            <Link href={`/events/${event.id}`}>
+                              <button className="text-[var(--color-coral)] font-semibold opacity-0 group-hover:opacity-100 transition-opacity">View</button>
+                            </Link>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </motion.section>
+
+              {/* Suggested Groups (MISSING ENDPOINT) */}
+              <motion.section variants={itemVariants}>
+                <h2 className="text-sm font-bold text-[var(--muted)] uppercase tracking-wider mb-4">
+                  Suggested Groups
+                </h2>
+                
+                <div className="p-4 rounded-[16px] border border-[var(--line)] border-dashed bg-[var(--panel)] text-center text-[var(--muted)] text-xs">
+                  Group recommendations coming soon.
                 </div>
-              </div>
+              </motion.section>
 
             </div>
-
           </div>
-        )}
+
+        </motion.div>
       </div>
     </SiteShell>
   );
