@@ -1,9 +1,8 @@
 /* EventSlider.module.css */
 
 .sliderContainer {
-  width: 100vw;
-  margin-left: calc(50% - 50vw);
-  margin-right: calc(50% - 50vw);
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
   overflow: visible;
   position: relative;
   background: transparent;
@@ -17,27 +16,82 @@
   opacity: 1;
 }
 
+.controls {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 8;
+  pointer-events: none;
+}
+
+.controls button {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  border: 1px solid rgba(185, 121, 255, 0.32);
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.075);
+  cursor: pointer;
+  pointer-events: auto;
+  backdrop-filter: blur(14px);
+  transition: transform 220ms ease, border-color 220ms ease, background 220ms ease;
+}
+
+.controls button:first-child {
+  margin-left: -14px;
+}
+
+.controls button:last-child {
+  margin-right: -14px;
+}
+
+.controls button:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 126, 21, 0.55);
+  background: rgba(255, 126, 21, 0.16);
+}
+
+.emptyState {
+  width: min(1180px, calc(100% - 32px));
+  margin: 16px auto 0;
+  padding: 22px;
+  border: 1px dashed rgba(185, 121, 255, 0.28);
+  border-radius: 18px;
+  color: #a99bb8;
+  background: rgba(255, 255, 255, 0.035);
+}
+
 .trackWrapper {
   width: 100%;
-  overflow-x: hidden;
+  overflow-x: auto;
   overflow-y: visible;
-  padding: 40px 0;
+  padding: 42px 0 28px;
   position: relative;
-  mask-image: linear-gradient(to right, transparent, black 3%, black 97%, transparent);
-  -webkit-mask-image: linear-gradient(to right, transparent, black 3%, black 97%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 2.5%, black 97.5%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 2.5%, black 97.5%, transparent);
+  scrollbar-width: none;
+}
+
+.trackWrapper::-webkit-scrollbar {
+  display: none;
 }
 
 .track {
   display: flex;
   width: max-content;
-  animation: slide 180s linear infinite;
+  animation: slide 165s linear infinite;
   padding: 0;
   margin: 0;
 }
 
-.marqueeGroup {
-  display: flex;
-  gap: 0;
+@media (hover: hover) {
+  .sliderContainer:hover .track {
+    animation-play-state: paused;
+  }
 }
 
 @keyframes slide {
