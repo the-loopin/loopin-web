@@ -70,13 +70,27 @@ export type ProfilePayload = {
   name: string;
   city: string;
   bio: string;
+  avatar?: string;
+  interests?: string[];
+  onlineStatus?: string;
 };
+
 
 export type GroupMemberItem = {
   id: string;
   groupId: string;
   userId: string;
   joinedAt: string;
+};
+
+export type UserSettings = {
+  emailNotifications: boolean;
+  publicProfile: boolean;
+};
+
+export type InterestItem = {
+  id: string;
+  label: string;
 };
 
 export async function registerUser(payload: { email: string; name: string }) {
@@ -141,6 +155,13 @@ export async function createGroup(payload: GroupPayload) {
 export async function getGroupsByEvent(eventId: string) {
   const response = await apiClient.get<GroupItem[]>(`/groups/by-event/${eventId}`);
   return response.data;
+}
+
+// Groups the current user belongs to (as admin or member) - powers the
+// "My Active Groups" panel on the profile page.
+export async function getMyGroups() {
+  const response = await apiClient.get<GroupItem[] | PageResponse<GroupItem>>("/me/groups");
+  return Array.isArray(response.data) ? response.data : response.data.content ?? [];
 }
 
 export async function getGroup(id: string) {
@@ -227,6 +248,36 @@ export async function updateProfile(payload: ProfilePayload) {
 
 export async function getBadges() {
   const response = await apiClient.get<string[]>("/me/badges");
+  return response.data;
+}
+
+// Notification / privacy preferences shown on the profile page.
+export async function getSettings() {
+  const response = await apiClient.get<UserSettings>("/me/settings");
+  return response.data;
+}
+
+export async function updateSettings(payload: Partial<UserSettings>) {
+  const response = await apiClient.patch<UserSettings>("/me/settings", payload);
+  return response.data;
+}
+
+// Full catalog of interests users can pick from (used to render the
+// "Interests" panel with the correct labels, even ones the user hasn't
+// selected yet).
+export async function getAvailableInterests() {
+  const response = await apiClient.get<InterestItem[]>("/interests");
+  return response.data;
+}
+
+// The IDs of interests the current user has selected.
+export async function getMyInterests() {
+  const response = await apiClient.get<string[]>("/me/interests");
+  return response.data;
+}
+
+export async function updateMyInterests(interestIds: string[]) {
+  const response = await apiClient.put<string[]>("/me/interests", { interestIds });
   return response.data;
 }
 

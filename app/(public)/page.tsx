@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { SiteShell } from "../site";
+
 import {
   ArrowUpRight,
   MapPin,
@@ -128,6 +129,7 @@ const mockEvents: EventCardItem[] = [
   }
 ];
 
+
 export default function PublicHomePage() {
   const [mounted, setMounted] = useState(false);
 
@@ -181,6 +183,7 @@ export default function PublicHomePage() {
         </div>
         <EventSlider events={mockEvents} />
       </div>
+
     </SiteShell>
   );
 }
