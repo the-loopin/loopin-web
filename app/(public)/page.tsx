@@ -3,17 +3,12 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { SiteShell } from "../site";
-import { Canvas } from "@react-three/fiber";
-import { Environment, PerspectiveCamera } from "@react-three/drei";
 import {
   ArrowUpRight,
-  Ticket,
-  Users,
-  ShieldCheck,
   MapPin,
 } from "lucide-react";
 import { EventSlider, EventCardItem } from "@/components/EventSlider/EventSlider";
-import { MatchArcs } from "@/components/three/MatchArcs";
+import BakuHeroMap from "@/components/ui/BakuHeroMap";
 
 // Mock suggested events matching backend JPA structure
 const mockEvents: EventCardItem[] = [
@@ -133,22 +128,6 @@ const mockEvents: EventCardItem[] = [
   }
 ];
 
-function MatchScene() {
-  return (
-    <>
-      <PerspectiveCamera makeDefault position={[0, 0.5, 3.5]} fov={45} />
-      <ambientLight intensity={1.2} />
-      <directionalLight position={[3, 6, 4]} intensity={2.5} color="#fff4dc" />
-      <pointLight position={[-2, 2, 1]} intensity={3} color="#b979ff" />
-      <pointLight position={[2, 1.5, -1]} intensity={2.5} color="#ff9900" />
-      <group position={[0, -0.2, 0]}>
-        <MatchArcs />
-      </group>
-      <Environment preset="city" />
-    </>
-  );
-}
-
 export default function PublicHomePage() {
   const [mounted, setMounted] = useState(false);
 
@@ -184,49 +163,24 @@ export default function PublicHomePage() {
               </span>
             </Link>
           </div>
-          <div className="hero-metrics">
-            <div className="metric-card">
-              <div className="metric-icon"><Ticket size={16} /></div>
-              <span>events this week</span>
-              <strong>128</strong>
-            </div>
-            <div className="metric-card">
-              <div className="metric-icon"><Users size={16} /></div>
-              <span>open groups</span>
-              <strong>42</strong>
-            </div>
-            <div className="metric-card">
-              <div className="metric-icon"><ShieldCheck size={16} /></div>
-              <span>reports resolved</span>
-              <strong>96%</strong>
-            </div>
-          </div>
         </div>
 
-        {/* 3D Match Animation */}
-        <div className="hero-scene">
-          {mounted && (
-            <Canvas shadows dpr={[1, 1.7]}>
-              <MatchScene />
-            </Canvas>
-          )}
+        {/* 3D Baku Map Visual */}
+        <div className="hero-scene !bg-transparent !border-none !shadow-none !rounded-none !p-0 select-none">
+          {mounted && <BakuHeroMap />}
         </div>
       </section>
 
       {/* Suggested Carousel Section */}
-      <div className="my-12">
-        <div className="flex justify-between items-center width-min(1180px, calc(100% - 32px)) mx-auto px-4 mb-4">
+      <div className="my-12 lg:my-20 xl:my-28 2xl:my-36">
+        <div className="flex justify-between items-center responsive-container mb-6">
           <div>
             <span className="text-xs text-[var(--color-coral)] font-bold tracking-widest uppercase">Suggestions</span>
             <h2 className="text-2xl font-extrabold text-[var(--color-ink)]">Suggested for your interests</h2>
           </div>
         </div>
-
         <EventSlider events={mockEvents} />
       </div>
-
-
     </SiteShell>
   );
 }
-
