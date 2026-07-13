@@ -326,6 +326,10 @@ export default function BakuHeroMapInner({ opportunities = [] }: BakuHeroMapInne
 
   const activePins = getActivePins();
   const activeConnections = getActiveConnections();
+  const mapBorderColor = hoveredPin?.type === "ACTIVITY" ? "#ff7e15" : "#b66dff";
+  const mapBorderGlow = hoveredPin?.type === "ACTIVITY"
+    ? "rgba(255, 126, 21, 0.22)"
+    : "rgba(182, 109, 255, 0.22)";
 
   // Create subtle floating particles
   const particles = Array.from({ length: 12 });
@@ -335,7 +339,8 @@ export default function BakuHeroMapInner({ opportunities = [] }: BakuHeroMapInne
       ref={containerRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      className="relative w-full h-full flex items-center justify-center p-4 min-h-[420px]"
+      style={{ clipPath: "inset(0 round 32px)" }}
+      className="relative isolate w-full h-full flex items-center justify-center min-h-[420px] overflow-hidden rounded-[32px]"
     >
       {/* Background Glows & Particle Effects */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-[32px] -z-10">
@@ -370,8 +375,13 @@ export default function BakuHeroMapInner({ opportunities = [] }: BakuHeroMapInne
 
       {/* Styled Glassmorphism Map Wrapper with Parallax */}
       <div
-        style={parallaxStyle}
-        className="relative w-full h-full rounded-[32px] border border-white/10 bg-black/40 backdrop-blur-md shadow-[0_0_50px_rgba(168,85,247,0.15)] overflow-hidden flex flex-col justify-end"
+        style={{
+          ...parallaxStyle,
+          borderColor: mapBorderColor,
+          boxShadow: `0 0 0 1px ${mapBorderColor}, 0 0 36px ${mapBorderGlow}`,
+          clipPath: "inset(0 round 32px)",
+        }}
+        className="relative w-full h-full rounded-[32px] border-[7px] bg-black/20 overflow-hidden flex flex-col justify-end transition-[border-color,box-shadow] duration-300"
       >
         {/* Map Container */}
         <div ref={mapContainerRef} className="absolute inset-0 w-full h-full rounded-[32px] overflow-hidden" />
@@ -470,6 +480,9 @@ export default function BakuHeroMapInner({ opportunities = [] }: BakuHeroMapInne
               if (!pos) return null;
 
               const isHovered = hoveredPin?.id === pin.id;
+              const markerColor = pin.type === "ACTIVITY" ? "#ff7e15" : "#b66dff";
+              const hoverColor = pin.type === "ACTIVITY" ? "#ffb15c" : "#d7b3ff";
+              const pulseColor = pin.type === "ACTIVITY" ? "rgba(255, 126, 21, 0.36)" : "rgba(182, 109, 255, 0.4)";
 
               return (
                 <div
@@ -486,18 +499,25 @@ export default function BakuHeroMapInner({ opportunities = [] }: BakuHeroMapInne
                 >
                   <div className="relative w-8 h-8 flex items-center justify-center">
                     {/* Outer glowing pulse ring */}
-                    <div className="pulse-ring-element absolute top-1/2 left-1/2 w-7 h-7 bg-purple-500/40 rounded-full" />
+                    <div
+                      className="pulse-ring-element absolute top-1/2 left-1/2 w-7 h-7 rounded-full"
+                      style={{ background: pulseColor }}
+                    />
                     
                     {/* Soft ambient purple glow */}
-                    <div className="absolute w-5 h-5 rounded-full bg-purple-600/30 filter blur-[3px] transition-transform duration-300 group-hover:scale-150" />
+                    <div
+                      className="absolute w-5 h-5 rounded-full filter blur-[3px] transition-transform duration-300 group-hover:scale-150"
+                      style={{ background: pulseColor }}
+                    />
 
                     {/* Central marker point */}
                     <div 
-                      className={`relative w-3.5 h-3.5 rounded-full border border-white/60 shadow-lg flex items-center justify-center transition-all duration-300 ${
-                        isHovered 
-                          ? "bg-cyan-400 scale-125 shadow-cyan-500/50" 
-                          : "bg-purple-600 group-hover:bg-purple-400 group-hover:scale-110 shadow-purple-900/50"
-                      }`}
+                      className="relative w-3.5 h-3.5 rounded-full border border-white/60 shadow-lg flex items-center justify-center transition-all duration-300 group-hover:scale-110"
+                      style={{
+                        background: isHovered ? hoverColor : markerColor,
+                        transform: isHovered ? "scale(1.25)" : undefined,
+                        boxShadow: `0 0 22px ${pulseColor}`,
+                      }}
                     >
                       <div className="w-1.5 h-1.5 rounded-full bg-white" />
                     </div>
@@ -519,14 +539,18 @@ export default function BakuHeroMapInner({ opportunities = [] }: BakuHeroMapInne
                     left: pinPositions[hoveredPin.id].x,
                     top: pinPositions[hoveredPin.id].y - 18,
                     transform: "translate(-50%, -100%)",
+                    borderColor: hoveredPin.type === "ACTIVITY" ? "rgba(255, 126, 21, 0.42)" : "rgba(182, 109, 255, 0.48)",
                   }}
                 >
                   {/* Category tag */}
                   <div className="flex items-center justify-between">
-                    <span className="text-[9px] font-bold tracking-widest text-purple-400 uppercase flex items-center gap-1">
-                      <Sparkles size={8} /> {hoveredPin.category}
+                    <span
+                      className="text-[9px] font-bold tracking-widest uppercase flex items-center gap-1"
+                      style={{ color: hoveredPin.type === "ACTIVITY" ? "#ff9f4a" : "#c58cff" }}
+                    >
+                      <Sparkles size={8} /> {hoveredPin.type === "EVENT" ? "Event" : "Activity"} - {hoveredPin.category}
                     </span>
-                    <span className="text-xs">{hoveredPin.icon}</span>
+                    <span className="text-[9px] uppercase text-gray-400">{hoveredPin.icon}</span>
                   </div>
 
                   {/* Title */}
@@ -537,15 +561,15 @@ export default function BakuHeroMapInner({ opportunities = [] }: BakuHeroMapInne
                   {/* Meta items */}
                   <div className="flex flex-col gap-1 text-[10px] text-gray-400">
                     <div className="flex items-center gap-1.5">
-                      <Calendar size={10} className="text-purple-400/80" />
+                      <Calendar size={10} style={{ color: hoveredPin.type === "ACTIVITY" ? "#ff9f4a" : "#c58cff" }} />
                       <span>{hoveredPin.time}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <Users size={10} className="text-cyan-400/80" />
+                      <Users size={10} style={{ color: hoveredPin.type === "ACTIVITY" ? "#ff9f4a" : "#c58cff" }} />
                       <span>{hoveredPin.attendees} people joined</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <MapPin size={10} className="text-purple-400/80" />
+                      <MapPin size={10} style={{ color: hoveredPin.type === "ACTIVITY" ? "#ff9f4a" : "#c58cff" }} />
                       <span className="truncate">{hoveredPin.name}</span>
                     </div>
                   </div>
