@@ -1,21 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { SiteShell } from "../site";
-import { Canvas, useFrame } from "@react-three/fiber";
-import { Environment, Float, Line, PerspectiveCamera, Text } from "@react-three/drei";
-import { Group, Mesh } from "three";
 import {
   ArrowUpRight,
-  Ticket,
-  Users,
-  ShieldCheck,
   MapPin,
-  Maximize2,
-  X
 } from "lucide-react";
 import { EventSlider, EventCardItem } from "@/components/EventSlider/EventSlider";
+import BakuHeroMap from "@/components/ui/BakuHeroMap";
 
 // Mock suggested events matching backend JPA structure
 const mockEvents: EventCardItem[] = [
@@ -135,119 +128,8 @@ const mockEvents: EventCardItem[] = [
   }
 ];
 
-function CityScene() {
-  const ringRef = useRef<Group>(null);
-  const pinsRef = useRef<Group>(null);
-  const pulseRef = useRef<Mesh>(null);
-
-  const buildings = useMemo(
-    () =>
-      Array.from({ length: 28 }, (_, index) => ({
-        x: (index % 7) * 0.78 - 2.35,
-        z: Math.floor(index / 7) * 0.72 - 1.15,
-        h: 0.24 + ((index * 37) % 8) * 0.075,
-        shade: index % 3,
-      })),
-    []
-  );
-
-  useFrame((state) => {
-    const t = state.clock.elapsedTime;
-    if (ringRef.current) ringRef.current.rotation.y = t * 0.18;
-    if (pinsRef.current) pinsRef.current.position.y = Math.sin(t * 1.4) * 0.04;
-    if (pulseRef.current) {
-      const scale = 1 + Math.sin(t * 2.6) * 0.08;
-      pulseRef.current.scale.set(scale, scale, scale);
-    }
-  });
-
-  return (
-    <>
-      <PerspectiveCamera makeDefault position={[3.2, 3.0, 4.0]} fov={36} />
-      <ambientLight intensity={0.8} />
-      <directionalLight position={[4, 8, 5]} intensity={2} color="#fff4dc" />
-      <pointLight position={[-3, 2, 2]} intensity={2.2} color="#b979ff" />
-      <pointLight position={[2.5, 1.6, -2.5]} intensity={1.8} color="#ff9900" />
-      <group rotation={[0, -0.48, 0]} position={[0, -0.18, 0]}>
-        <mesh receiveShadow position={[0, -0.04, 0]}>
-          <boxGeometry args={[6.5, 0.08, 3.9]} />
-          <meshStandardMaterial color="#101014" roughness={0.78} metalness={0.12} />
-        </mesh>
-
-        <group ref={ringRef} position={[0.25, 0.08, 0.15]}>
-          <mesh rotation={[Math.PI / 2, 0, 0]}>
-            <torusGeometry args={[1.62, 0.018, 16, 96]} />
-            <meshStandardMaterial color="#b979ff" emissive="#5b20a5" emissiveIntensity={0.5} />
-          </mesh>
-          <mesh rotation={[Math.PI / 2, 0, 0]}>
-            <torusGeometry args={[2.16, 0.012, 12, 96]} />
-            <meshStandardMaterial color="#ff9900" emissive="#7a3c00" emissiveIntensity={0.45} />
-          </mesh>
-        </group>
-
-        {buildings.map((building, index) => (
-          <Float key={index} speed={1.1 + (index % 4) * 0.2} floatIntensity={0.025} rotationIntensity={0.03}>
-            <mesh position={[building.x, building.h / 2, building.z]} castShadow>
-              <boxGeometry args={[0.34, building.h, 0.34]} />
-              <meshStandardMaterial
-                color={building.shade === 0 ? "#24212b" : building.shade === 1 ? "#1b2630" : "#2a2219"}
-                roughness={0.56}
-                metalness={0.2}
-              />
-            </mesh>
-          </Float>
-        ))}
-
-        <group ref={pinsRef}>
-          {[
-            [-1.8, 0.8, -0.7, "#b979ff"],
-            [0.25, 1.05, 0.58, "#ff9900"],
-            [1.9, 0.72, -0.24, "#21d6b5"],
-          ].map(([x, y, z, color], index) => (
-            <group key={index} position={[x as number, y as number, z as number]}>
-              <mesh>
-                <sphereGeometry args={[0.14, 28, 28]} />
-                <meshStandardMaterial color={color as string} emissive={color as string} emissiveIntensity={0.45} />
-              </mesh>
-              <mesh position={[0, -0.2, 0]} rotation={[Math.PI, 0, 0]}>
-                <coneGeometry args={[0.09, 0.22, 24]} />
-                <meshStandardMaterial color={color as string} emissive={color as string} emissiveIntensity={0.35} />
-              </mesh>
-            </group>
-          ))}
-        </group>
-
-        <Line
-          points={[
-            [-1.8, 0.86, -0.7],
-            [0.25, 1.1, 0.58],
-            [1.9, 0.78, -0.24],
-          ]}
-          color="#d9b8ff"
-          lineWidth={2}
-          transparent
-          opacity={0.72}
-        />
-
-        <mesh ref={pulseRef} position={[0.22, 0.14, 0.18]} rotation={[Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[0.55, 0.59, 72]} />
-          <meshStandardMaterial color="#ff9900" emissive="#ff9900" emissiveIntensity={0.42} transparent opacity={0.7} />
-        </mesh>
-
-        <Float speed={1.5} floatIntensity={0.08} rotationIntensity={0.04}>
-          <Text position={[0.22, 1.25, 0.18]} fontSize={0.28} color="#ffffff" anchorX="center" anchorY="middle">
-            live groups
-          </Text>
-        </Float>
-      </group>
-      <Environment preset="city" />
-    </>
-  );
-}
-
 export default function PublicHomePage() {
   const [mounted, setMounted] = useState(false);
-  const [isMapExpanded, setIsMapExpanded] = useState(false);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -281,109 +163,24 @@ export default function PublicHomePage() {
               </span>
             </Link>
           </div>
-          <div className="hero-metrics">
-            <div className="metric-card">
-              <div className="metric-icon"><Ticket size={16} /></div>
-              <span>events this week</span>
-              <strong>128</strong>
-            </div>
-            <div className="metric-card">
-              <div className="metric-icon"><Users size={16} /></div>
-              <span>open groups</span>
-              <strong>42</strong>
-            </div>
-            <div className="metric-card">
-              <div className="metric-icon"><ShieldCheck size={16} /></div>
-              <span>reports resolved</span>
-              <strong>96%</strong>
-            </div>
-          </div>
         </div>
 
-        {/* 3D Visualization + Map Container */}
-        <div className="hero-scene" style={{ cursor: 'pointer' }}>
-
-          {/* Polished placeholder — visible beneath the canvas until 3D loads */}
-          <div className="hero-viz-placeholder">
-            <div className="hero-viz-placeholder-ring">
-              <MapPin size={28} />
-            </div>
-            <span className="hero-viz-label">Interactive City View</span>
-          </div>
-
-          {/* Expand button */}
-          <div
-            style={{
-              position: 'absolute',
-              top: '14px',
-              right: '14px',
-              zIndex: 10,
-              background: 'color-mix(in srgb, var(--color-surface) 85%, transparent)',
-              borderRadius: '50%',
-              padding: '9px',
-              border: '1px solid var(--line)',
-              color: 'var(--color-ink)',
-              backdropFilter: 'blur(8px)',
-            }}
-            onClick={(e) => { e.stopPropagation(); setIsMapExpanded(true); }}
-            title="Expand Map"
-          >
-            <Maximize2 size={15} />
-          </div>
-
-          {/* Canvas — fills the container */}
-          <div onClick={() => setIsMapExpanded(true)} style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
-            {mounted && (
-              <Canvas shadows dpr={[1, 1.7]}>
-                <CityScene />
-              </Canvas>
-            )}
-          </div>
+        {/* 3D Baku Map Visual */}
+        <div className="hero-scene !bg-transparent !border-none !shadow-none !rounded-none !p-0 select-none">
+          {mounted && <BakuHeroMap />}
         </div>
       </section>
 
       {/* Suggested Carousel Section */}
-      <div className="my-12">
-        <div className="flex justify-between items-center width-min(1180px, calc(100% - 32px)) mx-auto px-4 mb-4">
+      <div className="my-12 lg:my-20 xl:my-28 2xl:my-36">
+        <div className="flex justify-between items-center responsive-container mb-6">
           <div>
             <span className="text-xs text-[var(--color-coral)] font-bold tracking-widest uppercase">Suggestions</span>
             <h2 className="text-2xl font-extrabold text-[var(--color-ink)]">Suggested for your interests</h2>
           </div>
         </div>
-
         <EventSlider events={mockEvents} />
       </div>
-
-      {/* Expanded 3D Map Modal */}
-      {isMapExpanded && (
-        <div className="map-modal-overlay">
-          <div className="map-modal-content">
-            <div className="p-4 border-b border-[var(--line)] flex justify-between items-center bg-[var(--color-surface)]">
-              <div>
-                <h3 className="text-lg font-bold text-[var(--color-ink)] flex items-center gap-2">
-                  <MapPin size={18} className="text-[var(--color-coral)]" />
-                  Expanded Loopin City Map View
-                </h3>
-                <p className="text-xs text-[var(--muted)]">View real-time event distributions across Baku</p>
-              </div>
-              <button
-                className="map-modal-close icon-button"
-                onClick={() => setIsMapExpanded(false)}
-              >
-                <X size={18} />
-              </button>
-            </div>
-            <div style={{ flex: 1, position: 'relative', background: '#070609' }}>
-              {mounted && (
-                <Canvas shadows dpr={[1, 1.7]}>
-                  <CityScene />
-                </Canvas>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </SiteShell>
   );
 }
-
