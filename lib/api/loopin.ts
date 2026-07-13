@@ -70,7 +70,11 @@ export type ProfilePayload = {
   name: string;
   city: string;
   bio: string;
+  avatar?: string;
+  interests?: string[];
+  onlineStatus?: string;
 };
+
 
 export type GroupMemberItem = {
   id: string;

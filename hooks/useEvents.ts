@@ -16,3 +16,12 @@ export function useEvent(eventId: string | undefined) {
 export function useRefreshEvents() {
   return useMutation({ mutationFn: async () => getEvents() });
 }
+
+import { getMyLoopedEvents } from "../lib/api/loopin";
+
+export function useMyLoopedEvents() {
+  return useQuery({
+    queryKey: ["myLoopedEvents"],
+    queryFn: getMyLoopedEvents,
+  });
+}
