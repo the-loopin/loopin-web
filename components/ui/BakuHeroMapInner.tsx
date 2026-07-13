@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calendar, Users, MapPin, Sparkles } from "lucide-react";
+import { EventCardItem } from "@/components/EventSlider/EventSlider";
 
 interface EventPin {
   id: string;
@@ -15,6 +16,7 @@ interface EventPin {
   attendees: number;
   icon: string;
   category: string;
+  type?: "EVENT" | "ACTIVITY";
 }
 
 const BakuEvents: EventPin[] = [
@@ -89,7 +91,22 @@ const Connections = [
   { from: "fountain", to: "portbaku" },
 ];
 
-export default function BakuHeroMapInner() {
+type BakuHeroMapInnerProps = {
+  opportunities?: EventCardItem[];
+};
+
+const formatPinTime = (value: string) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Soon";
+
+  return date.toLocaleString("en-US", {
+    weekday: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+export default function BakuHeroMapInner({ opportunities = [] }: BakuHeroMapInnerProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -99,6 +116,32 @@ export default function BakuHeroMapInner() {
   const [hoveredPin, setHoveredPin] = useState<EventPin | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [mapLoaded, setMapLoaded] = useState(false);
+
+  const mapPins = useMemo(() => {
+    const livePins = opportunities
+      .filter((item) => typeof item.latitude === "number" && typeof item.longitude === "number")
+      .slice(0, 8)
+      .map<EventPin>((item) => {
+        const type = item.type === "ACTIVITY" ? "ACTIVITY" : "EVENT";
+
+        return {
+          id: String(item.id),
+          name: item.address || item.city || "Baku",
+          coordinates: [item.longitude as number, item.latitude as number],
+          title: item.title,
+          time: formatPinTime(item.startDateTime),
+          attendees: item.interestsCount ?? 0,
+          icon: type === "ACTIVITY" ? "Activity" : "Event",
+          category: item.category || type,
+          type,
+        };
+      });
+
+    return livePins.length > 0 ? livePins : BakuEvents.map((pin, index) => ({
+      ...pin,
+      type: index % 2 === 0 ? "EVENT" as const : "ACTIVITY" as const,
+    }));
+  }, [opportunities]);
 
   // Resize listener to classify device type
   useEffect(() => {
@@ -242,13 +285,13 @@ export default function BakuHeroMapInner() {
   const getActivePins = () => {
     if (device === "mobile") {
       // Show only 3 central markers
-      return BakuEvents.filter(pin => ["fountain", "oldcity", "flametowers"].includes(pin.id));
+      return mapPins.slice(0, 3);
     }
     if (device === "tablet") {
       // Show 5 markers
-      return BakuEvents.filter(pin => pin.id !== "whitecity");
+      return mapPins.slice(0, 5);
     }
-    return BakuEvents;
+    return mapPins;
   };
 
   // Helper to filter active connections based on active pins
