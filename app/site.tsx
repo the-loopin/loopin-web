@@ -191,7 +191,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </nav>
-      <div className="mx-auto max-w-[1440px] px-4 pt-2 pb-8 sm:px-6 lg:px-8">{children}</div>
+      <div className="main-content-wrapper pt-2 pb-8">{children}</div>
     </main>
   );
 }
