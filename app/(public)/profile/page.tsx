@@ -221,7 +221,6 @@ export default function CompleteProfilePage() {
                 {loopedEventsList.length > 0 && (
                   <div className="flex flex-col gap-3">
                     {loopedEventsList.map((event) => {
-                      // eslint-disable-next-line react-hooks/purity
                       const dateObj = new Date(event.startDateTime || new Date().toISOString());
                       const month = dateObj.toLocaleString('en-US', { month: 'short' });
                       const day = dateObj.getDate();
@@ -387,7 +386,6 @@ export default function CompleteProfilePage() {
                 {suggestedEvents && suggestedEvents.length > 0 && (
                   <div className="flex flex-col gap-3">
                     {suggestedEvents.map((event) => {
-                      // eslint-disable-next-line react-hooks/purity
                       const dateObj = new Date(event.startDateTime || new Date().toISOString());
                       return (
                         <div key={event.id} className="p-4 rounded-[16px] bg-[var(--panel)] border border-[var(--line)] hover:border-[var(--color-coral)]/50 transition-colors group shadow-sm flex flex-col justify-between">

@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   ImagePlus,
-  MapPin,
   Trash2,
   User,
   Info,
@@ -228,6 +227,7 @@ export default function EditProfilePage() {
               <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center pt-2">
                 <div className="relative group shrink-0">
                   {avatarPreviewUrl ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
                     <img
                       className="h-28 w-28 rounded-full object-cover border-2 border-[var(--line)]"
                       src={avatarPreviewUrl}
@@ -325,7 +325,7 @@ export default function EditProfilePage() {
                 <div className="flex flex-col">
                   <h2 className="text-lg font-semibold" style={{ color: "var(--color-ink)" }}>Interests</h2>
                   <p className="text-xs font-medium mt-1" style={{ color: "var(--color-muted)" }}>
-                    Select topics you're interested in to get better recommendations.
+                    Select topics you&apos;re interested in to get better recommendations.
                   </p>
                 </div>
               </div>
