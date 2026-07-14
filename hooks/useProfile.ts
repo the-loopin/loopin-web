@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getCurrentUser, getProfile, UserItem, ProfilePayload } from "../lib/api/loopin";
+import { getCurrentUser, getProfile, UserItem, ProfilePayload } from "../lib/api";
 
 export function useProfile() {
   return useQuery<{ user: UserItem; profile: ProfilePayload }, Error>({
