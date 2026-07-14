@@ -1,5 +1,5 @@
 import React from "react";
-import { BadgeRarity } from "@/lib/data/mock-badges";
+import { BadgeRarity } from "@/lib/data/badge-catalog";
 import {
   Hand,
   Medal,
@@ -14,7 +14,10 @@ import {
   Ticket,
   Gift,
   HelpCircle,
-  LucideIcon
+  LucideIcon,
+  Sparkles,
+  CheckCircle2,
+  Flag
 } from "lucide-react";
 
 interface BadgeIconProps {
@@ -39,6 +42,9 @@ const iconMap: Record<string, LucideIcon> = {
   "ticket": Ticket,
   "gift": Gift,
   "secret": HelpCircle,
+  "sparkles": Sparkles,
+  "check": CheckCircle2,
+  "flag": Flag,
 };
 
 export function BadgeIcon({ iconName, rarity, size = 64, className = "", isLocked = false }: BadgeIconProps) {

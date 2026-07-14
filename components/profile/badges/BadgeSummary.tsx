@@ -3,16 +3,12 @@
 import { motion } from "framer-motion";
 
 interface BadgeSummaryProps {
-  totalXP: number;
   unlockedCount: number;
   totalCount: number;
 }
 
-export function BadgeSummary({ totalXP, unlockedCount, totalCount }: BadgeSummaryProps) {
-  // Simple level calculation for mock data
-  const level = Math.max(1, Math.floor(totalXP / 100));
-  const nextLevelXP = level * 100 + 100;
-  const progress = (totalXP - (level * 100)) / 100;
+export function BadgeSummary({ unlockedCount, totalCount }: BadgeSummaryProps) {
+  const progress = totalCount > 0 ? unlockedCount / totalCount : 0;
 
   return (
     <motion.div 
@@ -27,21 +23,13 @@ export function BadgeSummary({ totalXP, unlockedCount, totalCount }: BadgeSummar
             <div className="w-24 h-24 rounded-full border-4 border-[var(--color-teal)] flex items-center justify-center bg-[color-mix(in_srgb,var(--color-teal)_10%,transparent)] shadow-[0_0_20px_color-mix(in_srgb,var(--color-teal)_20%,transparent)]">
               <span className="text-4xl">👑</span>
             </div>
-            <div className="absolute -bottom-2 -right-2 bg-[var(--color-teal)] text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
-              Lvl {level}
-            </div>
           </div>
           
           <div className="flex flex-col text-center md:text-left">
-            <h2 className="text-2xl font-extrabold text-[var(--color-ink)]">Level {level} Explorer</h2>
-            <p className="text-[var(--muted)] text-sm mb-6">Complete activities, connect with others, and explore your city to earn more badges. Your achievements will appear here.</p>
+            <h2 className="text-2xl font-extrabold text-[var(--color-ink)]">Community Explorer</h2>
+            <p className="text-[var(--muted)] text-sm mb-6 max-w-md">Complete activities, connect with others, and explore your city to earn more badges. Your achievements will appear here.</p>
             
             <div className="flex gap-4 justify-center md:justify-start">
-              <div className="flex flex-col">
-                <span className="text-xl font-bold text-[var(--color-coral)]">{totalXP}</span>
-                <span className="text-xs text-[var(--muted)] uppercase tracking-wider">Total XP</span>
-              </div>
-              <div className="w-px bg-[var(--line)]"></div>
               <div className="flex flex-col">
                 <span className="text-xl font-bold text-[var(--color-ink)]">{unlockedCount}/{totalCount}</span>
                 <span className="text-xs text-[var(--muted)] uppercase tracking-wider">Badges</span>
@@ -52,8 +40,8 @@ export function BadgeSummary({ totalXP, unlockedCount, totalCount }: BadgeSummar
 
         <div className="w-full md:w-1/3 flex flex-col justify-center h-full pt-2">
           <div className="flex justify-between text-xs font-bold text-[var(--muted)] mb-2">
-            <span>Progress to Lvl {level + 1}</span>
-            <span>{totalXP} / {nextLevelXP} XP</span>
+            <span>Collection Progress</span>
+            <span>{unlockedCount} / {totalCount} Badges</span>
           </div>
           <div className="h-3 w-full bg-[color-mix(in_srgb,var(--color-ink)_10%,transparent)] rounded-full overflow-hidden">
             <motion.div 
