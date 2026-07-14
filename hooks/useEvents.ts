@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { getEventById, getEvents } from "../lib/api";
+import { getEvent, getEvents } from "../lib/api";
 
 export function useEvents() {
   return useQuery({ queryKey: ["events"], queryFn: () => getEvents() });
@@ -8,7 +8,7 @@ export function useEvents() {
 export function useEvent(eventId: string | undefined) {
   return useQuery({
     queryKey: ["events", eventId],
-    queryFn: () => getEventById(eventId ?? ""),
+    queryFn: () => getEvent(eventId ?? ""),
     enabled: Boolean(eventId),
   });
 }
