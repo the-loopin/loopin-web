@@ -1,35 +1,21 @@
 "use client";
 
-import {
-  type FormEvent,
-  useEffect,
-  useState,
-} from "react";
+import { type FormEvent, useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  AlignLeft,
-  ArrowLeft,
-  ImagePlus,
-  MapPin,
-  Trash2,
-  User,
-} from "lucide-react";
+import { AlignLeft, ArrowLeft, ImagePlus, MapPin, Trash2, User } from "lucide-react";
 
 import {
   getProfile,
   removeProfileAvatar,
   updateProfile,
   updateProfileAvatar,
+  updateMyInterests
 } from "@/lib/api";
 import { withUploadedMedia } from "@/lib/media/withUploadedMedia";
 
-import {
-  ErrorMessage,
-  Input,
-  SiteShell,
-  Textarea,
-} from "../../../site";
+import { ErrorMessage, Input, SiteShell, Textarea } from "../../../site";
+import { InterestsSelector } from "@/components/ui/InterestsSelector";
 
 type ProfileForm = {
   name: string;
@@ -40,48 +26,46 @@ type ProfileForm = {
 export default function EditProfilePage() {
   const router = useRouter();
 
-  const [form, setForm] =
-    useState<ProfileForm>({
-      name: "",
-      city: "",
-      bio: "",
-    });
+  const [form, setForm] = useState<ProfileForm>({
+    name: "",
+    city: "",
+    bio: "",
+  });
 
-  const [currentAvatarId, setCurrentAvatarId] =
-    useState<string | null>(null);
-  const [avatarFile, setAvatarFile] =
-    useState<File | null>(null);
-  const [avatarPreviewUrl, setAvatarPreviewUrl] =
-    useState("");
-  const [removeAvatarRequested, setRemoveAvatarRequested] =
-    useState(false);
-  const [loading, setLoading] =
-    useState(true);
-  const [saving, setSaving] =
-    useState(false);
-  const [error, setError] =
-    useState("");
+  const [selectedInterestIds, setSelectedInterestIds] = useState<string[]>([]);
+  const [initialInterestIds, setInitialInterestIds] = useState<string[]>([]);
+  const [initialForm, setInitialForm] = useState<ProfileForm | null>(null);
+
+  const [currentAvatarId, setCurrentAvatarId] = useState<string | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState("");
+  const [removeAvatarRequested, setRemoveAvatarRequested] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     async function loadProfile() {
       try {
-        const profile =
-          await getProfile();
+        const profile = await getProfile();
 
-        setForm({
+        const loadedForm = {
           name: profile.name ?? "",
           city: profile.city ?? "",
           bio: profile.bio ?? "",
-        });
+        };
 
-        setCurrentAvatarId(
-          profile.avatar?.id ?? null,
-        );
+        setForm(loadedForm);
+        setInitialForm(loadedForm);
+
+        setCurrentAvatarId(profile.avatar?.id ?? null);
+
+        const interestIds = profile.interests?.map(i => i.id || "").filter(Boolean) || [];
+        setSelectedInterestIds(interestIds);
+        setInitialInterestIds(interestIds);
       } catch (caught) {
         setError(
-          caught instanceof Error
-            ? caught.message
-            : "Failed to load profile.",
+          caught instanceof Error ? caught.message : "Failed to load profile."
         );
       } finally {
         setLoading(false);
@@ -91,31 +75,46 @@ export default function EditProfilePage() {
     void loadProfile();
   }, []);
 
-  function selectAvatar(
-    file: File | null,
-  ) {
+  function selectAvatar(file: File | null) {
     if (avatarPreviewUrl) {
-      URL.revokeObjectURL(
-        avatarPreviewUrl,
-      );
+      URL.revokeObjectURL(avatarPreviewUrl);
     }
 
     setAvatarFile(file);
-    setAvatarPreviewUrl(
-      file
-        ? URL.createObjectURL(file)
-        : "",
-    );
+    setAvatarPreviewUrl(file ? URL.createObjectURL(file) : "");
 
     if (file) {
       setRemoveAvatarRequested(false);
     }
   }
 
-  async function handleSubmit(
-    event: FormEvent<HTMLFormElement>,
-  ) {
+  const hasChanges = useMemo(() => {
+    if (!initialForm) return false;
+    const formChanged = 
+      form.name !== initialForm.name || 
+      form.city !== initialForm.city || 
+      form.bio !== initialForm.bio;
+    const avatarChanged = avatarFile !== null || removeAvatarRequested;
+    const interestsChanged = 
+      selectedInterestIds.length !== initialInterestIds.length || 
+      !selectedInterestIds.every(id => initialInterestIds.includes(id));
+    return formChanged || avatarChanged || interestsChanged;
+  }, [form, initialForm, avatarFile, removeAvatarRequested, selectedInterestIds, initialInterestIds]);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasChanges && !saving) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasChanges, saving]);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!hasChanges) return;
 
     setSaving(true);
     setError("");
@@ -127,6 +126,14 @@ export default function EditProfilePage() {
         bio: form.bio.trim() || undefined,
       });
 
+      const interestsChanged = 
+        selectedInterestIds.length !== initialInterestIds.length || 
+        !selectedInterestIds.every(id => initialInterestIds.includes(id));
+      
+      if (interestsChanged) {
+        await updateMyInterests(selectedInterestIds);
+      }
+
       if (removeAvatarRequested) {
         await removeProfileAvatar();
       } else if (avatarFile) {
@@ -135,14 +142,9 @@ export default function EditProfilePage() {
           purpose: "PROFILE_AVATAR",
           commit: (mediaId) => {
             if (!mediaId) {
-              throw new Error(
-                "Avatar upload did not return a media ID.",
-              );
+              throw new Error("Avatar upload did not return a media ID.");
             }
-
-            return updateProfileAvatar(
-              mediaId,
-            );
+            return updateProfileAvatar(mediaId);
           },
         });
       }
@@ -150,11 +152,8 @@ export default function EditProfilePage() {
       router.push("/profile");
     } catch (caught) {
       setError(
-        caught instanceof Error
-          ? caught.message
-          : "Failed to update profile.",
+        caught instanceof Error ? caught.message : "Failed to update profile."
       );
-    } finally {
       setSaving(false);
     }
   }
