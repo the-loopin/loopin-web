@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createGroup, getGroupById, getGroupsByEvent } from "../lib/api/groups";
-import type { EventGroup } from "../lib/types/group";
+import { createGroup, getGroupById, getGroupsByEvent, CreateGroupRequest } from "../lib/api";
 
 export function useGroupsByEvent(eventId: string | undefined) {
   return useQuery({
@@ -22,7 +21,7 @@ export function useCreateGroup() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (group: EventGroup) => createGroup(group),
+    mutationFn: (group: CreateGroupRequest) => createGroup(group),
     onSuccess: (_, group) => {
       void queryClient.invalidateQueries({ queryKey: ["groups", group.eventId] });
     },
