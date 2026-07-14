@@ -18,8 +18,31 @@ export type EventPayload = {
   status: string;
 };
 
-export type EventItem = EventPayload & {
+export type MediaReference = {
+  id: string;
+  contentType: string;
+  sizeBytes: number;
+};
+
+export type EventCreatePayload = Omit<
+  EventPayload,
+  "imageUrl" | "status"
+> & {
+  imageMediaId?: string | null;
+  interestIds?: string[];
+};
+
+export type EventItem = Omit<
+  EventPayload,
+  "imageUrl" | "status"
+> & {
   id: string | number;
+
+  image?: MediaReference | null;
+
+  imageUrl?: string | null;
+
+  status: string;
   displayCategory?: string;
   loopedCount?: number;
   createdAt?: string;
@@ -133,8 +156,14 @@ export async function getEvent(id: string) {
   return response.data;
 }
 
-export async function createEvent(payload: EventPayload) {
-  const response = await apiClient.post<EventItem>("/events", payload);
+export async function createEvent(
+  payload: EventCreatePayload,
+) {
+  const response = await apiClient.post<EventItem>(
+    "/events",
+    payload,
+  );
+
   return response.data;
 }
 
@@ -323,8 +352,13 @@ export async function getMyLoopedEvents() {
   return response.data;
 }
 
+export type MediaPurpose =
+  | "EVENT_IMAGE"
+  | "PROFILE_AVATAR"
+  | "GROUP_IMAGE";
+
 export type MediaUploadRequest = {
-  purpose: "EVENT_IMAGE" | "PROFILE_AVATAR" | "GROUP_IMAGE";
+  purpose: MediaPurpose;
   fileName: string;
   contentType: string;
   sizeBytes: number;
@@ -334,15 +368,37 @@ export type MediaUploadResponse = {
   mediaId: string;
   uploadUrl: string;
   expiresAt: string;
-  requiredHeaders?: Record<string, string>;
+  requiredHeaders: Record<string, string>;
 };
 
-export async function requestMediaUpload(payload: MediaUploadRequest) {
-  const response = await apiClient.post<MediaUploadResponse>("/media/uploads", payload);
+export type MediaCompletionResponse = {
+  mediaId: string;
+  status: "UPLOADED" | "ATTACHED";
+};
+
+export async function requestMediaUpload(
+  payload: MediaUploadRequest,
+) {
+  const response =
+    await apiClient.post<MediaUploadResponse>(
+      "/media/uploads",
+      payload,
+    );
+
   return response.data;
 }
 
-export async function completeMediaUpload(mediaId: string) {
-  const response = await apiClient.post<{ mediaId: string; status: string }>(`/media/uploads/${mediaId}/complete`);
+export async function completeMediaUpload(
+  mediaId: string,
+) {
+  const response =
+    await apiClient.post<MediaCompletionResponse>(
+      `/media/uploads/${mediaId}/complete`,
+    );
+
   return response.data;
+}
+
+export async function deleteMedia(mediaId: string) {
+  await apiClient.delete(`/media/${mediaId}`);
 }
