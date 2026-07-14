@@ -26,8 +26,6 @@ function getWebSocketUrl(): string {
 
   const apiBaseUrl = getApiBaseUrl();
 
-  // REST URL /api/v1 ilə bitirsə, yalnız /v1 hissəsini çıxar.
-  // /api context path qalmalıdır.
   const serverBaseUrl = apiBaseUrl.replace(/\/v1$/, "");
 
   return `${serverBaseUrl}/ws`;
