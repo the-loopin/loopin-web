@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { createGroup } from "@/lib/api/loopin";
+import { createGroup, GroupSize } from "@/lib/api";
 import { ErrorMessage, Input, PageHeader, Panel, Select, SiteShell, Textarea } from "../../../../../site";
 
 export default function NewGroupPage() {
@@ -23,7 +23,7 @@ export default function NewGroupPage() {
       const group = await createGroup({
         eventId: params.eventId,
         title: form.title,
-        groupSize: form.groupSize,
+        groupSize: form.groupSize as GroupSize,
         maxMembers: Number(form.maxMembers),
         groupNote: form.groupNote,
       });
