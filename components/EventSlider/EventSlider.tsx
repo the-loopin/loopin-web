@@ -69,45 +69,6 @@ const formatEventDateTime = (startStr: string, endStr?: string) => {
   }
 };
 
-// Helper to get card body gradient class name based on variant, category, or index rotation
-const getBodyGradientClass = (event: EventCardItem, index: number) => {
-  if (event.coverVariant) {
-    const match = event.coverVariant.match(/\d+/);
-    if (match) {
-      const idx = parseInt(match[0], 10) - 1;
-      const variants = [
-        "bodyGradientTech",
-        "bodyGradientOutdoor",
-        "bodyGradientArt",
-        "bodyGradientSocial",
-        "bodyGradientMusic",
-        "bodyGradientSport",
-      ];
-      if (idx >= 0 && idx < variants.length) {
-        return variants[idx];
-      }
-    }
-  }
-
-  const cat = event.category?.toUpperCase() || "";
-  if (cat.includes("TECH")) return "bodyGradientTech";
-  if (cat.includes("OUTDOOR")) return "bodyGradientOutdoor";
-  if (cat.includes("ART")) return "bodyGradientArt";
-  if (cat.includes("SOCIAL")) return "bodyGradientSocial";
-  if (cat.includes("MUSIC")) return "bodyGradientMusic";
-  if (cat.includes("SPORT")) return "bodyGradientSport";
-
-  const fallbackVariants = [
-    "bodyGradientTech",
-    "bodyGradientOutdoor",
-    "bodyGradientArt",
-    "bodyGradientSocial",
-    "bodyGradientMusic",
-    "bodyGradientSport",
-  ];
-  return fallbackVariants[index % fallbackVariants.length];
-};
-
 // Default interests mapping for fallback cases when interests are not explicitly provided
 const DEFAULT_INTERESTS: Record<string, string[]> = {
   TECH: ["AI", "Networking", "Startups"],
@@ -129,30 +90,6 @@ const getEventInterests = (event: EventCardItem) => {
     }
   }
   return ["Networking", "Social", "Community"];
-};
-
-// Helper to get category color styling
-const getCategoryColor = (category: string) => {
-  const cat = category.toUpperCase();
-  if (cat.includes("TECH")) {
-    return { text: "#f472b6", bg: "rgba(244, 114, 182, 0.08)", border: "rgba(244, 114, 182, 0.3)" };
-  }
-  if (cat.includes("ART")) {
-    return { text: "#fb923c", bg: "rgba(251, 146, 60, 0.08)", border: "rgba(251, 146, 60, 0.3)" };
-  }
-  if (cat.includes("SOCIAL")) {
-    return { text: "#c084fc", bg: "rgba(192, 132, 252, 0.08)", border: "rgba(192, 132, 252, 0.3)" };
-  }
-  if (cat.includes("OUTDOOR")) {
-    return { text: "#60a5fa", bg: "rgba(96, 165, 250, 0.08)", border: "rgba(96, 165, 250, 0.3)" };
-  }
-  if (cat.includes("MUSIC")) {
-    return { text: "#f43f5e", bg: "rgba(244, 63, 94, 0.08)", border: "rgba(244, 63, 94, 0.3)" };
-  }
-  if (cat.includes("SPORT")) {
-    return { text: "#2dd4bf", bg: "rgba(45, 212, 191, 0.08)", border: "rgba(45, 212, 191, 0.3)" };
-  }
-  return { text: "#4DFFD2", bg: "rgba(77, 255, 210, 0.08)", border: "rgba(77, 255, 210, 0.3)" };
 };
 
 export const EventSlider: React.FC<EventSliderProps> = ({ events, onJoin }) => {
