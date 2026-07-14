@@ -4,11 +4,6 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowUpRight, MapPin } from "lucide-react";
 import { SiteShell } from "../site";
-
-import {
-  ArrowUpRight,
-  MapPin,
-} from "lucide-react";
 import { EventSlider, EventCardItem } from "@/components/EventSlider/EventSlider";
 import BakuHeroMap from "@/components/ui/BakuHeroMap";
 import { EventItem, getEvents } from "@/lib/api/loopin";
