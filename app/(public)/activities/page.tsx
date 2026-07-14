@@ -13,7 +13,7 @@ import {
   EventCategory,
   SpringPage,
 } from "@/lib/api";
-import { assertEventImageContract } from "@/lib/media/eventImageContract";
+import { withUploadedMedia } from "@/lib/media/withUploadedMedia";
 import { getAuthToken } from "@/lib/auth/session";
 import LocationPickerMap from "@/components/ui/LocationPickerMap";
 import { EmptyState, ErrorMessage, Input, PageHeader, Select, SiteShell } from "../../site";
@@ -122,8 +122,6 @@ function createInitialForm(): EventPayload {
     isFree: true,
     price: 0,
     organizerName: "Leo Test",
-    imageUrl: "https://images.unsplash.com/photo-1452587925148-ce544e77e70d",
-    status: "PUBLISHED",
   };
 }
 
@@ -210,6 +208,8 @@ export default function ActivitiesPage() {
   const router = useRouter();
   const [activities, setActivities] = useState<EventItem[]>([]);
   const [pageData, setPageData] = useState<SpringPage<EventItem> | null>(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const pageSize = 20;
   const [form, setForm] = useState(() => createInitialForm());
   const [customCategory, setCustomCategory] = useState("");
   const [formErrors, setFormErrors] = useState<FormErrors>({});
@@ -226,23 +226,37 @@ export default function ActivitiesPage() {
   const [actionToast, setActionToast] = useState<ActionToast | null>(null);
   const [activeCreateStep, setActiveCreateStep] = useState(createSteps[0].href);
 
-  async function loadActivities() {
+  async function loadActivities(page = 0) {
     setLoading(true);
     setError("");
+
     try {
-      const params = {
-        type: "ACTIVITY" as const,
+      const data = await getEvents({
+        type: "ACTIVITY",
         city: filters.city || undefined,
-        category: filters.category ? (filters.category as EventCategory) : undefined,
+        category: filters.category
+          ? (filters.category as EventCategory)
+          : undefined,
         search: filters.search || undefined,
-        isFree: filters.isFree === "true" ? true : filters.isFree === "false" ? false : undefined,
-        page: 0,
-      };
-      const data = await getEvents(params);
+        isFree:
+          filters.isFree === "true"
+            ? true
+            : filters.isFree === "false"
+              ? false
+              : undefined,
+        page,
+        size: pageSize,
+      });
+
       setPageData(data);
       setActivities(data.content);
+      setCurrentPage(data.number ?? page);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Could not load activities.");
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Could not load activities.",
+      );
     } finally {
       setLoading(false);
     }
@@ -250,9 +264,16 @@ export default function ActivitiesPage() {
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    void loadActivities();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.category, filters.city, filters.isFree, filters.search]);
+    setCurrentPage(0);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadActivities(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    filters.category,
+    filters.city,
+    filters.isFree,
+    filters.search,
+  ]);
 
   useEffect(() => {
   if (!getAuthToken()) {
@@ -475,47 +496,51 @@ export default function ActivitiesPage() {
     setError("");
 
     try {
-      assertEventImageContract(imageFile);
-
-      const created = await createEvent({
-        title: form.title.trim(),
-        description: form.description.trim(),
-        type: "ACTIVITY",
-        category: form.category,
-        city: form.city.trim(),
-        address: form.address.trim(),
-        latitude: form.latitude,
-        longitude: form.longitude,
-        startDateTime: form.startDateTime,
-        endDateTime: form.endDateTime,
-        isFree: form.isFree,
-        price: form.isFree ? 0 : Number(form.price),
-        organizerName: form.organizerName.trim(),
-        interestIds: [],
+      const created = await withUploadedMedia({
+        file: imageFile,
+        purpose: "EVENT_IMAGE",
+        commit: (imageMediaId) =>
+          createEvent({
+            title: form.title.trim(),
+            description: form.description.trim(),
+            type: "ACTIVITY",
+            category: form.category,
+            city: form.city.trim(),
+            address: form.address.trim(),
+            latitude: form.latitude,
+            longitude: form.longitude,
+            startDateTime: form.startDateTime,
+            endDateTime: form.endDateTime,
+            isFree: form.isFree,
+            price: form.isFree ? 0 : Number(form.price),
+            organizerName: form.organizerName.trim(),
+            imageMediaId,
+            interestIds: [],
+          }),
       });
 
-      /*
-       * createEvent succeeded, so the backend attached the media to the event.
-       * Do not delete it in the catch block after this point.
-       */
       const displayCategory =
-        form.category === "OTHER" ? customCategory.trim() : "";
+        form.category === "OTHER"
+          ? customCategory.trim()
+          : "";
 
       const createdForDisplay: EventItem = {
         ...created,
         displayCategory,
-        /*
-         * The backend currently does not return a display URL for MediaAsset.
-         * Keep the local preview for the newly created card until the page reloads.
-         */
+        // The backend currently returns media metadata but no public
+        // delivery URL. Keep the local object URL until the next reload.
         imageUrl:
           imagePreviewUrl ||
-          created.imageUrl ||
-          form.imageUrl,
+          created.imageUrl,
       };
 
-      setActivities((current) => [createdForDisplay, ...current]);
-      setSelectedActivityId(createdForDisplay.id);
+      setActivities((current) => [
+        createdForDisplay,
+        ...current,
+      ]);
+      setSelectedActivityId(
+        createdForDisplay.id,
+      );
       setShowCreateForm(false);
 
       setForm({
@@ -580,7 +605,7 @@ export default function ActivitiesPage() {
   const selectedMapUrl = getMapUrl(selectedLocation.latitude, selectedLocation.longitude);
   const pickerLatitude = form.latitude ?? bakuCenter.latitude;
   const pickerLongitude = form.longitude ?? bakuCenter.longitude;
-  const activityPreviewImage = imagePreviewUrl || form.imageUrl;
+  const activityPreviewImage = imagePreviewUrl;
 
   function toggleMoreInfo(activityId: EventItem["id"]) {
     setFlippedActivityIds((current) => ({ ...current, [String(activityId)]: !current[String(activityId)] }));
@@ -603,7 +628,6 @@ export default function ActivitiesPage() {
   function removeSelectedImage() {
     setImageFile(null);
     setImagePreviewUrl("");
-    updateFormField("imageUrl", "");
   }
 
   function handleMapLocationChange(nextLatitude: number, nextLongitude: number) {
@@ -859,38 +883,51 @@ export default function ActivitiesPage() {
                   <span><ImagePlus size={18} /></span>
                   <div>
                     <h3>Activity Image</h3>
-                    <p>Add a cover image that shows the mood or place.</p>
+                    <p>Upload a JPEG, PNG or WebP cover image.</p>
                   </div>
                 </div>
                 <div className="image-upload-panel image-upload-panel-large">
                   <div className="image-upload-preview">
-                    {activityPreviewImage ? <img src={activityPreviewImage} alt="Activity preview" /> : <ImagePlus size={28} />}
+                    {activityPreviewImage ? (
+                      <>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={activityPreviewImage} alt="Activity preview" />
+                      </>
+                    ) : (
+                      <ImagePlus size={28} />
+                    )}
                   </div>
                   <div className="image-upload-body">
                     <strong>{imageFile ? imageFile.name : "Cover image"}</strong>
-                    <span>Local file attachment is unavailable until the API supports media attachment. Use an image URL instead.</span>
+                    <span>The image is uploaded first and attached to the Activity by media ID.</span>
                     <div className="image-upload-actions">
-                      <label className="upload-button opacity-50 cursor-not-allowed" aria-disabled="true">
-                        <ImagePlus size={16} /> File uploads unavailable
+                      <label className="upload-button">
+                        <ImagePlus size={16} /> Choose image
                         <input
                           accept="image/jpeg,image/png,image/webp"
                           type="file"
-                          disabled
-                          onChange={(event) => {
-                            const file = event.target.files?.[0] ?? null;
+                          onChange={(changeEvent) => {
+                            const file = changeEvent.target.files?.[0] ?? null;
+                            if (imagePreviewUrl) {
+                              URL.revokeObjectURL(imagePreviewUrl);
+                            }
                             setImageFile(file);
-                            setImagePreviewUrl(file ? URL.createObjectURL(file) : "");
+                            setImagePreviewUrl(
+                              file ? URL.createObjectURL(file) : "",
+                            );
                           }}
                         />
                       </label>
                       {activityPreviewImage ? (
-                        <button className="secondary-button" type="button" onClick={removeSelectedImage}>Remove</button>
+                        <button
+                          className="secondary-button"
+                          type="button"
+                          onClick={removeSelectedImage}
+                        >
+                          Remove
+                        </button>
                       ) : null}
                     </div>
-                    <label className="form-field mt-3">
-                      <span>Image URL</span>
-                      <input type="url" value={form.imageUrl} placeholder="https://example.com/cover.jpg" onChange={(event) => updateFormField("imageUrl", event.target.value)} />
-                    </label>
                   </div>
                 </div>
               </section>
@@ -1070,6 +1107,35 @@ export default function ActivitiesPage() {
               );
             }) : <EmptyState>No activities matched your filters.</EmptyState>}
           </div>
+
+          {pageData && pageData.totalPages > 1 ? (
+            <nav
+              className="mt-5 flex items-center justify-between gap-3"
+              aria-label="Activity pages"
+            >
+              <span className="text-sm text-[var(--muted)]">
+                Page {pageData.number + 1} of {pageData.totalPages}
+              </span>
+              <div className="flex gap-2">
+                <button
+                  className="secondary-button"
+                  type="button"
+                  disabled={pageData.first || loading}
+                  onClick={() => void loadActivities(currentPage - 1)}
+                >
+                  Previous
+                </button>
+                <button
+                  className="secondary-button"
+                  type="button"
+                  disabled={pageData.last || loading}
+                  onClick={() => void loadActivities(currentPage + 1)}
+                >
+                  Next
+                </button>
+              </div>
+            </nav>
+          ) : null}
         </div>
 
         {selectedActivity && (
