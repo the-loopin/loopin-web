@@ -165,7 +165,7 @@ export default function CompleteProfilePage() {
           {/* SECTION 2 — QUICK STATS */}
           <motion.section variants={containerVariants} className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
             {[
-              { label: "Events Joined", value: loopedEventsList.length, icon: Calendar, pending: eventsPending },
+              { label: "Events Joined", value: upcomingEvents?.totalElements ?? 0, icon: Calendar, pending: eventsPending },
               { label: "Active Groups", value: "-", icon: Users, pending: false }, // Explicitly missing backend endpoint
               { label: "Badges Earned", value: myBadges?.length ?? 0, icon: Award, pending: badgesPending },
             ].map((stat, i) => (
