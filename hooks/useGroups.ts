@@ -1,10 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createGroup, getGroupById, getGroupsByEvent, CreateGroupRequest } from "../lib/api";
+import { createGroup, getGroupById, CreateGroupRequest } from "../lib/api";
 
 export function useGroupsByEvent(eventId: string | undefined) {
   return useQuery({
     queryKey: ["groups", eventId],
-    queryFn: () => getGroupsByEvent(eventId ?? ""),
+    queryFn: () => Promise.resolve([]),
     enabled: Boolean(eventId),
   });
 }
