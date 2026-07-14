@@ -1,9 +1,8 @@
 /* EventSlider.module.css */
 
 .sliderContainer {
-  width: 100vw;
-  margin-left: calc(50% - 50vw);
-  margin-right: calc(50% - 50vw);
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
   overflow: visible;
   position: relative;
   background: transparent;
@@ -17,27 +16,82 @@
   opacity: 1;
 }
 
+.controls {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 8;
+  pointer-events: none;
+}
+
+.controls button {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  border: 1px solid rgba(185, 121, 255, 0.32);
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.075);
+  cursor: pointer;
+  pointer-events: auto;
+  backdrop-filter: blur(14px);
+  transition: transform 220ms ease, border-color 220ms ease, background 220ms ease;
+}
+
+.controls button:first-child {
+  margin-left: -14px;
+}
+
+.controls button:last-child {
+  margin-right: -14px;
+}
+
+.controls button:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 126, 21, 0.55);
+  background: rgba(255, 126, 21, 0.16);
+}
+
+.emptyState {
+  width: min(1180px, calc(100% - 32px));
+  margin: 16px auto 0;
+  padding: 22px;
+  border: 1px dashed rgba(185, 121, 255, 0.28);
+  border-radius: 18px;
+  color: #a99bb8;
+  background: rgba(255, 255, 255, 0.035);
+}
+
 .trackWrapper {
   width: 100%;
-  overflow-x: hidden;
+  overflow-x: auto;
   overflow-y: visible;
-  padding: 40px 0;
+  padding: 42px 0 28px;
   position: relative;
-  mask-image: linear-gradient(to right, transparent, black 3%, black 97%, transparent);
-  -webkit-mask-image: linear-gradient(to right, transparent, black 3%, black 97%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 2.5%, black 97.5%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 2.5%, black 97.5%, transparent);
+  scrollbar-width: none;
+}
+
+.trackWrapper::-webkit-scrollbar {
+  display: none;
 }
 
 .track {
   display: flex;
   width: max-content;
-  animation: slide 180s linear infinite;
+  animation: slide 165s linear infinite;
   padding: 0;
   margin: 0;
 }
 
-.marqueeGroup {
-  display: flex;
-  gap: 0;
+@media (hover: hover) {
+  .sliderContainer:hover .track {
+    animation-play-state: paused;
+  }
 }
 
 @keyframes slide {
@@ -49,21 +103,34 @@
   }
 }
 
-/* Pause sliding animation when hovering over the slider container */
-@media (hover: hover) {
-  .sliderContainer:hover .track {
-    animation-play-state: paused;
-  }
+.marqueeGroup {
+  display: flex;
+  gap: 24px;
+  padding-right: 24px;
 }
 
 .cardWrapper {
-  width: 320px;
-  height: 460px;
+  width: 360px;
+  height: 330px;
   flex-shrink: 0;
   position: relative;
   z-index: 1;
   transition: z-index 0.25s step-start;
-  margin-right: 24px; /* Serves as the gap between cards, allowing seamless percent loop translation */
+  margin-right: 0;
+}
+
+.eventCard {
+  --card-accent: #b66dff;
+  --card-accent-soft: rgba(182, 109, 255, 0.18);
+  --card-accent-border: rgba(182, 109, 255, 0.34);
+  --card-accent-dark: #20102f;
+}
+
+.activityCard {
+  --card-accent: #ff7e15;
+  --card-accent-soft: rgba(255, 126, 21, 0.18);
+  --card-accent-border: rgba(255, 126, 21, 0.36);
+  --card-accent-dark: #2a1208;
 }
 
 /* Bring the hovered card to the foreground instantly */
@@ -121,7 +188,7 @@
   height: 64px;
   z-index: -1;
   border-radius: 999px;
-  background: rgba(139, 92, 246, 0.22);
+  background: var(--card-accent-soft);
   filter: blur(26px);
   opacity: 0;
   pointer-events: none;
@@ -137,7 +204,7 @@
     rotateY(var(--ry, 0deg));
   box-shadow:
     0 28px 70px rgba(0, 0, 0, 0.48),
-    0 18px 42px rgba(139, 92, 246, 0.10),
+    0 18px 42px var(--card-accent-soft),
     inset 0 1px 0 rgba(255, 255, 255, 0.045);
   filter: saturate(1.06);
 }
@@ -157,7 +224,7 @@
 .cardInteractive:hover .moreInfoBtn {
   transform: translateY(-2px);
   box-shadow:
-    0 10px 24px rgba(217, 70, 239, 0.14),
+    0 10px 24px var(--card-accent-soft),
     inset 0 1px 0 rgba(255, 255, 255, 0.16);
   filter: brightness(1.15);
 }
@@ -217,6 +284,9 @@
   transform: rotateY(180deg);
   z-index: 1;
   pointer-events: none;
+  background:
+    radial-gradient(circle at 16% 18%, var(--card-accent-soft), transparent 36%),
+    linear-gradient(135deg, #111827 0%, var(--card-accent-dark) 52%, #0b1220 100%);
 }
 
 .cardInner.flipped .cardFront {
@@ -231,19 +301,19 @@
 
 .cardWrapper:hover .cardFront,
 .cardWrapper:hover .cardBack {
-  border-color: rgba(255, 255, 255, 0.09); /* Soft, subtle white highlight on hover */
+  border-color: var(--card-accent-border);
 }
 
 /* Front Side Layout */
 .imageArea {
   position: relative;
   width: 100%;
-  height: 48%;
+  height: 38%;
   overflow: hidden;
   flex-shrink: 0;
   background:
-    linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)),
-    #172033;
+    linear-gradient(180deg, var(--card-accent-soft), rgba(255,255,255,0.02)),
+    #171120;
 }
 
 .imageArea::after {
@@ -274,7 +344,9 @@
 .fallbackGradient {
   width: 100%;
   height: 100%;
-  background: transparent;
+  background:
+    radial-gradient(circle at 18% 18%, var(--card-accent-soft), transparent 36%),
+    linear-gradient(135deg, #171120, var(--card-accent-dark));
   position: relative;
 }
 
@@ -321,17 +393,16 @@
 }
 
 .heartIcon {
-  color: #d946ef; /* Pink/Purple */
+  color: var(--card-accent);
 }
 
 .cardBody {
-  height: 52%;
+  height: 62%;
   position: relative;
-  padding: 24px;
+  padding: 20px;
   background:
-    radial-gradient(circle at 15% 20%, rgba(139, 92, 246, 0.28), transparent 35%),
-    radial-gradient(circle at 85% 80%, rgba(255, 122, 24, 0.24), transparent 38%),
-    linear-gradient(135deg, #111827 0%, #160b18 45%, #0b1220 100%);
+    radial-gradient(circle at 16% 18%, var(--card-accent-soft), transparent 36%),
+    linear-gradient(135deg, #111827 0%, var(--card-accent-dark) 52%, #0b1220 100%);
 }
 
 .cardBody::before {
@@ -354,44 +425,38 @@
 
 .bodyGradientTech {
   background:
-    radial-gradient(circle at 20% 15%, rgba(139, 92, 246, 0.34), transparent 36%),
-    radial-gradient(circle at 90% 85%, rgba(236, 72, 153, 0.24), transparent 40%),
-    linear-gradient(135deg, #111827, #190b2e 50%, #07111f);
+    radial-gradient(circle at 16% 18%, var(--card-accent-soft), transparent 36%),
+    linear-gradient(135deg, #111827 0%, var(--card-accent-dark) 52%, #0b1220 100%);
 }
 
 .bodyGradientOutdoor {
   background:
-    radial-gradient(circle at 20% 15%, rgba(77, 255, 210, 0.22), transparent 36%),
-    radial-gradient(circle at 90% 85%, rgba(59, 130, 246, 0.28), transparent 40%),
-    linear-gradient(135deg, #111827, #0b1b2e 50%, #07111f);
+    radial-gradient(circle at 16% 18%, var(--card-accent-soft), transparent 36%),
+    linear-gradient(135deg, #111827 0%, var(--card-accent-dark) 52%, #0b1220 100%);
 }
 
 .bodyGradientArt {
   background:
-    radial-gradient(circle at 20% 15%, rgba(251, 146, 60, 0.28), transparent 36%),
-    radial-gradient(circle at 90% 85%, rgba(236, 72, 153, 0.22), transparent 40%),
-    linear-gradient(135deg, #111827, #24100c 50%, #07111f);
+    radial-gradient(circle at 16% 18%, var(--card-accent-soft), transparent 36%),
+    linear-gradient(135deg, #111827 0%, var(--card-accent-dark) 52%, #0b1220 100%);
 }
 
 .bodyGradientSocial {
   background:
-    radial-gradient(circle at 20% 15%, rgba(168, 85, 247, 0.3), transparent 36%),
-    radial-gradient(circle at 90% 85%, rgba(244, 114, 182, 0.2), transparent 40%),
-    linear-gradient(135deg, #111827, #1d1030 50%, #07111f);
+    radial-gradient(circle at 16% 18%, var(--card-accent-soft), transparent 36%),
+    linear-gradient(135deg, #111827 0%, var(--card-accent-dark) 52%, #0b1220 100%);
 }
 
 .bodyGradientMusic {
   background:
-    radial-gradient(circle at 20% 15%, rgba(236, 72, 153, 0.3), transparent 36%),
-    radial-gradient(circle at 90% 85%, rgba(217, 70, 239, 0.2), transparent 40%),
-    linear-gradient(135deg, #111827, #220b33 50%, #07111f);
+    radial-gradient(circle at 16% 18%, var(--card-accent-soft), transparent 36%),
+    linear-gradient(135deg, #111827 0%, var(--card-accent-dark) 52%, #0b1220 100%);
 }
 
 .bodyGradientSport {
   background:
-    radial-gradient(circle at 20% 15%, rgba(20, 184, 166, 0.25), transparent 36%),
-    radial-gradient(circle at 90% 85%, rgba(59, 130, 246, 0.25), transparent 40%),
-    linear-gradient(135deg, #111827, #092021 50%, #07111f);
+    radial-gradient(circle at 16% 18%, var(--card-accent-soft), transparent 36%),
+    linear-gradient(135deg, #111827 0%, var(--card-accent-dark) 52%, #0b1220 100%);
 }
 
 .textGroup {
@@ -416,7 +481,7 @@
 .metaInfo {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
   margin-top: 4px;
 }
 
@@ -436,7 +501,7 @@
 }
 
 .metaIcon {
-  color: #d946ef; /* Pink/purple icons */
+  color: var(--card-accent);
   flex-shrink: 0;
 }
 
@@ -456,8 +521,8 @@
   align-items: center;
   justify-content: space-between;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
-  padding-top: 14px;
-  margin-top: 14px;
+  padding-top: 12px;
+  margin-top: 12px;
 }
 
 .priceGroup {
@@ -476,6 +541,7 @@
 .priceValue {
   font-size: 1.05rem;
   font-weight: 800;
+  color: var(--card-accent);
 }
 
 .moreInfoBtn {
@@ -491,8 +557,8 @@
 }
 
 .moreInfoBtn:hover {
-  background: rgba(217, 70, 239, 0.15); /* Pink tint on hover */
-  border-color: rgba(217, 70, 239, 0.4);
+  background: var(--card-accent-soft);
+  border-color: var(--card-accent-border);
   color: #fff;
   transform: translateY(-1px);
 }
@@ -639,7 +705,7 @@
   width: 100%;
   padding: 10px 16px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #d946ef 0%, #ff7e15 100%); /* Primary gradient */
+  background: var(--card-accent);
   color: #fff;
   font-size: 0.85rem;
   font-weight: 700;
@@ -651,9 +717,9 @@
 
 .joinBtn:hover {
   transform: translateY(-1px);
-  box-shadow: 
-    0 6px 20px rgba(217, 70, 239, 0.3),
-    0 2px 10px rgba(255, 126, 21, 0.2);
+  box-shadow:
+    0 8px 24px var(--card-accent-soft),
+    0 0 0 1px var(--card-accent-border);
 }
 
 .joinBtn:active {

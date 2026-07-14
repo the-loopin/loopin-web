@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { EventCardItem } from "@/components/EventSlider/EventSlider";
 
 const BakuHeroMapInner = dynamic(() => import("./BakuHeroMapInner"), {
   ssr: false,
@@ -14,6 +15,10 @@ const BakuHeroMapInner = dynamic(() => import("./BakuHeroMapInner"), {
   ),
 });
 
-export default function BakuHeroMap() {
-  return <BakuHeroMapInner />;
+type BakuHeroMapProps = {
+  opportunities?: EventCardItem[];
+};
+
+export default function BakuHeroMap({ opportunities = [] }: BakuHeroMapProps) {
+  return <BakuHeroMapInner opportunities={opportunities} />;
 }

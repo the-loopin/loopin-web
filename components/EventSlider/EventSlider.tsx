@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { CalendarDays, MapPin, Heart, User } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { CalendarDays, ChevronLeft, ChevronRight, Heart, MapPin, User } from "lucide-react";
 import styles from "./EventSlider.module.css";
 
 export interface EventCardItem {
@@ -68,45 +69,6 @@ const formatEventDateTime = (startStr: string, endStr?: string) => {
   }
 };
 
-// Helper to get card body gradient class name based on variant, category, or index rotation
-const getBodyGradientClass = (event: EventCardItem, index: number) => {
-  if (event.coverVariant) {
-    const match = event.coverVariant.match(/\d+/);
-    if (match) {
-      const idx = parseInt(match[0], 10) - 1;
-      const variants = [
-        "bodyGradientTech",
-        "bodyGradientOutdoor",
-        "bodyGradientArt",
-        "bodyGradientSocial",
-        "bodyGradientMusic",
-        "bodyGradientSport",
-      ];
-      if (idx >= 0 && idx < variants.length) {
-        return variants[idx];
-      }
-    }
-  }
-
-  const cat = event.category?.toUpperCase() || "";
-  if (cat.includes("TECH")) return "bodyGradientTech";
-  if (cat.includes("OUTDOOR")) return "bodyGradientOutdoor";
-  if (cat.includes("ART")) return "bodyGradientArt";
-  if (cat.includes("SOCIAL")) return "bodyGradientSocial";
-  if (cat.includes("MUSIC")) return "bodyGradientMusic";
-  if (cat.includes("SPORT")) return "bodyGradientSport";
-
-  const fallbackVariants = [
-    "bodyGradientTech",
-    "bodyGradientOutdoor",
-    "bodyGradientArt",
-    "bodyGradientSocial",
-    "bodyGradientMusic",
-    "bodyGradientSport",
-  ];
-  return fallbackVariants[index % fallbackVariants.length];
-};
-
 // Default interests mapping for fallback cases when interests are not explicitly provided
 const DEFAULT_INTERESTS: Record<string, string[]> = {
   TECH: ["AI", "Networking", "Startups"],
@@ -130,31 +92,9 @@ const getEventInterests = (event: EventCardItem) => {
   return ["Networking", "Social", "Community"];
 };
 
-// Helper to get category color styling
-const getCategoryColor = (category: string) => {
-  const cat = category.toUpperCase();
-  if (cat.includes("TECH")) {
-    return { text: "#f472b6", bg: "rgba(244, 114, 182, 0.08)", border: "rgba(244, 114, 182, 0.3)" };
-  }
-  if (cat.includes("ART")) {
-    return { text: "#fb923c", bg: "rgba(251, 146, 60, 0.08)", border: "rgba(251, 146, 60, 0.3)" };
-  }
-  if (cat.includes("SOCIAL")) {
-    return { text: "#c084fc", bg: "rgba(192, 132, 252, 0.08)", border: "rgba(192, 132, 252, 0.3)" };
-  }
-  if (cat.includes("OUTDOOR")) {
-    return { text: "#60a5fa", bg: "rgba(96, 165, 250, 0.08)", border: "rgba(96, 165, 250, 0.3)" };
-  }
-  if (cat.includes("MUSIC")) {
-    return { text: "#f43f5e", bg: "rgba(244, 63, 94, 0.08)", border: "rgba(244, 63, 94, 0.3)" };
-  }
-  if (cat.includes("SPORT")) {
-    return { text: "#2dd4bf", bg: "rgba(45, 212, 191, 0.08)", border: "rgba(45, 212, 191, 0.3)" };
-  }
-  return { text: "#4DFFD2", bg: "rgba(77, 255, 210, 0.08)", border: "rgba(77, 255, 210, 0.3)" };
-};
-
 export const EventSlider: React.FC<EventSliderProps> = ({ events, onJoin }) => {
+  const router = useRouter();
+  const trackWrapperRef = useRef<HTMLDivElement | null>(null);
   const [flippedIds, setFlippedIds] = useState<Record<string | number, boolean>>({});
   const [isReady, setIsReady] = useState(false);
 
@@ -164,11 +104,20 @@ export const EventSlider: React.FC<EventSliderProps> = ({ events, onJoin }) => {
   }, []);
 
   if (!events || events.length === 0) {
-    return null;
+    return (
+      <div className={styles.emptyState}>
+        No opportunities are published yet.
+      </div>
+    );
   }
 
-  const MIN_REPEAT = 6;
-  const baseEvents = Array.from({ length: MIN_REPEAT }).flatMap(() => events);
+  const goToNext = () => {
+    trackWrapperRef.current?.scrollBy({ left: 380, behavior: "smooth" });
+  };
+
+  const goToPrevious = () => {
+    trackWrapperRef.current?.scrollBy({ left: -380, behavior: "smooth" });
+  };
 
   const toggleFlip = (id: string | number) => {
     setFlippedIds((prev) => ({
@@ -182,6 +131,13 @@ export const EventSlider: React.FC<EventSliderProps> = ({ events, onJoin }) => {
       e.preventDefault();
       onJoin(event);
     }
+  };
+
+  const openOpportunityPage = (event: EventCardItem, e: React.MouseEvent<HTMLElement>) => {
+    const target = e.target as HTMLElement;
+    if (target.closest("button") || target.closest("a")) return;
+
+    router.push(event.joinUrl || (event.type === "ACTIVITY" ? "/activities" : "/events"));
   };
 
   const handleCardMouseMove = (id: string | number, event: React.MouseEvent<HTMLElement>) => {
@@ -217,18 +173,24 @@ export const EventSlider: React.FC<EventSliderProps> = ({ events, onJoin }) => {
     const isFlipped = !!flippedIds[event.id];
     const displayDate = formatEventDateTime(event.startDateTime, event.endDateTime);
     const locationStr = `${event.city}${event.address ? `, ${event.address}` : ""}`;
-    const catColor = getCategoryColor(event.category);
+    const isActivity = event.type === "ACTIVITY";
+    const catColor = isActivity
+      ? { text: "#ff9f4a", bg: "rgba(255, 126, 21, 0.12)", border: "rgba(255, 126, 21, 0.34)" }
+      : { text: "#c58cff", bg: "rgba(182, 109, 255, 0.12)", border: "rgba(182, 109, 255, 0.34)" };
 
     return (
       <div
         key={`${event.id}-${isDuplicate ? "dup" : "orig"}-${index}`}
-        className={styles.cardWrapper}
+        className={`${styles.cardWrapper} ${isActivity ? styles.activityCard : styles.eventCard}`}
         data-testid={isDuplicate ? undefined : `event-card-${event.id}`}
       >
         <div 
           className={styles.cardInteractive}
           onMouseMove={(e) => handleCardMouseMove(event.id, e)}
           onMouseLeave={handleCardMouseLeave}
+          onClick={(e) => openOpportunityPage(event, e)}
+          role="link"
+          tabIndex={0}
         >
           <div className={`${styles.cardInner} ${isFlipped ? styles.flipped : ""}`}>
             
@@ -267,7 +229,7 @@ export const EventSlider: React.FC<EventSliderProps> = ({ events, onJoin }) => {
                 )}
               </div>
 
-              <div className={`${styles.cardBody} ${styles[getBodyGradientClass(event, index)] || ""}`}>
+              <div className={styles.cardBody}>
                 <div className={styles.cardBodyContent}>
                   <div className={styles.textGroup}>
                     <h3 className={styles.title} title={event.title}>
@@ -295,9 +257,6 @@ export const EventSlider: React.FC<EventSliderProps> = ({ events, onJoin }) => {
                       <span className={styles.priceLabel}>Admission</span>
                       <span 
                         className={styles.priceValue}
-                        style={{
-                          color: event.isFree ? "#4DFFD2" : "#ff7e15"
-                        }}
                       >
                         {event.isFree ? "Free" : `$${event.price || 0}`}
                       </span>
@@ -317,7 +276,7 @@ export const EventSlider: React.FC<EventSliderProps> = ({ events, onJoin }) => {
             </div>
 
             {/* Back Face of the Card */}
-            <div className={`${styles.cardBack} ${styles[getBodyGradientClass(event, index)] || ""}`}>
+            <div className={styles.cardBack}>
               <div className={styles.cardBackContent}>
                 <div className={styles.backMainContent}>
                   <h4 className={styles.interestsHeading}>Interests</h4>
@@ -343,7 +302,7 @@ export const EventSlider: React.FC<EventSliderProps> = ({ events, onJoin }) => {
                       className={styles.joinBtn}
                       onClick={(e) => handleJoinClick(event, e)}
                     >
-                      Join event
+                      Loopin
                     </Link>
                   ) : (
                     <button
@@ -357,7 +316,7 @@ export const EventSlider: React.FC<EventSliderProps> = ({ events, onJoin }) => {
                         }
                       }}
                     >
-                      Join event
+                      Loopin
                     </button>
                   )}
 
@@ -383,13 +342,21 @@ export const EventSlider: React.FC<EventSliderProps> = ({ events, onJoin }) => {
       className={`${styles.sliderContainer} ${isReady ? styles.ready : ""}`}
       id="event-slider-container"
     >
-      <div className={styles.trackWrapper}>
+      <div className={styles.controls}>
+        <button type="button" onClick={goToPrevious} aria-label="Show previous opportunity">
+          <ChevronLeft size={18} />
+        </button>
+        <button type="button" onClick={goToNext} aria-label="Show next opportunity">
+          <ChevronRight size={18} />
+        </button>
+      </div>
+      <div className={styles.trackWrapper} ref={trackWrapperRef}>
         <div className={styles.track}>
           <div className={styles.marqueeGroup}>
-            {baseEvents.map((event, index) => renderCard(event, index, false))}
+            {events.concat(events, events).map((event, index) => renderCard(event, index, false))}
           </div>
           <div className={styles.marqueeGroup} aria-hidden="true">
-            {baseEvents.map((event, index) => renderCard(event, index, true))}
+            {events.concat(events, events).map((event, index) => renderCard(event, index, true))}
           </div>
         </div>
       </div>

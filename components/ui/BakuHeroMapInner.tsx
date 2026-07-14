@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calendar, Users, MapPin, Sparkles } from "lucide-react";
+import { EventCardItem } from "@/components/EventSlider/EventSlider";
 
 interface EventPin {
   id: string;
@@ -15,6 +16,7 @@ interface EventPin {
   attendees: number;
   icon: string;
   category: string;
+  type?: "EVENT" | "ACTIVITY";
 }
 
 const BakuEvents: EventPin[] = [
@@ -89,7 +91,37 @@ const Connections = [
   { from: "fountain", to: "portbaku" },
 ];
 
-export default function BakuHeroMapInner() {
+type BakuHeroMapInnerProps = {
+  opportunities?: EventCardItem[];
+};
+
+const formatPinTime = (value: string) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Soon";
+
+  return date.toLocaleString("en-US", {
+    weekday: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const PARTICLE_PRESETS = [
+  { width: 4.2, height: 3.1, left: 12.5, top: 45.2, animY: -42, animX: 5, duration: 9.2 },
+  { width: 3.5, height: 5.2, left: 78.1, top: 23.4, animY: -35, animX: -2, duration: 11.4 },
+  { width: 2.1, height: 2.8, left: 34.7, top: 67.1, animY: -28, animX: 4, duration: 8.7 },
+  { width: 5.4, height: 4.1, left: 56.2, top: 89.0, animY: -48, animX: -6, duration: 12.1 },
+  { width: 3.9, height: 3.2, left: 89.4, top: 12.8, animY: -32, animX: 3, duration: 7.9 },
+  { width: 4.8, height: 4.7, left: 21.0, top: 76.5, animY: -45, animX: -4, duration: 10.5 },
+  { width: 2.9, height: 3.6, left: 63.8, top: 54.3, animY: -39, animX: 6, duration: 9.8 },
+  { width: 5.1, height: 2.4, left: 45.3, top: 31.9, animY: -41, animX: -1, duration: 11.2 },
+  { width: 3.2, height: 4.9, left: 91.7, top: 62.0, animY: -36, animX: 2, duration: 8.3 },
+  { width: 4.5, height: 3.3, left: 8.3, top: 18.2, animY: -44, animX: -5, duration: 12.8 },
+  { width: 2.6, height: 5.8, left: 71.9, top: 82.4, animY: -31, animX: 7, duration: 10.1 },
+  { width: 3.8, height: 2.7, left: 52.1, top: 3.5, animY: -47, animX: -3, duration: 9.5 }
+];
+
+export default function BakuHeroMapInner({ opportunities = [] }: BakuHeroMapInnerProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -99,6 +131,71 @@ export default function BakuHeroMapInner() {
   const [hoveredPin, setHoveredPin] = useState<EventPin | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [mapLoaded, setMapLoaded] = useState(false);
+
+  const mapPins = useMemo(() => {
+    const livePins = opportunities
+      .filter((item) => typeof item.latitude === "number" && typeof item.longitude === "number")
+      .slice(0, 8)
+      .map<EventPin>((item) => {
+        const type = item.type === "ACTIVITY" ? "ACTIVITY" : "EVENT";
+
+        return {
+          id: String(item.id),
+          name: item.address || item.city || "Baku",
+          coordinates: [item.longitude as number, item.latitude as number],
+          title: item.title,
+          time: formatPinTime(item.startDateTime),
+          attendees: item.interestsCount ?? 0,
+          icon: type === "ACTIVITY" ? "Activity" : "Event",
+          category: item.category || type,
+          type,
+        };
+      });
+
+    return livePins.length > 0 ? livePins : BakuEvents.map((pin, index) => ({
+      ...pin,
+      type: index % 2 === 0 ? "EVENT" as const : "ACTIVITY" as const,
+    }));
+  }, [opportunities]);
+
+  const activePins = useMemo(() => {
+    if (device === "mobile") {
+      return mapPins.slice(0, 3);
+    }
+    if (device === "tablet") {
+      return mapPins.slice(0, 5);
+    }
+    return mapPins;
+  }, [device, mapPins]);
+
+  const activeConnections = useMemo(() => {
+    const activePinIds = activePins.map(p => p.id);
+    return Connections.filter(
+      conn => activePinIds.includes(conn.from) && activePinIds.includes(conn.to)
+    );
+  }, [activePins]);
+
+  const activePinsRef = useRef(activePins);
+  useEffect(() => {
+    activePinsRef.current = activePins;
+  }, [activePins]);
+
+  const updateProjectedPositions = useCallback(() => {
+    if (!mapRef.current) return;
+    const positions: Record<string, { x: number; y: number }> = {};
+    activePinsRef.current.forEach((pin) => {
+      const proj = mapRef.current!.project(new maplibregl.LngLat(pin.coordinates[0], pin.coordinates[1]));
+      positions[pin.id] = { x: proj.x, y: proj.y };
+    });
+    setPinPositions(positions);
+  }, []);
+
+  // Trigger update when activePins or mapLoaded changes
+  useEffect(() => {
+    if (mapLoaded) {
+      updateProjectedPositions();
+    }
+  }, [activePins, mapLoaded, updateProjectedPositions]);
 
   // Resize listener to classify device type
   useEffect(() => {
@@ -150,21 +247,6 @@ export default function BakuHeroMapInner() {
     });
 
     mapRef.current = map;
-
-    // Helper to project lat/lng to screen coordinates
-    const updateProjectedPositions = () => {
-      if (!mapRef.current) return;
-      const positions: Record<string, { x: number; y: number }> = {};
-      
-      // Filter pins by device constraints
-      const activePins = getActivePins();
-      activePins.forEach((pin) => {
-        const proj = mapRef.current!.project(new maplibregl.LngLat(pin.coordinates[0], pin.coordinates[1]));
-        positions[pin.id] = { x: proj.x, y: proj.y };
-      });
-      
-      setPinPositions(positions);
-    };
 
     map.on("load", () => {
       setMapLoaded(true);
@@ -228,7 +310,7 @@ export default function BakuHeroMapInner() {
       map.remove();
       mapRef.current = null;
     };
-  }, [device]);
+  }, [device, updateProjectedPositions]);
 
   // Recalculate coordinates if device changes (which filters visible pins)
   useEffect(() => {
@@ -237,27 +319,6 @@ export default function BakuHeroMapInner() {
       mapRef.current.resize();
     }
   }, [device, mapLoaded]);
-
-  // Helper to filter active pins based on device responsive requirements
-  const getActivePins = () => {
-    if (device === "mobile") {
-      // Show only 3 central markers
-      return BakuEvents.filter(pin => ["fountain", "oldcity", "flametowers"].includes(pin.id));
-    }
-    if (device === "tablet") {
-      // Show 5 markers
-      return BakuEvents.filter(pin => pin.id !== "whitecity");
-    }
-    return BakuEvents;
-  };
-
-  // Helper to filter active connections based on active pins
-  const getActiveConnections = () => {
-    const activePinIds = getActivePins().map(p => p.id);
-    return Connections.filter(
-      conn => activePinIds.includes(conn.from) && activePinIds.includes(conn.to)
-    );
-  };
 
   // Mouse Parallax handlers
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -281,18 +342,18 @@ export default function BakuHeroMapInner() {
     transition: "transform 400ms cubic-bezier(0.25, 1, 0.5, 1)",
   } : {};
 
-  const activePins = getActivePins();
-  const activeConnections = getActiveConnections();
-
-  // Create subtle floating particles
-  const particles = Array.from({ length: 12 });
+  const mapBorderColor = hoveredPin?.type === "ACTIVITY" ? "#ff7e15" : "#b66dff";
+  const mapBorderGlow = hoveredPin?.type === "ACTIVITY"
+    ? "rgba(255, 126, 21, 0.22)"
+    : "rgba(182, 109, 255, 0.22)";
 
   return (
     <div
       ref={containerRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      className="relative w-full h-full flex items-center justify-center p-4 min-h-[420px]"
+      style={{ clipPath: "inset(0 round 32px)" }}
+      className="relative isolate w-full h-full flex items-center justify-center min-h-[420px] overflow-hidden rounded-[32px]"
     >
       {/* Background Glows & Particle Effects */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-[32px] -z-10">
@@ -301,23 +362,23 @@ export default function BakuHeroMapInner() {
         <div className="absolute bottom-[10%] left-[10%] w-[220px] h-[220px] rounded-full bg-cyan-500/10 blur-[80px]" />
         
         {/* Subtle Mesh Dust Particles */}
-        {particles.map((_, idx) => (
+        {PARTICLE_PRESETS.map((p, idx) => (
           <motion.div
             key={idx}
             className="absolute rounded-full bg-purple-500/15"
             style={{
-              width: `${Math.random() * 4 + 2}px`,
-              height: `${Math.random() * 4 + 2}px`,
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
+              width: `${p.width}px`,
+              height: `${p.height}px`,
+              left: `${p.left}%`,
+              top: `${p.top}%`,
             }}
             animate={{
-              y: [0, Math.random() * -30 - 20],
-              x: [0, Math.random() * 16 - 8],
+              y: [0, p.animY],
+              x: [0, p.animX],
               opacity: [0, 0.5, 0.5, 0],
             }}
             transition={{
-              duration: Math.random() * 6 + 7,
+              duration: p.duration,
               repeat: Infinity,
               ease: "easeInOut",
             }}
@@ -327,8 +388,13 @@ export default function BakuHeroMapInner() {
 
       {/* Styled Glassmorphism Map Wrapper with Parallax */}
       <div
-        style={parallaxStyle}
-        className="relative w-full h-full rounded-[32px] border border-white/10 bg-black/40 backdrop-blur-md shadow-[0_0_50px_rgba(168,85,247,0.15)] overflow-hidden flex flex-col justify-end"
+        style={{
+          ...parallaxStyle,
+          borderColor: mapBorderColor,
+          boxShadow: `0 0 0 1px ${mapBorderColor}, 0 0 36px ${mapBorderGlow}`,
+          clipPath: "inset(0 round 32px)",
+        }}
+        className="relative w-full h-full rounded-[32px] border-[7px] bg-black/20 overflow-hidden flex flex-col justify-end transition-[border-color,box-shadow] duration-300"
       >
         {/* Map Container */}
         <div ref={mapContainerRef} className="absolute inset-0 w-full h-full rounded-[32px] overflow-hidden" />
@@ -427,6 +493,9 @@ export default function BakuHeroMapInner() {
               if (!pos) return null;
 
               const isHovered = hoveredPin?.id === pin.id;
+              const markerColor = pin.type === "ACTIVITY" ? "#ff7e15" : "#b66dff";
+              const hoverColor = pin.type === "ACTIVITY" ? "#ffb15c" : "#d7b3ff";
+              const pulseColor = pin.type === "ACTIVITY" ? "rgba(255, 126, 21, 0.36)" : "rgba(182, 109, 255, 0.4)";
 
               return (
                 <div
@@ -443,18 +512,25 @@ export default function BakuHeroMapInner() {
                 >
                   <div className="relative w-8 h-8 flex items-center justify-center">
                     {/* Outer glowing pulse ring */}
-                    <div className="pulse-ring-element absolute top-1/2 left-1/2 w-7 h-7 bg-purple-500/40 rounded-full" />
+                    <div
+                      className="pulse-ring-element absolute top-1/2 left-1/2 w-7 h-7 rounded-full"
+                      style={{ background: pulseColor }}
+                    />
                     
                     {/* Soft ambient purple glow */}
-                    <div className="absolute w-5 h-5 rounded-full bg-purple-600/30 filter blur-[3px] transition-transform duration-300 group-hover:scale-150" />
+                    <div
+                      className="absolute w-5 h-5 rounded-full filter blur-[3px] transition-transform duration-300 group-hover:scale-150"
+                      style={{ background: pulseColor }}
+                    />
 
                     {/* Central marker point */}
                     <div 
-                      className={`relative w-3.5 h-3.5 rounded-full border border-white/60 shadow-lg flex items-center justify-center transition-all duration-300 ${
-                        isHovered 
-                          ? "bg-cyan-400 scale-125 shadow-cyan-500/50" 
-                          : "bg-purple-600 group-hover:bg-purple-400 group-hover:scale-110 shadow-purple-900/50"
-                      }`}
+                      className="relative w-3.5 h-3.5 rounded-full border border-white/60 shadow-lg flex items-center justify-center transition-all duration-300 group-hover:scale-110"
+                      style={{
+                        background: isHovered ? hoverColor : markerColor,
+                        transform: isHovered ? "scale(1.25)" : undefined,
+                        boxShadow: `0 0 22px ${pulseColor}`,
+                      }}
                     >
                       <div className="w-1.5 h-1.5 rounded-full bg-white" />
                     </div>
@@ -476,14 +552,18 @@ export default function BakuHeroMapInner() {
                     left: pinPositions[hoveredPin.id].x,
                     top: pinPositions[hoveredPin.id].y - 18,
                     transform: "translate(-50%, -100%)",
+                    borderColor: hoveredPin.type === "ACTIVITY" ? "rgba(255, 126, 21, 0.42)" : "rgba(182, 109, 255, 0.48)",
                   }}
                 >
                   {/* Category tag */}
                   <div className="flex items-center justify-between">
-                    <span className="text-[9px] font-bold tracking-widest text-purple-400 uppercase flex items-center gap-1">
-                      <Sparkles size={8} /> {hoveredPin.category}
+                    <span
+                      className="text-[9px] font-bold tracking-widest uppercase flex items-center gap-1"
+                      style={{ color: hoveredPin.type === "ACTIVITY" ? "#ff9f4a" : "#c58cff" }}
+                    >
+                      <Sparkles size={8} /> {hoveredPin.type === "EVENT" ? "Event" : "Activity"} - {hoveredPin.category}
                     </span>
-                    <span className="text-xs">{hoveredPin.icon}</span>
+                    <span className="text-[9px] uppercase text-gray-400">{hoveredPin.icon}</span>
                   </div>
 
                   {/* Title */}
@@ -494,15 +574,15 @@ export default function BakuHeroMapInner() {
                   {/* Meta items */}
                   <div className="flex flex-col gap-1 text-[10px] text-gray-400">
                     <div className="flex items-center gap-1.5">
-                      <Calendar size={10} className="text-purple-400/80" />
+                      <Calendar size={10} style={{ color: hoveredPin.type === "ACTIVITY" ? "#ff9f4a" : "#c58cff" }} />
                       <span>{hoveredPin.time}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <Users size={10} className="text-cyan-400/80" />
+                      <Users size={10} style={{ color: hoveredPin.type === "ACTIVITY" ? "#ff9f4a" : "#c58cff" }} />
                       <span>{hoveredPin.attendees} people joined</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <MapPin size={10} className="text-purple-400/80" />
+                      <MapPin size={10} style={{ color: hoveredPin.type === "ACTIVITY" ? "#ff9f4a" : "#c58cff" }} />
                       <span className="truncate">{hoveredPin.name}</span>
                     </div>
                   </div>
