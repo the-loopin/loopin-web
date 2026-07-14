@@ -1,9 +1,5 @@
 import apiClient from "./client";
 
-// ==========================================
-// TİPLƏR və PAYLOAD-LAR (TYPES & PAYLOADS)
-// ==========================================
-
 export type EventPayload = {
   title: string;
   description: string;
@@ -22,15 +18,40 @@ export type EventPayload = {
   status: string;
 };
 
-export type EventItem = EventPayload & {
+export type MediaReference = {
+  id: string;
+  contentType: string;
+  sizeBytes: number;
+  url?: string | null;
+};
+
+export type EventCreatePayload = Omit<
+  EventPayload,
+  "imageUrl" | "status"
+> & {
+  imageMediaId?: string | null;
+  interestIds?: string[];
+};
+
+export type EventUpdatePayload = EventCreatePayload;
+
+export type EventItem = Omit<
+  EventPayload,
+  "imageUrl" | "status"
+> & {
   id: string | number;
+
+  image?: MediaReference | null;
+
+  imageUrl?: string | null;
+
+  status: string;
   displayCategory?: string;
   loopedCount?: number;
   createdAt?: string;
   updatedAt?: string;
 };
 
-// Spring Boot Pageable Cavabları üçün Tip (Pagination)
 export type PageResponse<T> = {
   content: T[];
   totalPages: number;
@@ -45,6 +66,7 @@ export type GroupPayload = {
   groupSize: string;
   maxMembers: number;
   groupNote: string;
+  imageMediaId?: string | null;
 };
 
 export type GroupItem = GroupPayload & {
@@ -101,24 +123,6 @@ export type InterestItem = {
   label: string;
 };
 
-export type MediaUploadRequest = {
-  purpose: "EVENT_IMAGE" | "PROFILE_AVATAR" | "GROUP_IMAGE";
-  fileName: string;
-  contentType: string;
-  sizeBytes: number;
-};
-
-export type MediaUploadResponse = {
-  mediaId: string;
-  uploadUrl: string;
-  expiresAt: string;
-  requiredHeaders?: Record<string, string>;
-};
-
-// ==========================================
-// İSTİFADƏÇİ və AUTENTİKASİYA (AUTH & USER)
-// ==========================================
-
 export async function registerUser(payload: { email: string; name: string }) {
   const response = await apiClient.post<UserItem>("/users/register", payload);
   return response.data;
@@ -149,10 +153,6 @@ export async function getCurrentUser() {
   return response.data;
 }
 
-// ==========================================
-// TƏDBİRLƏR (EVENTS)
-// ==========================================
-
 export async function getEvents(params?: Record<string, string>) {
   const response = await apiClient.get<EventItem[] | PageResponse<EventItem>>("/events", { params });
   return Array.isArray(response.data) ? response.data : response.data.content ?? [];
@@ -163,12 +163,18 @@ export async function getEvent(id: string) {
   return response.data;
 }
 
-export async function createEvent(payload: EventPayload) {
-  const response = await apiClient.post<EventItem>("/events", payload);
+export async function createEvent(
+  payload: EventCreatePayload,
+) {
+  const response = await apiClient.post<EventItem>(
+    "/events",
+    payload,
+  );
+
   return response.data;
 }
 
-export async function updateEvent(id: string, payload: EventPayload) {
+export async function updateEvent(id: string, payload: EventUpdatePayload) {
   const response = await apiClient.put<EventItem>(`/events/${id}`, payload);
   return response.data;
 }
@@ -191,9 +197,6 @@ export async function getMyLoopedEvents() {
   return response.data;
 }
 
-// ==========================================
-// QRUPLAR və QOŞULMA (GROUPS & MEMBERS)
-// ==========================================
 
 export async function createGroup(payload: GroupPayload) {
   const response = await apiClient.post<GroupItem>("/groups", payload);
@@ -270,10 +273,6 @@ export async function rejectJoinRequest(groupId: string, requestId: string) {
   return response.data;
 }
 
-// ==========================================
-// PROFİL, MARAQLAR və PARMETRLƏR
-// ==========================================
-
 export async function getProfile() {
   const response = await apiClient.get<ProfilePayload>("/me");
   return response.data;
@@ -281,6 +280,11 @@ export async function getProfile() {
 
 export async function updateProfile(payload: ProfilePayload) {
   const response = await apiClient.put<ProfilePayload>("/me", payload);
+  return response.data;
+}
+
+export async function updateProfileAvatar(mediaId: string) {
+  const response = await apiClient.put("/me/avatar", { mediaId });
   return response.data;
 }
 
@@ -314,17 +318,13 @@ export async function updateMyInterests(interestIds: string[]) {
   return response.data;
 }
 
-// ==========================================
-// YENİLƏNMİŞ ADMİN ENDPOINT-LƏRİ (v1/admin)
-// ==========================================
-
-// Dashboard statistikasını çəkir: GET /v1/admin/dashboard/stats
+// GET /v1/admin/dashboard/stats
 export async function getAdminStats() {
   const response = await apiClient.get<Record<string, number>>("/admin/dashboard/stats");
   return response.data;
 }
 
-// İstifadəçiləri Spring Boot Pageable ilə çəkir: GET /v1/admin/users
+// GET /v1/admin/users
 export async function getAdminUsers(page = 0, size = 10) {
   const response = await apiClient.get<PageResponse<UserItem>>("/admin/users", {
     params: { page, size }
@@ -332,7 +332,7 @@ export async function getAdminUsers(page = 0, size = 10) {
   return response.data;
 }
 
-// Tədbirləri filter və Pageable ilə çəkir: GET /v1/admin/events
+// GET /v1/admin/events
 export async function getAdminEvents(status?: string, page = 0, size = 10) {
   const response = await apiClient.get<PageResponse<EventItem>>("/admin/events", {
     params: { status, page, size }
@@ -340,32 +340,69 @@ export async function getAdminEvents(status?: string, page = 0, size = 10) {
   return response.data;
 }
 
-// İstifadəçi rolunu yeniləyir: PUT /v1/admin/users/{id}/role
+// PUT /v1/admin/users/{id}/role
 export async function updateUserRole(userId: string, role: string) {
   const response = await apiClient.put<UserItem>(`/admin/users/${userId}/role`, { role });
   return response.data;
 }
 
-// İstifadəçini silir: DELETE /v1/admin/users/{id}
+// DELETE /v1/admin/users/{id}
 export async function deleteUser(userId: string) {
   await apiClient.delete(`/admin/users/${userId}`);
 }
 
-// Tədbiri silir: DELETE /v1/admin/events/{id}
+// DELETE /v1/admin/events/{id}
 export async function deleteAdminEvent(eventId: string) {
   await apiClient.delete(`/admin/events/${eventId}`);
 }
 
-// ==========================================
-// MEDİA YÜKLƏMƏLƏRİ (MEDIA UPLOADS)
-// ==========================================
+export type MediaPurpose =
+  | "EVENT_IMAGE"
+  | "PROFILE_AVATAR"
+  | "GROUP_IMAGE";
 
-export async function requestMediaUpload(payload: MediaUploadRequest) {
-  const response = await apiClient.post<MediaUploadResponse>("/media/uploads", payload);
+export type MediaUploadRequest = {
+  purpose: MediaPurpose;
+  fileName: string;
+  contentType: string;
+  sizeBytes: number;
+};
+
+export type MediaUploadResponse = {
+  mediaId: string;
+  uploadUrl: string;
+  expiresAt: string;
+  requiredHeaders: Record<string, string>;
+};
+
+export type MediaCompletionResponse = {
+  mediaId: string;
+  status: "UPLOADED" | "ATTACHED";
+};
+
+export async function requestMediaUpload(
+  payload: MediaUploadRequest,
+) {
+  const response =
+    await apiClient.post<MediaUploadResponse>(
+      "/media/uploads",
+      payload,
+    );
+
   return response.data;
 }
 
-export async function completeMediaUpload(mediaId: string) {
-  const response = await apiClient.post<{ mediaId: string; status: string }>(`/media/uploads/${mediaId}/complete`);
+export async function completeMediaUpload(
+  mediaId: string,
+) {
+  const response =
+    await apiClient.post<MediaCompletionResponse>(
+      `/media/uploads/${mediaId}/complete`,
+    );
+
   return response.data;
+}
+
+export async function deleteMedia(mediaId: string) {
+  await apiClient.delete(`/media/${mediaId}`);
 }

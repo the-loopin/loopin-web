@@ -3,28 +3,22 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  completeMediaUpload,
   createEvent,
-  EventItem,
-  EventPayload,
+  deleteMedia,
+  type EventItem,
+  type EventPayload,
   getEvents,
   getMyLoopedEvents,
   loopInEvent,
-  requestMediaUpload,
   unloopEvent,
 } from "@/lib/api/loopin";
+import { uploadMedia } from "@/lib/media/uploadMedia";
 import { getAuthToken } from "@/lib/auth/session";
 import LocationPickerMap from "@/components/ui/LocationPickerMap";
 import { EmptyState, ErrorMessage, Input, PageHeader, Select, SiteShell } from "../../site";
 import { ArrowLeft, CalendarDays, CheckCircle2, CircleMinus, Clock, FileText, ImagePlus, Info, MapPin, Navigation, Plus, RefreshCw, Save, Search, Send, Ticket, Users } from "lucide-react";
 
 const categories = ["TECH", "STARTUP", "HR", "EDUCATION", "TRAVEL", "SPORT", "SOCIAL", "LANGUAGE", "CREATIVE", "OTHER"];
-const bakuBounds = {
-  north: 40.47,
-  south: 40.3,
-  east: 50.02,
-  west: 49.78,
-};
 const bakuCenter = { latitude: 40.3777, longitude: 49.892 };
 
 function formatDateTimeLocal(date: Date) {
@@ -257,16 +251,19 @@ export default function EventsPage() {
       return;
     }
 
-    setLoopedEventIds(getStoredLoopedIds());
-
     async function loadLoopedEvents() {
+      const storedLoopedIds = getStoredLoopedIds();
+
       try {
         const loopedEvents = await getMyLoopedEvents();
-        const loopedIds = Object.fromEntries(loopedEvents.map((event) => [String(event.id), true]));
+        const loopedIds = Object.fromEntries(
+          loopedEvents.map((event) => [String(event.id), true]),
+        );
+
         setLoopedEventIds(loopedIds);
         saveStoredLoopedIds(loopedIds);
       } catch {
-        // Keep the locally stored state if the sync request is temporarily unavailable.
+        setLoopedEventIds(storedLoopedIds);
       }
     }
 
@@ -429,24 +426,15 @@ export default function EventsPage() {
     }
   }
 
-  async function uploadImageIfNeeded() {
-    if (!imageFile) return form.imageUrl;
+  async function uploadImageIfNeeded(): Promise<string | undefined> {
+    if (!imageFile) {
+      return undefined;
+    }
 
     setUploadingImage(true);
+
     try {
-      const upload = await requestMediaUpload({
-        purpose: "EVENT_IMAGE",
-        fileName: imageFile.name,
-        contentType: imageFile.type || "application/octet-stream",
-        sizeBytes: imageFile.size,
-      });
-      await fetch(upload.uploadUrl, {
-        method: "PUT",
-        headers: upload.requiredHeaders ?? { "Content-Type": imageFile.type || "application/octet-stream" },
-        body: imageFile,
-      });
-      await completeMediaUpload(upload.mediaId);
-      return form.imageUrl;
+      return await uploadMedia(imageFile, "EVENT_IMAGE");
     } finally {
       setUploadingImage(false);
     }
@@ -454,12 +442,14 @@ export default function EventsPage() {
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
     if (!getAuthToken()) {
       router.push("/login?warning=Please%20sign%20in%20before%20creating%20an%20event.");
       return;
     }
 
     const validationErrors = validateForm();
+
     if (Object.keys(validationErrors).length > 0) {
       setError("");
       setActionToast({
@@ -472,20 +462,43 @@ export default function EventsPage() {
     }
 
     setError("");
+
+    let uploadedMediaId: string | undefined;
+
     try {
-      const imageUrl = await uploadImageIfNeeded();
-      // Ensure type is forced to EVENT
-      const created = await createEvent({ ...form, imageUrl, status: "PUBLISHED", type: "EVENT" });
+      uploadedMediaId = await uploadImageIfNeeded();
+
+      const created = await createEvent({
+        title: form.title.trim(),
+        description: form.description.trim(),
+        type: "EVENT",
+        category: form.category,
+        city: form.city.trim(),
+        address: form.address.trim(),
+        latitude: form.latitude,
+        longitude: form.longitude,
+        startDateTime: form.startDateTime,
+        endDateTime: form.endDateTime,
+        isFree: form.isFree,
+        price: form.isFree ? 0 : Number(form.price),
+        organizerName: form.organizerName.trim(),
+        imageMediaId: uploadedMediaId,
+        interestIds: [],
+      });
+
+      uploadedMediaId = undefined;
+
       const displayCategory = form.category === "OTHER" ? customCategory.trim() : "";
       const createdForDisplay = {
         ...created,
         displayCategory,
-        imageUrl: imagePreviewUrl || created.imageUrl || imageUrl,
+        imageUrl: imagePreviewUrl || created.imageUrl || form.imageUrl,
       };
+
       setEvents((current) => [createdForDisplay, ...current]);
       setSelectedEventId(createdForDisplay.id);
       setShowCreateForm(false);
-      // Reset form title/desc for next use
+
       setForm({
         ...createInitialForm(),
         title: "Baku Tech Meetup",
@@ -496,12 +509,18 @@ export default function EventsPage() {
       setImagePreviewUrl("");
       setFormErrors({});
     } catch (caught) {
+      if (uploadedMediaId) {
+        await deleteMedia(uploadedMediaId).catch(() => undefined);
+      }
+
       const apiError = getApiErrorResponse(caught);
       const message = getApiErrorMessage(caught, "Could not create event.");
+
       if (apiError?.fieldErrors) {
         setFormErrors(apiError.fieldErrors as FormErrors);
         focusFirstInvalidField(apiError.fieldErrors as FormErrors);
       }
+
       setError("");
       setActionToast({
         type: "error",
@@ -823,7 +842,14 @@ export default function EventsPage() {
                 </div>
                 <div className="image-upload-panel image-upload-panel-large">
                   <div className="image-upload-preview">
-                    {eventPreviewImage ? <img src={eventPreviewImage} alt="Event preview" /> : <ImagePlus size={28} />}
+                    {eventPreviewImage ? (
+                      <>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={eventPreviewImage} alt="Event preview" />
+                      </>
+                    ) : (
+                      <ImagePlus size={28} />
+                    )}
                   </div>
                   <div className="image-upload-body">
                     <strong>{imageFile ? imageFile.name : "Cover image"}</strong>
