@@ -2214,6 +2214,13 @@ button:disabled {
   background: color-mix(in srgb, var(--page-accent) 10%, transparent);
 }
 
+.edit-card-button {
+  padding: 0 13px;
+  color: var(--color-ink);
+  border: 1px solid color-mix(in srgb, var(--page-accent) 30%, var(--line));
+  background: color-mix(in srgb, var(--page-accent) 11%, transparent);
+}
+
 .more-info-button,
 .card-back-button {
   padding: 0 13px;
