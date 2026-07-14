@@ -13,6 +13,7 @@ import {
   unloopEvent,
   EventCategory,
   EventStatus,
+  SpringPage,
 } from "@/lib/api";
 import { uploadMedia } from "@/lib/media/uploadMedia";
 import { getAuthToken } from "@/lib/auth/session";
@@ -210,6 +211,7 @@ function getMapUrl(latitude: number, longitude: number, span = 0.018, showMarker
 export default function ActivitiesPage() {
   const router = useRouter();
   const [activities, setActivities] = useState<EventItem[]>([]);
+  const [pageData, setPageData] = useState<SpringPage<EventItem> | null>(null);
   const [form, setForm] = useState(() => createInitialForm());
   const [customCategory, setCustomCategory] = useState("");
   const [formErrors, setFormErrors] = useState<FormErrors>({});
@@ -232,15 +234,16 @@ export default function ActivitiesPage() {
     setError("");
     try {
       const params = {
+        type: "ACTIVITY" as const,
         city: filters.city || undefined,
         category: filters.category ? (filters.category as EventCategory) : undefined,
         search: filters.search || undefined,
         isFree: filters.isFree === "true" ? true : filters.isFree === "false" ? false : undefined,
+        page: 0,
       };
       const data = await getEvents(params);
-      // Filter client-side to only show events of type ACTIVITY
-      const filtered = data.content.filter(e => e.type === "ACTIVITY");
-      setActivities(filtered);
+      setPageData(data);
+      setActivities(data.content);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not load activities.");
     } finally {
@@ -248,7 +251,13 @@ export default function ActivitiesPage() {
     }
   }
 
-useEffect(() => {
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadActivities();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.category, filters.city, filters.isFree, filters.search]);
+
+  useEffect(() => {
   if (!getAuthToken()) {
     return;
   }
@@ -501,7 +510,6 @@ useEffect(() => {
         isFree: form.isFree,
         price: form.isFree ? 0 : Number(form.price),
         organizerName: form.organizerName.trim(),
-        imageMediaId: uploadedMediaId,
         interestIds: [],
       });
 

@@ -8,7 +8,6 @@ import {
   createJoinRequest,
   EventItem,
   getEvent,
-  getGroupsByEvent,
   GroupItem,
   GroupSize,
 } from "@/lib/api";
@@ -43,12 +42,10 @@ export default function EventGroupsPage() {
     setError("");
     setLoading(true);
     try {
-      const [loadedEvent, loadedGroups] = await Promise.all([
-        getEvent(params.eventId),
-        getGroupsByEvent(params.eventId),
-      ]);
+      const loadedEvent = await getEvent(params.eventId);
       setEventItem(loadedEvent);
-      setGroups(loadedGroups);
+      // Group listing is not yet available on the backend
+      setGroups([]);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not load groups.");
     } finally {
@@ -57,6 +54,7 @@ export default function EventGroupsPage() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadGroups();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.eventId]);
@@ -167,7 +165,9 @@ export default function EventGroupsPage() {
                 ))}
               </div>
             ) : (
-              <EmptyState>No groups yet. Create the first one for this {eventItem?.type === "ACTIVITY" ? "activity" : "event"}.</EmptyState>
+              <EmptyState>
+                Listing groups is coming soon! You can create a new group for this {eventItem?.type === "ACTIVITY" ? "activity" : "event"} and share the link.
+              </EmptyState>
             )}
           </section>
 

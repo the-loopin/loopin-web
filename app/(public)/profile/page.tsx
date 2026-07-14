@@ -66,13 +66,11 @@ export default function CompleteProfilePage() {
   const displayName = user?.name || profile?.name || "Anonymous User";
   const initials = displayName.split(" ").map((n: string) => n[0]).join("").toUpperCase().substring(0, 2);
   const location = profile?.city || "Unknown Location";
-  const onlineStatus = profile?.onlineStatus === "online" || true;
 
   // Dynamic Profile Completion
   const { completionPercentage, missingFields } = useMemo(() => {
     if (!profile) return { completionPercentage: 0, missingFields: [] };
     const fields = [
-      { name: "avatar", label: "Upload profile avatar", complete: !!profile.avatar },
       { name: "bio", label: "Write a short bio", complete: !!profile.bio },
       { name: "city", label: "Add your city", complete: !!profile.city },
       { name: "interests", label: "Complete your interests", complete: !!(profile.interests && profile.interests.length > 0) },
@@ -120,18 +118,9 @@ export default function CompleteProfilePage() {
           <motion.section variants={itemVariants} className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
             <div className="flex items-center gap-6">
               <div className="relative">
-                {profile?.avatar?.url ? (
-                  <img src={profile.avatar.url} alt={displayName} className="w-24 h-24 rounded-[24px] object-cover shadow-xl shadow-[var(--color-accent)]/20 border border-[var(--line)]" />
-                ) : (
                   <div className="w-24 h-24 rounded-[24px] bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-coral)] flex items-center justify-center text-3xl font-black text-white shadow-xl shadow-[var(--color-accent)]/20 border border-white/10 overflow-hidden">
                     {initials}
                   </div>
-                )}
-                {onlineStatus && (
-                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-[var(--background)] rounded-full flex items-center justify-center transition-colors">
-                    <div className="w-3.5 h-3.5 bg-green-500 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
-                  </div>
-                )}
               </div>
               
               <div className="flex flex-col">
@@ -143,12 +132,6 @@ export default function CompleteProfilePage() {
                     <MapPin size={14} className="text-[var(--color-coral)]" />
                     <span>{location}</span>
                   </div>
-                  {onlineStatus && (
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-                      <span>Online</span>
-                    </div>
-                  )}
                 </div>
 
                 <div className="flex items-center gap-2 text-xs font-semibold text-[var(--color-ink)]/70 flex-wrap">
@@ -237,8 +220,9 @@ export default function CompleteProfilePage() {
 
                 {loopedEventsList.length > 0 && (
                   <div className="flex flex-col gap-3">
-                    {loopedEventsList.map((event: any) => {
-                      const dateObj = new Date(event.startDateTime || Date.now());
+                    {loopedEventsList.map((event: EventItem) => {
+                      // eslint-disable-next-line react-hooks/purity
+                      const dateObj = new Date(event.startDateTime || new Date().toISOString());
                       const month = dateObj.toLocaleString('en-US', { month: 'short' });
                       const day = dateObj.getDate();
                       const time = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -402,8 +386,9 @@ export default function CompleteProfilePage() {
 
                 {suggestedEvents && suggestedEvents.length > 0 && (
                   <div className="flex flex-col gap-3">
-                    {suggestedEvents.map((event: any) => {
-                      const dateObj = new Date(event.startDateTime || Date.now());
+                    {suggestedEvents.map((event: EventItem) => {
+                      // eslint-disable-next-line react-hooks/purity
+                      const dateObj = new Date(event.startDateTime || new Date().toISOString());
                       return (
                         <div key={event.id} className="p-4 rounded-[16px] bg-[var(--panel)] border border-[var(--line)] hover:border-[var(--color-coral)]/50 transition-colors group shadow-sm flex flex-col justify-between">
                           <h4 className="text-sm font-bold text-[var(--color-ink)] mb-1 group-hover:text-[var(--color-coral)] transition-colors line-clamp-1">{event.title}</h4>

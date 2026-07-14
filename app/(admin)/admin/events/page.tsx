@@ -45,6 +45,7 @@ export default function AdminEventsPage() {
 
   // Triggers fresh server requests automatically whenever structural parameters modify
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadEvents(currentPage, statusFilter);
   }, [currentPage, statusFilter, loadEvents]);
 

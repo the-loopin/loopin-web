@@ -23,7 +23,7 @@ export default function AdminUsersPage() {
       setUsers(data.content || []);
       setTotalPages(data.totalPages || 0);
       setCurrentPage(data.number || 0);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
       setError("An error occurred while loading users from the database.");
     } finally {
@@ -32,7 +32,8 @@ export default function AdminUsersPage() {
   };
 
   useEffect(() => {
-    fetchUsers(currentPage);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void fetchUsers(currentPage);
   }, [currentPage]);
 
   const handleRoleChange = async (userId: string, newRole: string) => {
@@ -46,7 +47,7 @@ export default function AdminUsersPage() {
       setUsers((prevUsers) =>
         prevUsers.map((u) => (String(u.id) === userId ? { ...u, role: newRole as "USER" | "ADMIN" } : u))
       );
-    } catch (err) {
+    } catch {
       alert("Could not update user role. Please try again.");
     } finally {
       setActionLoadingId(null);
@@ -62,7 +63,7 @@ export default function AdminUsersPage() {
       
       // Remove deleted item from modern state instantly
       setUsers((prevUsers) => prevUsers.filter((u) => String(u.id) !== userId));
-    } catch (err) {
+    } catch {
       alert("Could not delete user. Please try again.");
     } finally {
       setActionLoadingId(null);
