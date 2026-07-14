@@ -10,7 +10,8 @@ import {
   getEvent,
   getGroupsByEvent,
   GroupItem,
-} from "@/lib/api/loopin";
+  GroupSize,
+} from "@/lib/api";
 import { EmptyState, ErrorMessage, Input, PageHeader, Select, SiteShell, Textarea } from "../../../../site";
 import { ArrowLeft, MessageCircle, Plus, Send, Users } from "lucide-react";
 
@@ -68,7 +69,7 @@ export default function EventGroupsPage() {
       const group = await createGroup({
         eventId: params.eventId,
         title: form.title,
-        groupSize: form.groupSize,
+        groupSize: form.groupSize as GroupSize,
         maxMembers: groupSizeToMaxMembers[form.groupSize],
         groupNote: form.groupNote,
       });
