@@ -1,22 +1,22 @@
 import apiClient from "./client";
-import type { CreateGroupMessageRequest, GroupMessage } from "../types/message";
+import type { CreateGroupMessageRequest, GroupMessageResponse } from "./contracts";
+import type { SpringPage } from "./pagination";
 
-type MessagePage = {
-  content?: GroupMessage[];
-};
-
-export async function getGroupMessages(groupId: string): Promise<GroupMessage[]> {
-  const response = await apiClient.get<GroupMessage[] | MessagePage>(`/groups/${groupId}/messages`, {
-    params: { page: 0, size: 200 },
+export async function getGroupMessages(
+  groupId: string,
+  page = 0,
+  size = 200
+): Promise<SpringPage<GroupMessageResponse>> {
+  const response = await apiClient.get<SpringPage<GroupMessageResponse>>(`/groups/${groupId}/messages`, {
+    params: { page, size },
   });
-
-  return Array.isArray(response.data) ? response.data : response.data.content ?? [];
+  return response.data;
 }
 
 export async function sendMessage(
   groupId: string,
-  message: CreateGroupMessageRequest,
-): Promise<GroupMessage> {
-  const response = await apiClient.post<GroupMessage>(`/groups/${groupId}/messages`, message);
+  message: CreateGroupMessageRequest
+): Promise<GroupMessageResponse> {
+  const response = await apiClient.post<GroupMessageResponse>(`/groups/${groupId}/messages`, message);
   return response.data;
 }
