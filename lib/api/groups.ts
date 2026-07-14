@@ -80,17 +80,7 @@ export async function rejectJoinRequest(groupId: string, requestId: string): Pro
   return response.data;
 }
 
-// Gaps: Backend lacks endpoints for listing groups by event or listing my groups.
-// But we must perform the HTTP requests as per instructions (calling them will result in 404 until backend adds them).
-export async function getGroupsByEvent(eventId: string): Promise<GroupResponse[]> {
-  const response = await apiClient.get<GroupResponse[]>(`/groups/by-event/${eventId}`);
-  return response.data;
-}
 
-export async function getMyGroups(): Promise<GroupResponse[]> {
-  const response = await apiClient.get<GroupResponse[]>("/me/groups");
-  return response.data;
-}
 
 // Keep old camelCase/getGroupById alias just in case
 export async function getGroupById(groupId: string): Promise<GroupResponse> {
