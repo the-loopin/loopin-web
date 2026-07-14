@@ -14,12 +14,4 @@ export async function updateProfile(payload: UpdateUserProfileRequest): Promise<
   return response.data;
 }
 
-export async function updateProfileAvatar(mediaId: string): Promise<UserProfileResponse> {
-  const response = await apiClient.put<UserProfileResponse>("/me/avatar", { mediaId });
-  return response.data;
-}
 
-export async function removeProfileAvatar(): Promise<UserProfileResponse> {
-  const response = await apiClient.delete<UserProfileResponse>("/me/avatar");
-  return response.data;
-}
