@@ -11,7 +11,9 @@ import {
   getMyLoopedEvents,
   loopInEvent,
   unloopEvent,
-} from "@/lib/api/loopin";
+  EventCategory,
+  EventStatus,
+} from "@/lib/api";
 import { uploadMedia } from "@/lib/media/uploadMedia";
 import { getAuthToken } from "@/lib/auth/session";
 import LocationPickerMap from "@/components/ui/LocationPickerMap";
@@ -229,9 +231,15 @@ export default function EventsPage() {
     setLoading(true);
     setError("");
     try {
-      const data = await getEvents(filters);
+      const params = {
+        city: filters.city || undefined,
+        category: filters.category ? (filters.category as EventCategory) : undefined,
+        search: filters.search || undefined,
+        isFree: filters.isFree === "true" ? true : filters.isFree === "false" ? false : undefined,
+      };
+      const data = await getEvents(params);
       // Filter client-side to only show events of type EVENT
-      const filtered = data.filter(e => e.type === "EVENT");
+      const filtered = data.content.filter(e => e.type === "EVENT");
       setEvents(filtered);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not load events.");
@@ -257,7 +265,9 @@ export default function EventsPage() {
       try {
         const loopedEvents = await getMyLoopedEvents();
         const loopedIds = Object.fromEntries(
-          loopedEvents.map((event) => [String(event.id), true]),
+          (loopedEvents.content || [])
+            .filter((item) => item.event && item.event.id)
+            .map((item) => [String(item.event!.id), true])
         );
 
         setLoopedEventIds(loopedIds);
@@ -753,7 +763,7 @@ export default function EventsPage() {
                   </label>
                   <label className="form-field">
                     <span>Category</span>
-                    <select value={form.category} onChange={(event) => updateFormField("category", event.target.value)}>
+                    <select value={form.category} onChange={(event) => updateFormField("category", event.target.value as EventCategory)}>
                       {categories.map((category) => <option key={category} value={category}>{formatCategoryName(category)}</option>)}
                     </select>
                   </label>
