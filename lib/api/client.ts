@@ -46,13 +46,23 @@ apiClient.interceptors.response.use(
     const status = error?.response?.status ?? 500;
     const responseData = error?.response?.data;
     
+    const fallbackCodeByStatus: Record<number, string> = {
+      400: "BAD_REQUEST",
+      401: "UNAUTHORIZED",
+      403: "FORBIDDEN",
+      404: "NOT_FOUND",
+      409: "CONFLICT",
+      429: "RATE_LIMITED",
+      500: "INTERNAL_SERVER_ERROR",
+    };
+
     // Default error details
     let message = error.message ?? "An unexpected error occurred";
-    let code = "INTERNAL_SERVER_ERROR";
+    let code = fallbackCodeByStatus[status] ?? "UNKNOWN_ERROR";
     let fieldErrors: Record<string, string> | undefined;
 
     if (responseData && typeof responseData === "object") {
-      message = responseData.message ?? message;
+      message = responseData.message ?? responseData.detail ?? message;
       code = responseData.error ?? responseData.code ?? code;
       fieldErrors = responseData.fieldErrors;
     }
