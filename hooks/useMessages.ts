@@ -1,11 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getGroupMessages, sendMessage } from "../lib/api/messages";
+import { getGroupMessages, sendMessage } from "../lib/api";
 import type { CreateGroupMessageRequest } from "../lib/types/message";
 
 export function useMessages(groupId: string | undefined) {
   return useQuery({
     queryKey: ["messages", groupId],
-    queryFn: () => getGroupMessages(groupId ?? ""),
+    queryFn: async () => {
+      const page = await getGroupMessages(groupId ?? "");
+      return page.content || [];
+    },
     enabled: Boolean(groupId),
   });
 }
