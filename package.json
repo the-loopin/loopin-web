@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "api:schema:update": "node scripts/update-openapi-schema.mjs",
+    "api:generate": "openapi-typescript contracts/openapi.json -o lib/api/generated/schema.ts",
+    "api:check": "npm run api:generate && git diff --exit-code -- contracts/openapi.json lib/api/generated/schema.ts",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
@@ -35,6 +39,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
+    "openapi-typescript": "^7.13.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
