@@ -49,8 +49,12 @@ export type EventItem = Omit<
   updatedAt?: string;
 };
 
-type PageResponse<T> = {
-  content?: T[];
+export type PageResponse<T> = {
+  content: T[];
+  totalPages: number;
+  totalElements: number;
+  size: number;
+  number: number;
 };
 
 export type GroupPayload = {
@@ -98,7 +102,6 @@ export type ProfilePayload = {
   onlineStatus?: string;
 };
 
-
 export type GroupMemberItem = {
   id: string;
   groupId: string;
@@ -115,6 +118,21 @@ export type InterestItem = {
   id: string;
   label: string;
 };
+
+export type MediaUploadRequest = {
+  purpose: "EVENT_IMAGE" | "PROFILE_AVATAR" | "GROUP_IMAGE";
+  fileName: string;
+  contentType: string;
+  sizeBytes: number;
+};
+
+export type MediaUploadResponse = {
+  mediaId: string;
+  uploadUrl: string;
+  expiresAt: string;
+  requiredHeaders?: Record<string, string>;
+};
+
 
 export async function registerUser(payload: { email: string; name: string }) {
   const response = await apiClient.post<UserItem>("/users/register", payload);
@@ -176,6 +194,21 @@ export async function deleteEvent(id: string) {
   await apiClient.delete(`/events/${id}`);
 }
 
+export async function loopInEvent(eventId: string) {
+  const response = await apiClient.post<EventItem>(`/events/${eventId}/loop-in`);
+  return response.data;
+}
+
+export async function unloopEvent(eventId: string) {
+  await apiClient.delete(`/events/${eventId}/loop-in`);
+}
+
+export async function getMyLoopedEvents() {
+  const response = await apiClient.get<EventItem[]>("/me/looped-events");
+  return response.data;
+}
+
+
 export async function createGroup(payload: GroupPayload) {
   const response = await apiClient.post<GroupItem>("/groups", payload);
   return response.data;
@@ -186,8 +219,6 @@ export async function getGroupsByEvent(eventId: string) {
   return response.data;
 }
 
-// Groups the current user belongs to (as admin or member) - powers the
-// "My Active Groups" panel on the profile page.
 export async function getMyGroups() {
   const response = await apiClient.get<GroupItem[] | PageResponse<GroupItem>>("/me/groups");
   return Array.isArray(response.data) ? response.data : response.data.content ?? [];
@@ -208,27 +239,15 @@ export async function updateGroupStatus(id: string, status: string) {
   return response.data;
 }
 
-export async function getGroupMembers(
-  groupId: string,
-): Promise<GroupMemberItem[]> {
-  const response = await apiClient.get<GroupMemberItem[]>(
-    `/groups/${groupId}/members`,
-  );
-
+export async function getGroupMembers(groupId: string): Promise<GroupMemberItem[]> {
+  const response = await apiClient.get<GroupMemberItem[]>(`/groups/${groupId}/members`);
   return response.data;
 }
 
-export async function addGroupMember(
-  groupId: string,
-  userPublicId: string,
-) {
-  const response = await apiClient.post(
-    `/groups/${groupId}/members`,
-    {
-      userId: userPublicId,
-    },
-  );
-
+export async function addGroupMember(groupId: string, userPublicId: string) {
+  const response = await apiClient.post(`/groups/${groupId}/members`, {
+    userId: userPublicId,
+  });
   return response.data;
 }
 
@@ -280,7 +299,6 @@ export async function getBadges() {
   return response.data;
 }
 
-// Notification / privacy preferences shown on the profile page.
 export async function getSettings() {
   const response = await apiClient.get<UserSettings>("/me/settings");
   return response.data;
@@ -291,15 +309,11 @@ export async function updateSettings(payload: Partial<UserSettings>) {
   return response.data;
 }
 
-// Full catalog of interests users can pick from (used to render the
-// "Interests" panel with the correct labels, even ones the user hasn't
-// selected yet).
 export async function getAvailableInterests() {
   const response = await apiClient.get<InterestItem[]>("/interests");
   return response.data;
 }
 
-// The IDs of interests the current user has selected.
 export async function getMyInterests() {
   const response = await apiClient.get<string[]>("/me/interests");
   return response.data;
@@ -310,30 +324,40 @@ export async function updateMyInterests(interestIds: string[]) {
   return response.data;
 }
 
+// GET /v1/admin/dashboard/stats
 export async function getAdminStats() {
   const response = await apiClient.get<Record<string, number>>("/admin/dashboard/stats");
   return response.data;
 }
 
-export async function getAdminUsers() {
-  const response = await apiClient.get<{ content?: UserItem[] } | UserItem[]>("/admin/users");
-  return Array.isArray(response.data) ? response.data : response.data.content ?? [];
+// GET /v1/admin/users
+export async function getAdminUsers(page = 0, size = 10) {
+  const response = await apiClient.get<PageResponse<UserItem>>("/admin/users", {
+    params: { page, size }
+  });
+  return response.data;
 }
 
-export async function getAdminEvents() {
-  const response = await apiClient.get<{ content?: EventItem[] } | EventItem[]>("/admin/events");
-  return Array.isArray(response.data) ? response.data : response.data.content ?? [];
+// GET /v1/admin/events
+export async function getAdminEvents(status?: string, page = 0, size = 10) {
+  const response = await apiClient.get<PageResponse<EventItem>>("/admin/events", {
+    params: { status, page, size }
+  });
+  return response.data;
 }
 
-export async function updateAdminUserRole(userId: string, role: string) {
+// PUT /v1/admin/users/{id}/role
+export async function updateUserRole(userId: string, role: string) {
   const response = await apiClient.put<UserItem>(`/admin/users/${userId}/role`, { role });
   return response.data;
 }
 
-export async function deleteAdminUser(userId: string) {
+// DELETE /v1/admin/users/{id}
+export async function deleteUser(userId: string) {
   await apiClient.delete(`/admin/users/${userId}`);
 }
 
+// DELETE /v1/admin/events/{id}
 export async function deleteAdminEvent(eventId: string) {
   await apiClient.delete(`/admin/events/${eventId}`);
 }
