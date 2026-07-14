@@ -2,6 +2,7 @@
 
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef, useEffect, useState } from "react";
+import type { Material, Mesh } from "three";
 import {
   QuadraticBezierCurve3,
   Vector3,
@@ -91,8 +92,15 @@ export function MatchArcs() {
     if (pulseRef.current) {
       pulseRef.current.scale.setScalar(pulseScale);
       pulseRef.current.children.forEach((child: unknown) => {
-        const mesh = child as THREE.Mesh;
-        if (mesh.material) (mesh.material as THREE.Material).opacity = pulseOpacity;
+        const mesh = child as Mesh;
+        if (mesh.material) {
+          const materials = Array.isArray(mesh.material)
+            ? mesh.material
+            : [mesh.material];
+          materials.forEach((mat) => {
+            (mat as Material).opacity = pulseOpacity;
+          });
+        }
       });
     }
   });
