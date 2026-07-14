@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
-import { deleteEvent, EventItem, EventPayload, getEvent, updateEvent } from "@/lib/api/loopin";
+import { deleteEvent, EventItem, EventPayload, getEvent, updateEvent, EventCategory, EventStatus, EventUpdateRequest } from "@/lib/api";
 import { ErrorMessage, Input, PageHeader, Panel, Select, SiteShell, Textarea } from "../../../site";
 
 const categories = ["TECH", "STARTUP", "HR", "EDUCATION", "TRAVEL", "SPORT", "SOCIAL", "LANGUAGE", "CREATIVE", "OTHER"];
@@ -23,19 +23,10 @@ export default function EventDetailRoutePage() {
       const loaded = await getEvent(eventId);
       setEvent(loaded);
       setForm({
-        title: loaded.title,
-        description: loaded.description,
-        type: loaded.type,
-        category: loaded.category,
-        city: loaded.city,
+        ...loaded,
         address: loaded.address ?? "",
-        startDateTime: loaded.startDateTime,
-        endDateTime: loaded.endDateTime,
-        isFree: loaded.isFree,
         price: Number(loaded.price ?? 0),
-        organizerName: loaded.organizerName,
         imageUrl: loaded.imageUrl ?? "",
-        status: loaded.status,
       });
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not load event.");
@@ -54,7 +45,23 @@ export default function EventDetailRoutePage() {
     submitEvent.preventDefault();
     if (!form) return;
     try {
-      const updated = await updateEvent(eventId, form);
+      const payload: EventUpdateRequest = {
+        title: form.title,
+        description: form.description,
+        type: form.type,
+        category: form.category,
+        city: form.city,
+        address: form.address || undefined,
+        latitude: form.latitude,
+        longitude: form.longitude,
+        startDateTime: form.startDateTime,
+        endDateTime: form.endDateTime,
+        isFree: form.isFree,
+        price: form.price,
+        organizerName: form.organizerName,
+        imageUrl: form.imageUrl || undefined,
+      };
+      const updated = await updateEvent(eventId, payload);
       setEvent(updated);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not update event.");
@@ -86,14 +93,14 @@ export default function EventDetailRoutePage() {
               <Input label="Title" value={form.title} onChange={(title) => setForm((c) => c && { ...c, title })} />
               <Textarea label="Description" value={form.description} onChange={(description) => setForm((c) => c && { ...c, description })} />
               <div className="grid gap-3 md:grid-cols-2">
-                <Select label="Category" value={form.category} options={categories} onChange={(category) => setForm((c) => c && { ...c, category })} />
-                <Select label="Status" value={form.status} options={statuses} onChange={(status) => setForm((c) => c && { ...c, status })} />
+                <Select label="Category" value={form.category} options={categories} onChange={(category) => setForm((c) => c && { ...c, category: category as EventCategory })} />
+                <Select label="Status" value={form.status} options={statuses} onChange={(status) => setForm((c) => c && { ...c, status: status as EventStatus })} />
                 <Input label="City" value={form.city} onChange={(city) => setForm((c) => c && { ...c, city })} />
                 <Input label="Address" value={form.address} onChange={(address) => setForm((c) => c && { ...c, address })} />
                 <Input label="Start" value={form.startDateTime} onChange={(startDateTime) => setForm((c) => c && { ...c, startDateTime })} />
                 <Input label="End" value={form.endDateTime} onChange={(endDateTime) => setForm((c) => c && { ...c, endDateTime })} />
                 <Input label="Organizer" value={form.organizerName} onChange={(organizerName) => setForm((c) => c && { ...c, organizerName })} />
-                <Input label="Image URL" value={form.imageUrl} onChange={(imageUrl) => setForm((c) => c && { ...c, imageUrl })} />
+                <Input label="Image URL" value={form.imageUrl || ""} onChange={(imageUrl) => setForm((c) => c && { ...c, imageUrl })} />
               </div>
               <div className="flex flex-wrap gap-2">
                 <button className="primary-button" type="submit">Save event</button>
