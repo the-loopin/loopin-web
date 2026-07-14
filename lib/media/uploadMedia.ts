@@ -2,7 +2,7 @@ import {
   completeMediaUpload,
   type MediaPurpose,
   requestMediaUpload,
-} from "@/lib/api/loopin";
+} from "@/lib/api";
 
 const supportedImageTypes = new Set([
   "image/jpeg",
@@ -50,11 +50,18 @@ export async function uploadMedia(
     sizeBytes: file.size,
   });
 
+  if (!upload.uploadUrl) {
+    throw new Error("Missing upload URL from media registry.");
+  }
+  if (!upload.mediaId) {
+    throw new Error("Missing media ID from media registry.");
+  }
+
   const storageResponse = await fetch(
     upload.uploadUrl,
     {
       method: "PUT",
-      headers: upload.requiredHeaders,
+      headers: upload.requiredHeaders as Record<string, string>,
       body: file,
     },
   );
@@ -76,6 +83,10 @@ export async function uploadMedia(
     throw new Error(
       `Unexpected media status: ${completion.status}`,
     );
+  }
+
+  if (!completion.mediaId) {
+    throw new Error("Media completion did not return a valid media ID.");
   }
 
   return completion.mediaId;
