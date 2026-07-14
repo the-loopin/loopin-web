@@ -3,28 +3,22 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  completeMediaUpload,
   createEvent,
-  EventItem,
-  EventPayload,
+  deleteMedia,
+  type EventItem,
+  type EventPayload,
   getEvents,
   getMyLoopedEvents,
   loopInEvent,
-  requestMediaUpload,
   unloopEvent,
 } from "@/lib/api/loopin";
+import { uploadMedia } from "@/lib/media/uploadMedia";
 import { getAuthToken } from "@/lib/auth/session";
 import LocationPickerMap from "@/components/ui/LocationPickerMap";
 import { EmptyState, ErrorMessage, Input, PageHeader, Select, SiteShell } from "../../site";
 import { ArrowLeft, CalendarDays, CheckCircle2, CircleMinus, Clock, FileText, ImagePlus, Info, MapPin, Navigation, Plus, RefreshCw, Save, Search, Send, Ticket, Users } from "lucide-react";
 
 const categories = ["TECH", "STARTUP", "HR", "EDUCATION", "TRAVEL", "SPORT", "SOCIAL", "LANGUAGE", "CREATIVE", "OTHER"];
-const bakuBounds = {
-  north: 40.47,
-  south: 40.3,
-  east: 50.02,
-  west: 49.78,
-};
 const bakuCenter = { latitude: 40.3777, longitude: 49.892 };
 
 function formatDateTimeLocal(date: Date) {
@@ -114,21 +108,21 @@ function scoreAddressPlace(place: NominatimPlace, originalAddress: string) {
 
 function createInitialForm(): EventPayload {
   return {
-  title: "Casual Photography Walk",
-  description: "Meet up to walk around Icherisheher and take some photos.",
-  type: "ACTIVITY",
-  category: "CREATIVE",
-  city: "Baku",
-  address: "Old City Gate",
-  latitude: bakuCenter.latitude,
-  longitude: bakuCenter.longitude,
-  startDateTime: getDateTimeFromNow(60),
-  endDateTime: getDateTimeFromNow(180),
-  isFree: true,
-  price: 0,
-  organizerName: "Leo Test",
-  imageUrl: "https://images.unsplash.com/photo-1452587925148-ce544e77e70d",
-  status: "PUBLISHED",
+    title: "Casual Photography Walk",
+    description: "Meet up to walk around Icherisheher and take some photos.",
+    type: "ACTIVITY",
+    category: "CREATIVE",
+    city: "Baku",
+    address: "Old City Gate",
+    latitude: bakuCenter.latitude,
+    longitude: bakuCenter.longitude,
+    startDateTime: getDateTimeFromNow(60),
+    endDateTime: getDateTimeFromNow(180),
+    isFree: true,
+    price: 0,
+    organizerName: "Leo Test",
+    imageUrl: "https://images.unsplash.com/photo-1452587925148-ce544e77e70d",
+    status: "PUBLISHED",
   };
 }
 
@@ -246,32 +240,42 @@ export default function ActivitiesPage() {
     }
   }
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void loadActivities();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.category, filters.city, filters.isFree, filters.search]); // auto-trigger on simple filters
+useEffect(() => {
+  if (!getAuthToken()) {
+    return;
+  }
 
-  useEffect(() => {
-    if (!getAuthToken()) {
-      return;
+  async function loadLoopedActivities() {
+    const storedLoopedIds =
+      getStoredLoopedIds();
+
+    try {
+      const loopedEvents =
+        await getMyLoopedEvents();
+
+      const loopedIds =
+        Object.fromEntries(
+          loopedEvents.map((event) => [
+            String(event.id),
+            true,
+          ]),
+        );
+
+      setLoopedActivityIds(loopedIds);
+      saveStoredLoopedIds(loopedIds);
+    } catch {
+      /*
+       * if Backend request fails
+       * use localStorage fallback.
+       */
+      setLoopedActivityIds(
+        storedLoopedIds,
+      );
     }
+  }
 
-    setLoopedActivityIds(getStoredLoopedIds());
-
-    async function loadLoopedActivities() {
-      try {
-        const loopedEvents = await getMyLoopedEvents();
-        const loopedIds = Object.fromEntries(loopedEvents.map((event) => [String(event.id), true]));
-        setLoopedActivityIds(loopedIds);
-        saveStoredLoopedIds(loopedIds);
-      } catch {
-        // Keep the locally stored state if the sync request is temporarily unavailable.
-      }
-    }
-
-    void loadLoopedActivities();
-  }, []);
+  void loadLoopedActivities();
+}, []);
 
   useEffect(() => {
     if (!actionToast) {
@@ -429,24 +433,15 @@ export default function ActivitiesPage() {
     }
   }
 
-  async function uploadImageIfNeeded() {
-    if (!imageFile) return form.imageUrl;
+  async function uploadImageIfNeeded(): Promise<string | undefined> {
+    if (!imageFile) {
+      return undefined;
+    }
 
     setUploadingImage(true);
+
     try {
-      const upload = await requestMediaUpload({
-        purpose: "EVENT_IMAGE",
-        fileName: imageFile.name,
-        contentType: imageFile.type || "application/octet-stream",
-        sizeBytes: imageFile.size,
-      });
-      await fetch(upload.uploadUrl, {
-        method: "PUT",
-        headers: upload.requiredHeaders ?? { "Content-Type": imageFile.type || "application/octet-stream" },
-        body: imageFile,
-      });
-      await completeMediaUpload(upload.mediaId);
-      return form.imageUrl;
+      return await uploadMedia(imageFile, "EVENT_IMAGE");
     } finally {
       setUploadingImage(false);
     }
@@ -454,12 +449,16 @@ export default function ActivitiesPage() {
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
     if (!getAuthToken()) {
-      router.push("/login?warning=Please%20sign%20in%20before%20creating%20an%20activity.");
+      router.push(
+        "/login?warning=Please%20sign%20in%20before%20creating%20an%20activity.",
+      );
       return;
     }
 
     const validationErrors = validateForm();
+
     if (Object.keys(validationErrors).length > 0) {
       setError("");
       setActionToast({
@@ -472,20 +471,56 @@ export default function ActivitiesPage() {
     }
 
     setError("");
+
+    let uploadedMediaId: string | undefined;
+
     try {
-      const imageUrl = await uploadImageIfNeeded();
-      // Ensure type is forced to ACTIVITY
-      const created = await createEvent({ ...form, imageUrl, status: "PUBLISHED", type: "ACTIVITY" });
-      const displayCategory = form.category === "OTHER" ? customCategory.trim() : "";
-      const createdForDisplay = {
+      uploadedMediaId = await uploadImageIfNeeded();
+
+      const created = await createEvent({
+        title: form.title.trim(),
+        description: form.description.trim(),
+        type: "ACTIVITY",
+        category: form.category,
+        city: form.city.trim(),
+        address: form.address.trim(),
+        latitude: form.latitude,
+        longitude: form.longitude,
+        startDateTime: form.startDateTime,
+        endDateTime: form.endDateTime,
+        isFree: form.isFree,
+        price: form.isFree ? 0 : Number(form.price),
+        organizerName: form.organizerName.trim(),
+        imageMediaId: uploadedMediaId,
+        interestIds: [],
+      });
+
+      /*
+       * createEvent succeeded, so the backend attached the media to the event.
+       * Do not delete it in the catch block after this point.
+       */
+      uploadedMediaId = undefined;
+
+      const displayCategory =
+        form.category === "OTHER" ? customCategory.trim() : "";
+
+      const createdForDisplay: EventItem = {
         ...created,
         displayCategory,
-        imageUrl: imagePreviewUrl || created.imageUrl || imageUrl,
+        /*
+         * The backend currently does not return a display URL for MediaAsset.
+         * Keep the local preview for the newly created card until the page reloads.
+         */
+        imageUrl:
+          imagePreviewUrl ||
+          created.imageUrl ||
+          form.imageUrl,
       };
+
       setActivities((current) => [createdForDisplay, ...current]);
       setSelectedActivityId(createdForDisplay.id);
       setShowCreateForm(false);
-      // Reset form title/desc for next use
+
       setForm({
         ...createInitialForm(),
         title: "Bicycle Ride Boulevard",
@@ -496,12 +531,25 @@ export default function ActivitiesPage() {
       setImagePreviewUrl("");
       setFormErrors({});
     } catch (caught) {
+      /*
+       * Upload completed but event creation failed.
+       * Delete the unattached media asset to avoid an orphan object.
+       */
+      if (uploadedMediaId) {
+        await deleteMedia(uploadedMediaId).catch(() => undefined);
+      }
+
       const apiError = getApiErrorResponse(caught);
-      const message = getApiErrorMessage(caught, "Could not create activity.");
+      const message = getApiErrorMessage(
+        caught,
+        "Could not create activity.",
+      );
+
       if (apiError?.fieldErrors) {
         setFormErrors(apiError.fieldErrors as FormErrors);
         focusFirstInvalidField(apiError.fieldErrors as FormErrors);
       }
+
       setError("");
       setActionToast({
         type: "error",
@@ -832,7 +880,7 @@ export default function ActivitiesPage() {
                       <label className="upload-button">
                         <ImagePlus size={16} /> {activityPreviewImage ? "Change image" : "Choose image"}
                         <input
-                          accept="image/*"
+                          accept="image/jpeg,image/png,image/webp"
                           type="file"
                           onChange={(event) => {
                             const file = event.target.files?.[0] ?? null;
