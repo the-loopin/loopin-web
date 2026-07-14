@@ -13,7 +13,7 @@ import {
   EventCategory,
   type SpringPage,
 } from "@/lib/api";
-import { assertEventImageContract } from "@/lib/media/eventImageContract";
+import { withUploadedMedia } from "@/lib/media/withUploadedMedia";
 import { getAuthToken } from "@/lib/auth/session";
 import LocationPickerMap from "@/components/ui/LocationPickerMap";
 import { EmptyState, ErrorMessage, Input, PageHeader, Select, SiteShell } from "../../site";
@@ -122,8 +122,6 @@ function createInitialForm(): EventPayload {
   isFree: true,
   price: 0,
   organizerName: "Baku Hackers Club",
-  imageUrl: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d",
-  status: "PUBLISHED",
   };
 }
 
@@ -466,35 +464,51 @@ export default function EventsPage() {
     setError("");
 
     try {
-      assertEventImageContract(imageFile);
-
-      const created = await createEvent({
-        title: form.title.trim(),
-        description: form.description.trim(),
-        type: "EVENT",
-        category: form.category,
-        city: form.city.trim(),
-        address: form.address.trim(),
-        latitude: form.latitude,
-        longitude: form.longitude,
-        startDateTime: form.startDateTime,
-        endDateTime: form.endDateTime,
-        isFree: form.isFree,
-        price: form.isFree ? 0 : Number(form.price),
-        organizerName: form.organizerName.trim(),
-        imageUrl: form.imageUrl || undefined,
-        interestIds: [],
+      const created = await withUploadedMedia({
+        file: imageFile,
+        purpose: "EVENT_IMAGE",
+        commit: (imageMediaId) =>
+          createEvent({
+            title: form.title.trim(),
+            description: form.description.trim(),
+            type: "EVENT",
+            category: form.category,
+            city: form.city.trim(),
+            address: form.address.trim(),
+            latitude: form.latitude,
+            longitude: form.longitude,
+            startDateTime: form.startDateTime,
+            endDateTime: form.endDateTime,
+            isFree: form.isFree,
+            price: form.isFree ? 0 : Number(form.price),
+            organizerName: form.organizerName.trim(),
+            imageMediaId,
+            interestIds: [],
+          }),
       });
 
-      const displayCategory = form.category === "OTHER" ? customCategory.trim() : "";
-      const createdForDisplay = {
+      const displayCategory =
+        form.category === "OTHER"
+          ? customCategory.trim()
+          : "";
+
+      const createdForDisplay: EventItem = {
         ...created,
         displayCategory,
-        imageUrl: imagePreviewUrl || created.imageUrl || form.imageUrl,
+        // The backend currently returns media metadata but no public
+        // delivery URL. Keep the local object URL until the next reload.
+        imageUrl:
+          imagePreviewUrl ||
+          created.imageUrl,
       };
 
-      setEvents((current) => [createdForDisplay, ...current]);
-      setSelectedEventId(createdForDisplay.id);
+      setEvents((current) => [
+        createdForDisplay,
+        ...current,
+      ]);
+      setSelectedEventId(
+        createdForDisplay.id,
+      );
       setShowCreateForm(false);
 
       setForm({
@@ -552,7 +566,7 @@ export default function EventsPage() {
   const selectedMapUrl = getMapUrl(selectedLocation.latitude, selectedLocation.longitude);
   const pickerLatitude = form.latitude ?? bakuCenter.latitude;
   const pickerLongitude = form.longitude ?? bakuCenter.longitude;
-  const eventPreviewImage = imagePreviewUrl || form.imageUrl;
+  const eventPreviewImage = imagePreviewUrl;
 
   function toggleMoreInfo(eventId: EventItem["id"]) {
     setFlippedEventIds((current) => ({ ...current, [String(eventId)]: !current[String(eventId)] }));
@@ -575,7 +589,6 @@ export default function EventsPage() {
   function removeSelectedImage() {
     setImageFile(null);
     setImagePreviewUrl("");
-    updateFormField("imageUrl", "");
   }
 
   function handleMapLocationChange(nextLatitude: number, nextLongitude: number) {
@@ -831,7 +844,7 @@ export default function EventsPage() {
                   <span><ImagePlus size={18} /></span>
                   <div>
                     <h3>Event Image</h3>
-                    <p>Add a cover image that feels close to the actual event.</p>
+                    <p>Upload a JPEG, PNG or WebP cover image.</p>
                   </div>
                 </div>
                 <div className="image-upload-panel image-upload-panel-large">
@@ -847,29 +860,35 @@ export default function EventsPage() {
                   </div>
                   <div className="image-upload-body">
                     <strong>{imageFile ? imageFile.name : "Cover image"}</strong>
-                    <span>Local file attachment is unavailable until the API supports media attachment. Use an image URL instead.</span>
+                    <span>The image is uploaded first and attached to the Event by media ID.</span>
                     <div className="image-upload-actions">
-                      <label className="upload-button opacity-50 cursor-not-allowed" aria-disabled="true">
-                        <ImagePlus size={16} /> File uploads unavailable
+                      <label className="upload-button">
+                        <ImagePlus size={16} /> Choose image
                         <input
-                          accept="image/*"
+                          accept="image/jpeg,image/png,image/webp"
                           type="file"
-                          disabled
-                          onChange={(event) => {
-                            const file = event.target.files?.[0] ?? null;
+                          onChange={(changeEvent) => {
+                            const file = changeEvent.target.files?.[0] ?? null;
+                            if (imagePreviewUrl) {
+                              URL.revokeObjectURL(imagePreviewUrl);
+                            }
                             setImageFile(file);
-                            setImagePreviewUrl(file ? URL.createObjectURL(file) : "");
+                            setImagePreviewUrl(
+                              file ? URL.createObjectURL(file) : "",
+                            );
                           }}
                         />
                       </label>
                       {eventPreviewImage ? (
-                        <button className="secondary-button" type="button" onClick={removeSelectedImage}>Remove</button>
+                        <button
+                          className="secondary-button"
+                          type="button"
+                          onClick={removeSelectedImage}
+                        >
+                          Remove
+                        </button>
                       ) : null}
                     </div>
-                    <label className="form-field mt-3">
-                      <span>Image URL</span>
-                      <input type="url" value={form.imageUrl} placeholder="https://example.com/cover.jpg" onChange={(event) => updateFormField("imageUrl", event.target.value)} />
-                    </label>
                   </div>
                 </div>
               </section>
