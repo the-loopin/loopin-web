@@ -76,6 +76,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/me/avatar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["updateMyAvatar"];
+        post?: never;
+        delete: operations["removeMyAvatar"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/groups/{groupId}": {
         parameters: {
             query?: never;
@@ -87,6 +103,22 @@ export interface paths {
         put: operations["updateGroup"];
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/groups/{groupId}/image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["updateGroupImage"];
+        post?: never;
+        delete: operations["removeGroupImage"];
         options?: never;
         head?: never;
         patch?: never;
@@ -312,6 +344,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/dev/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["devLogin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/auth/google": {
         parameters: {
             query?: never;
@@ -322,22 +370,6 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["authenticateGoogleUser"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/auth/dev-login": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["devLogin"];
         delete?: never;
         options?: never;
         head?: never;
@@ -624,22 +656,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/health": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["healthCheck"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/v1/groups/{groupId}/members/{userId}": {
         parameters: {
             query?: never;
@@ -903,6 +919,13 @@ export interface components {
             slug?: string;
             category?: string;
         };
+        MediaReferenceResponse: {
+            /** Format: uuid */
+            id?: string;
+            contentType?: string;
+            /** Format: int64 */
+            sizeBytes?: number;
+        };
         UserProfileResponse: {
             /** Format: uuid */
             id?: string;
@@ -911,6 +934,7 @@ export interface components {
             name?: string;
             city?: string;
             bio?: string;
+            avatar?: components["schemas"]["MediaReferenceResponse"];
             interests?: components["schemas"]["InterestResponse"][];
         };
         UpdateUserInterestsRequest: {
@@ -921,6 +945,10 @@ export interface components {
             interestId: string;
             weight?: number;
             source?: string;
+        };
+        UpdateUserAvatarRequest: {
+            /** Format: uuid */
+            mediaId: string;
         };
         UpdateGroupRequest: {
             title?: string;
@@ -946,10 +974,15 @@ export interface components {
             /** @enum {string} */
             status?: "OPEN" | "FULL" | "ARCHIVED" | "CANCELLED";
             groupNote?: string;
+            image?: components["schemas"]["MediaReferenceResponse"];
             /** Format: int32 */
             memberCount?: number;
             /** Format: date-time */
             createdAt?: string;
+        };
+        UpdateGroupImageRequest: {
+            /** Format: uuid */
+            mediaId: string;
         };
         EventUpdateRequest: {
             title: string;
@@ -969,7 +1002,8 @@ export interface components {
             isFree: boolean;
             price?: number;
             organizerName: string;
-            imageUrl?: string;
+            /** Format: uuid */
+            imageMediaId?: string;
             interestIds?: string[];
         };
         EventResponse: {
@@ -992,7 +1026,9 @@ export interface components {
             isFree?: boolean;
             price?: number;
             organizerName?: string;
+            /** @deprecated */
             imageUrl?: string;
+            image?: components["schemas"]["MediaReferenceResponse"];
             /** @enum {string} */
             status?: "DRAFT" | "PUBLISHED" | "COMPLETED" | "CANCELLED";
             /** @enum {string} */
@@ -1076,6 +1112,8 @@ export interface components {
             /** Format: int32 */
             maxMembers?: number;
             groupNote?: string;
+            /** Format: uuid */
+            imageMediaId?: string;
         };
         CreateGroupMessageRequest: {
             messageText: string;
@@ -1140,13 +1178,24 @@ export interface components {
             isFree: boolean;
             price?: number;
             organizerName: string;
-            imageUrl?: string;
+            /** Format: uuid */
+            imageMediaId?: string;
             interestIds?: string[];
         };
         LoopedEventResponse: {
             event?: components["schemas"]["EventResponse"];
             /** Format: int64 */
             loopedCount?: number;
+        };
+        DevLoginRequest: {
+            email: string;
+        };
+        DevLoginResult: {
+            accessToken?: string;
+            tokenType?: string;
+            /** Format: uuid */
+            userId?: string;
+            email?: string;
         };
         GoogleLoginRequest: {
             idToken: string;
@@ -1157,9 +1206,6 @@ export interface components {
             name?: string;
             /** @enum {string} */
             role?: "USER" | "ADMIN";
-        };
-        DevLoginRequest: {
-            email?: string;
         };
         CreateAnnouncementRequest: {
             title: string;
@@ -1241,11 +1287,11 @@ export interface components {
         };
         Pageablenull: {
             unpaged?: boolean;
-            /** Format: int32 */
-            pageNumber?: number;
             paged?: boolean;
             /** Format: int32 */
             pageSize?: number;
+            /** Format: int32 */
+            pageNumber?: number;
             /** Format: int64 */
             offset?: number;
             sort?: components["schemas"]["Sortnull"];
@@ -1534,6 +1580,50 @@ export interface operations {
             };
         };
     };
+    updateMyAvatar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateUserAvatarRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["UserProfileResponse"];
+                };
+            };
+        };
+    };
+    removeMyAvatar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["UserProfileResponse"];
+                };
+            };
+        };
+    };
     getGroup: {
         parameters: {
             query?: never;
@@ -1570,6 +1660,54 @@ export interface operations {
                 "application/json": components["schemas"]["UpdateGroupRequest"];
             };
         };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["GroupResponse"];
+                };
+            };
+        };
+    };
+    updateGroupImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                groupId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateGroupImageRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["GroupResponse"];
+                };
+            };
+        };
+    };
+    removeGroupImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                groupId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description OK */
             200: {
@@ -2049,30 +2187,6 @@ export interface operations {
             };
         };
     };
-    authenticateGoogleUser: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["GoogleLoginRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["AuthResponse"];
-                };
-            };
-        };
-    };
     devLogin: {
         parameters: {
             query?: never;
@@ -2083,6 +2197,30 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["DevLoginRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DevLoginResult"];
+                };
+            };
+        };
+    };
+    authenticateGoogleUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoogleLoginRequest"];
             };
         };
         responses: {
@@ -2495,28 +2633,6 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["InterestResponse"][];
-                };
-            };
-        };
-    };
-    healthCheck: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": {
-                        [key: string]: string;
-                    };
                 };
             };
         };
