@@ -68,6 +68,8 @@ export default function CompleteProfilePage() {
   const initials = displayName.split(" ").map((n: string) => n[0]).join("").toUpperCase().substring(0, 2);
   const location = profile?.city || "Unknown Location";
 
+  const avatarUrl = profile?.avatar?.url;
+
   // Dynamic Profile Completion
   const { completionPercentage, missingFields } = useMemo(() => {
     if (!profile) return { completionPercentage: 0, missingFields: [] };
@@ -119,9 +121,18 @@ export default function CompleteProfilePage() {
           <motion.section variants={itemVariants} className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
             <div className="flex items-center gap-6">
               <div className="relative">
-                  <div className="w-24 h-24 rounded-[24px] bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-coral)] flex items-center justify-center text-3xl font-black text-white shadow-xl shadow-[var(--color-accent)]/20 border border-white/10 overflow-hidden">
-                    {initials}
-                  </div>
+                <div className="w-24 h-24 rounded-[24px] bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-coral)] flex items-center justify-center text-3xl font-black text-white shadow-xl shadow-[var(--color-accent)]/20 border border-white/10 overflow-hidden">
+                  {avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={avatarUrl}
+                      alt={`${displayName} avatar`}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    initials
+                  )}
+                </div>
               </div>
               
               <div className="flex flex-col">
