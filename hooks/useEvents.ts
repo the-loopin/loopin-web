@@ -1,8 +1,8 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { getEventById, getEvents } from "../lib/api/events";
+import { getEventById, getEvents } from "../lib/api";
 
 export function useEvents() {
-  return useQuery({ queryKey: ["events"], queryFn: getEvents });
+  return useQuery({ queryKey: ["events"], queryFn: () => getEvents() });
 }
 
 export function useEvent(eventId: string | undefined) {
@@ -17,11 +17,11 @@ export function useRefreshEvents() {
   return useMutation({ mutationFn: async () => getEvents() });
 }
 
-import { getMyLoopedEvents } from "../lib/api/loopin";
+import { getMyLoopedEvents } from "../lib/api";
 
 export function useMyLoopedEvents() {
   return useQuery({
     queryKey: ["myLoopedEvents"],
-    queryFn: getMyLoopedEvents,
+    queryFn: () => getMyLoopedEvents(),
   });
 }
