@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { getBadges } from "@/lib/api/loopin";
+import { getBadges } from "@/lib/api";
 import { ArrowLeft, Award, CheckCircle2, Sparkles, Flag, Lock, HelpCircle } from "lucide-react";
 import { SiteShell } from "../../../site";
 
