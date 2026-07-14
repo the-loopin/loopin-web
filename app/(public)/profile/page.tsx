@@ -51,7 +51,16 @@ export default function CompleteProfilePage() {
   const profile = userData?.profile;
 
   // Suggested events derived from general events endpoint
-  const suggestedEvents = allEvents ? allEvents.slice(0, 3) : [];
+  const suggestedEvents = allEvents?.content ? allEvents.content.slice(0, 3) : [];
+
+  const loopedEventsList = useMemo(() => {
+    return (upcomingEvents?.content || [])
+      .filter((item) => item.event)
+      .map((item) => ({
+        ...item.event,
+        loopedCount: item.loopedCount ?? item.event?.loopedCount ?? 0,
+      }));
+  }, [upcomingEvents]);
 
   // Derive initial/display name
   const displayName = user?.name || profile?.name || "Anonymous User";
@@ -111,8 +120,8 @@ export default function CompleteProfilePage() {
           <motion.section variants={itemVariants} className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
             <div className="flex items-center gap-6">
               <div className="relative">
-                {profile?.avatar ? (
-                  <img src={profile.avatar} alt={displayName} className="w-24 h-24 rounded-[24px] object-cover shadow-xl shadow-[var(--color-accent)]/20 border border-[var(--line)]" />
+                {profile?.avatar?.url ? (
+                  <img src={profile.avatar.url} alt={displayName} className="w-24 h-24 rounded-[24px] object-cover shadow-xl shadow-[var(--color-accent)]/20 border border-[var(--line)]" />
                 ) : (
                   <div className="w-24 h-24 rounded-[24px] bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-coral)] flex items-center justify-center text-3xl font-black text-white shadow-xl shadow-[var(--color-accent)]/20 border border-white/10 overflow-hidden">
                     {initials}
@@ -144,8 +153,8 @@ export default function CompleteProfilePage() {
 
                 <div className="flex items-center gap-2 text-xs font-semibold text-[var(--color-ink)]/70 flex-wrap">
                   {profile?.interests?.map((interest, idx) => (
-                    <React.Fragment key={interest}>
-                      <span>{interest}</span>
+                    <React.Fragment key={interest.id}>
+                      <span>{interest.name}</span>
                       {idx < profile.interests!.length - 1 && <span className="w-1 h-1 rounded-full bg-[var(--color-accent)]" />}
                     </React.Fragment>
                   ))}
@@ -173,7 +182,7 @@ export default function CompleteProfilePage() {
           {/* SECTION 2 — QUICK STATS */}
           <motion.section variants={containerVariants} className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
             {[
-              { label: "Events Joined", value: upcomingEvents?.length ?? 0, icon: Calendar, pending: eventsPending },
+              { label: "Events Joined", value: loopedEventsList.length, icon: Calendar, pending: eventsPending },
               { label: "Active Groups", value: "-", icon: Users, pending: false }, // Explicitly missing backend endpoint
               { label: "Badges Earned", value: myBadges?.length ?? 0, icon: Award, pending: badgesPending },
             ].map((stat, i) => (
@@ -220,15 +229,15 @@ export default function CompleteProfilePage() {
                   </div>
                 )}
 
-                {upcomingEvents?.length === 0 && (
+                {loopedEventsList.length === 0 && (
                   <div className="p-8 rounded-[20px] border border-[var(--line)] border-dashed bg-[var(--panel)] text-center text-[var(--muted)] text-sm">
                     No upcoming events yet. <Link href="/events" className="text-[var(--color-coral)] hover:underline">Explore events to join one!</Link>
                   </div>
                 )}
 
-                {upcomingEvents && upcomingEvents.length > 0 && (
+                {loopedEventsList.length > 0 && (
                   <div className="flex flex-col gap-3">
-                    {upcomingEvents.map((event: any) => {
+                    {loopedEventsList.map((event: any) => {
                       const dateObj = new Date(event.startDateTime || Date.now());
                       const month = dateObj.toLocaleString('en-US', { month: 'short' });
                       const day = dateObj.getDate();
