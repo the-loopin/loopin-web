@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { getGroup, GroupItem } from "@/lib/api/loopin";
+import { getGroup, GroupItem } from "@/lib/api";
 import { EmptyState, ErrorMessage, Input, PageHeader, Panel, SiteShell } from "../../../site";
 
 export default function AdminGroupsPage() {
