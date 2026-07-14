@@ -253,7 +253,7 @@ export default function EventsPage() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentPage(0);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+
     void loadEvents(0);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.category, filters.city, filters.isFree, filters.search]); // reset page when filters change

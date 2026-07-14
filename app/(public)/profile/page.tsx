@@ -13,7 +13,6 @@ import {
   ChevronRight,
   Clock,
   CheckCircle2,
-  Sparkles,
   ArrowRight,
   AlertCircle
 } from "lucide-react";
@@ -23,6 +22,8 @@ import { toEventItem } from "@/lib/api";
 import { useProfile } from "@/hooks/useProfile";
 import { useMyLoopedEvents, useEvents } from "@/hooks/useEvents";
 import { useBadges } from "@/hooks/useBadges";
+import { getBadgeUI } from "@/lib/data/badge-catalog";
+import { BadgeIcon } from "@/components/profile/badges/BadgeIcon";
 
 // Animation Variants
 const containerVariants = {
@@ -221,7 +222,6 @@ export default function CompleteProfilePage() {
                 {loopedEventsList.length > 0 && (
                   <div className="flex flex-col gap-3">
                     {loopedEventsList.map((event) => {
-                      // eslint-disable-next-line react-hooks/purity
                       const dateObj = new Date(event.startDateTime || new Date().toISOString());
                       const month = dateObj.toLocaleString('en-US', { month: 'short' });
                       const day = dateObj.getDate();
@@ -340,7 +340,7 @@ export default function CompleteProfilePage() {
                     <Award size={14} /> Top Badges
                   </h2>
                   {myBadges && myBadges.length > 0 && (
-                    <Link href="/profile/badges" className="text-xs font-semibold text-[var(--color-coral)] hover:underline flex items-center gap-1">
+                    <Link href="/profile/my-badges" className="text-xs font-semibold text-[var(--color-coral)] hover:underline flex items-center gap-1">
                       View All <ChevronRight size={12} />
                     </Link>
                   )}
@@ -357,12 +357,17 @@ export default function CompleteProfilePage() {
 
                 {myBadges && myBadges.length > 0 && (
                   <div className="grid grid-cols-3 gap-3">
-                    {myBadges.slice(0, 3).map((badge: string, idx: number) => (
-                      <div key={idx} className="aspect-square rounded-[16px] bg-[var(--panel)] border border-[var(--line)] flex flex-col items-center justify-center gap-2 hover:border-[var(--color-coral)]/50 transition-colors cursor-pointer group shadow-sm p-2 text-center">
-                        <Sparkles size={20} className="text-[var(--color-accent)] group-hover:scale-110 transition-transform" />
-                        <span className="text-[10px] font-bold text-[var(--muted)] group-hover:text-[var(--color-ink)] line-clamp-2 leading-tight">{badge}</span>
-                      </div>
-                    ))}
+                    {myBadges.slice(0, 3).map((badgeId: string, idx: number) => {
+                      const badgeUI = getBadgeUI(badgeId);
+                      return (
+                        <div key={idx} className="aspect-square rounded-[16px] bg-[var(--panel)] border border-[var(--line)] flex flex-col items-center justify-center gap-2 hover:border-[var(--color-coral)]/50 transition-colors cursor-pointer group shadow-sm p-2 text-center">
+                          <div className="group-hover:scale-110 transition-transform">
+                            <BadgeIcon iconName={badgeUI.icon} rarity={badgeUI.rarity} size={32} />
+                          </div>
+                          <span className="text-[10px] font-bold text-[var(--muted)] group-hover:text-[var(--color-ink)] line-clamp-2 leading-tight">{badgeUI.title}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </motion.section>
@@ -387,7 +392,6 @@ export default function CompleteProfilePage() {
                 {suggestedEvents && suggestedEvents.length > 0 && (
                   <div className="flex flex-col gap-3">
                     {suggestedEvents.map((event) => {
-                      // eslint-disable-next-line react-hooks/purity
                       const dateObj = new Date(event.startDateTime || new Date().toISOString());
                       return (
                         <div key={event.id} className="p-4 rounded-[16px] bg-[var(--panel)] border border-[var(--line)] hover:border-[var(--color-coral)]/50 transition-colors group shadow-sm flex flex-col justify-between">

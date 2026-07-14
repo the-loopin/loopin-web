@@ -1,18 +1,19 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Badge } from "@/lib/data/mock-badges";
+import { BadgeUI } from "@/lib/data/badge-catalog";
 import { X } from "lucide-react";
 import { useEffect } from "react";
 import { BadgeIcon } from "./BadgeIcon";
 
 interface BadgeModalProps {
-  badge: Badge | null;
+  badge: BadgeUI | null;
+  isUnlocked?: boolean;
   onClose: () => void;
 }
 
-export function BadgeModal({ badge, onClose }: BadgeModalProps) {
-  const isLocked = badge?.status === "locked";
+export function BadgeModal({ badge, isUnlocked = false, onClose }: BadgeModalProps) {
+  const isLocked = !isUnlocked;
 
   // Prevent background scrolling when modal is open
   useEffect(() => {
@@ -70,45 +71,18 @@ export function BadgeModal({ badge, onClose }: BadgeModalProps) {
                 </p>
 
                 <div className="w-full bg-[color-mix(in_srgb,var(--color-ink)_3%,transparent)] rounded-xl p-4 mb-6 border border-[var(--line)]">
-                  <div className="flex justify-between items-center mb-3">
-                    <span className="font-semibold text-[var(--color-ink)]">Reward</span>
-                    <span className="font-bold text-[var(--color-coral)]">+{badge.xp} XP</span>
-                  </div>
-                  
-                  {isLocked && badge.maxProgress !== undefined ? (
-                    <div className="flex flex-col gap-2">
-                      <div className="flex justify-between text-sm font-semibold text-[var(--muted)]">
-                        <span>Progress</span>
-                        <span>{badge.progress} / {badge.maxProgress}</span>
-                      </div>
-                      <div className="h-3 w-full bg-[color-mix(in_srgb,var(--color-ink)_10%,transparent)] rounded-full overflow-hidden">
-                        <motion.div 
-                          initial={{ width: 0 }}
-                          animate={{ width: `${(badge.progress! / badge.maxProgress) * 100}%` }}
-                          transition={{ delay: 0.2, duration: 0.8, ease: "easeOut" }}
-                          className="h-full bg-[var(--muted)] rounded-full" 
-                        />
-                      </div>
+                  {isLocked ? (
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="font-semibold text-[var(--color-ink)]">Status</span>
+                      <span className="font-bold text-[var(--muted)]">Locked</span>
                     </div>
                   ) : (
                     <div className="flex justify-between items-center text-sm">
                       <span className="font-semibold text-[var(--color-ink)]">Status</span>
-                      <span className="font-bold text-[var(--color-teal)]">
-                        Unlocked on {badge.earnedAt ? new Date(badge.earnedAt).toLocaleDateString() : 'Unknown'}
-                      </span>
+                      <span className="font-bold text-[var(--color-teal)]">Unlocked</span>
                     </div>
                   )}
                 </div>
-
-                {isLocked ? (
-                  <button className="primary-button w-full" onClick={onClose}>
-                    Keep exploring!
-                  </button>
-                ) : (
-                  <button className="secondary-button w-full" onClick={onClose}>
-                    Close
-                  </button>
-                )}
               </div>
             </motion.div>
           </div>

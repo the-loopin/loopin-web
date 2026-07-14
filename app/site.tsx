@@ -67,6 +67,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
     <main className="prototype-shell min-h-screen">
       <nav className="topbar">
         <Link className="brand-lockup" href="/">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.png" alt="Loopin" />
           <span>Loopin</span>
         </Link>

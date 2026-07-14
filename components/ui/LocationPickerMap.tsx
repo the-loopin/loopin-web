@@ -70,6 +70,7 @@ export default function LocationPickerMap({ latitude, longitude, label, onChange
       mapRef.current = null;
       markerRef.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

@@ -265,7 +265,7 @@ export default function ActivitiesPage() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentPage(0);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+
     void loadActivities(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [

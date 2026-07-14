@@ -1,30 +1,22 @@
 export type BadgeCategory = "Activity" | "Community" | "Creator" | "Social" | "Events" | "Special";
-export type BadgeStatus = "unlocked" | "locked";
 export type BadgeRarity = "common" | "rare" | "epic" | "legendary";
 
-export interface Badge {
-  id: string;
+export interface BadgeUI {
+  id: string; // The backend identifier
   title: string;
   description: string;
   category: BadgeCategory;
-  xp: number;
-  status: BadgeStatus;
-  progress?: number; // Current progress if locked
-  maxProgress?: number; // Max progress if locked
-  earnedAt?: string; // ISO date string if unlocked
   icon: string; // Emoji or icon name
   rarity: BadgeRarity;
+  // State like 'status', 'progress', 'earnedAt', 'xp' is removed to adhere to architectural principles.
 }
 
-export const MOCK_BADGES: Badge[] = [
+export const BADGE_UI_CATALOG: BadgeUI[] = [
   {
     id: "welcome",
     title: "Welcome to Loopin",
     description: "Joined the Loopin community",
     category: "Community",
-    xp: 50,
-    status: "unlocked",
-    earnedAt: "2026-01-15T10:00:00Z",
     icon: "hand",
     rarity: "common",
   },
@@ -33,9 +25,6 @@ export const MOCK_BADGES: Badge[] = [
     title: "First Post",
     description: "Created your first post in the community",
     category: "Creator",
-    xp: 25,
-    status: "unlocked",
-    earnedAt: "2026-02-10T14:30:00Z",
     icon: "medal",
     rarity: "common",
   },
@@ -44,9 +33,6 @@ export const MOCK_BADGES: Badge[] = [
     title: "First Like",
     description: "Liked a post for the first time",
     category: "Social",
-    xp: 10,
-    status: "unlocked",
-    earnedAt: "2026-02-11T09:15:00Z",
     icon: "heart",
     rarity: "common",
   },
@@ -55,9 +41,6 @@ export const MOCK_BADGES: Badge[] = [
     title: "First Comment",
     description: "Started a conversation by commenting",
     category: "Social",
-    xp: 15,
-    status: "unlocked",
-    earnedAt: "2026-02-12T16:45:00Z",
     icon: "message",
     rarity: "common",
   },
@@ -66,9 +49,6 @@ export const MOCK_BADGES: Badge[] = [
     title: "Community Member",
     description: "Joined your first group",
     category: "Community",
-    xp: 30,
-    status: "unlocked",
-    earnedAt: "2026-03-05T11:20:00Z",
     icon: "users",
     rarity: "rare",
   },
@@ -77,9 +57,6 @@ export const MOCK_BADGES: Badge[] = [
     title: "Explorer",
     description: "Attended events in 3 different cities/areas",
     category: "Activity",
-    xp: 100,
-    status: "unlocked",
-    earnedAt: "2026-05-20T18:00:00Z",
     icon: "map",
     rarity: "rare",
   },
@@ -88,10 +65,6 @@ export const MOCK_BADGES: Badge[] = [
     title: "30 Day Streak",
     description: "Logged in for 30 consecutive days",
     category: "Activity",
-    xp: 150,
-    status: "locked",
-    progress: 12,
-    maxProgress: 30,
     icon: "flame",
     rarity: "epic",
   },
@@ -100,10 +73,6 @@ export const MOCK_BADGES: Badge[] = [
     title: "Top Creator",
     description: "Reach 500 Likes on your posts",
     category: "Creator",
-    xp: 500,
-    status: "locked",
-    progress: 327,
-    maxProgress: 500,
     icon: "award",
     rarity: "epic",
   },
@@ -112,9 +81,6 @@ export const MOCK_BADGES: Badge[] = [
     title: "100 Likes",
     description: "Received 100 likes across all your posts",
     category: "Creator",
-    xp: 100,
-    status: "unlocked",
-    earnedAt: "2026-06-01T12:00:00Z",
     icon: "star",
     rarity: "rare",
   },
@@ -123,10 +89,6 @@ export const MOCK_BADGES: Badge[] = [
     title: "Trending",
     description: "Have a post reach the trending section",
     category: "Social",
-    xp: 250,
-    status: "locked",
-    progress: 0,
-    maxProgress: 1,
     icon: "trending",
     rarity: "epic",
   },
@@ -135,10 +97,6 @@ export const MOCK_BADGES: Badge[] = [
     title: "Event Participant",
     description: "Attended 5 community events",
     category: "Events",
-    xp: 100,
-    status: "locked",
-    progress: 2,
-    maxProgress: 5,
     icon: "ticket",
     rarity: "common",
   },
@@ -147,10 +105,6 @@ export const MOCK_BADGES: Badge[] = [
     title: "Holiday Spirit",
     description: "Participated in a special holiday event",
     category: "Special",
-    xp: 200,
-    status: "locked",
-    progress: 0,
-    maxProgress: 1,
     icon: "gift",
     rarity: "legendary",
   },
@@ -159,11 +113,50 @@ export const MOCK_BADGES: Badge[] = [
     title: "???",
     description: "Unlock this by exploring hidden features",
     category: "Special",
-    xp: 1000,
-    status: "locked",
-    progress: 0,
-    maxProgress: 1,
     icon: "secret",
     rarity: "legendary",
   },
+  {
+    id: "ATTENDEE",
+    title: "Attendee",
+    description: "Successfully joined and participated in your first community event.",
+    category: "Events",
+    icon: "check",
+    rarity: "common",
+  },
+  {
+    id: "CREATOR",
+    title: "Event Creator",
+    description: "Created a group or organized a community walk/event under your name.",
+    category: "Creator",
+    icon: "sparkles",
+    rarity: "rare",
+  },
+  {
+    id: "HELPER",
+    title: "Helper",
+    description: "Recognized by other members for guiding and supporting the community.",
+    category: "Community",
+    icon: "flag",
+    rarity: "epic",
+  }
 ];
+
+// Fallback for unknown backend badges
+export const UNKNOWN_BADGE_UI: BadgeUI = {
+  id: "unknown",
+  title: "Mystery Badge",
+  description: "An achievement that hasn't been properly mapped in the catalog.",
+  category: "Special",
+  icon: "help",
+  rarity: "common",
+};
+
+export function getBadgeUI(id: string): BadgeUI {
+  const found = BADGE_UI_CATALOG.find((b) => b.id === id);
+  if (found) {
+    return found;
+  }
+  console.warn(`Badge ID "${id}" returned from backend is missing from BADGE_UI_CATALOG.`);
+  return { ...UNKNOWN_BADGE_UI, id };
+}
