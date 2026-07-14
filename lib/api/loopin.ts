@@ -22,6 +22,7 @@ export type MediaReference = {
   id: string;
   contentType: string;
   sizeBytes: number;
+  url?: string | null;
 };
 
 export type EventCreatePayload = Omit<
@@ -31,6 +32,8 @@ export type EventCreatePayload = Omit<
   imageMediaId?: string | null;
   interestIds?: string[];
 };
+
+export type EventUpdatePayload = EventCreatePayload;
 
 export type EventItem = Omit<
   EventPayload,
@@ -63,6 +66,7 @@ export type GroupPayload = {
   groupSize: string;
   maxMembers: number;
   groupNote: string;
+  imageMediaId?: string | null;
 };
 
 export type GroupItem = GroupPayload & {
@@ -119,21 +123,6 @@ export type InterestItem = {
   label: string;
 };
 
-export type MediaUploadRequest = {
-  purpose: "EVENT_IMAGE" | "PROFILE_AVATAR" | "GROUP_IMAGE";
-  fileName: string;
-  contentType: string;
-  sizeBytes: number;
-};
-
-export type MediaUploadResponse = {
-  mediaId: string;
-  uploadUrl: string;
-  expiresAt: string;
-  requiredHeaders?: Record<string, string>;
-};
-
-
 export async function registerUser(payload: { email: string; name: string }) {
   const response = await apiClient.post<UserItem>("/users/register", payload);
   return response.data;
@@ -185,7 +174,7 @@ export async function createEvent(
   return response.data;
 }
 
-export async function updateEvent(id: string, payload: EventPayload) {
+export async function updateEvent(id: string, payload: EventUpdatePayload) {
   const response = await apiClient.put<EventItem>(`/events/${id}`, payload);
   return response.data;
 }
@@ -294,6 +283,11 @@ export async function updateProfile(payload: ProfilePayload) {
   return response.data;
 }
 
+export async function updateProfileAvatar(mediaId: string) {
+  const response = await apiClient.put("/me/avatar", { mediaId });
+  return response.data;
+}
+
 export async function getBadges() {
   const response = await apiClient.get<string[]>("/me/badges");
   return response.data;
@@ -360,20 +354,6 @@ export async function deleteUser(userId: string) {
 // DELETE /v1/admin/events/{id}
 export async function deleteAdminEvent(eventId: string) {
   await apiClient.delete(`/admin/events/${eventId}`);
-}
-
-export async function loopInEvent(eventId: string) {
-  const response = await apiClient.post<EventItem>(`/events/${eventId}/loop-in`);
-  return response.data;
-}
-
-export async function unloopEvent(eventId: string) {
-  await apiClient.delete(`/events/${eventId}/loop-in`);
-}
-
-export async function getMyLoopedEvents() {
-  const response = await apiClient.get<EventItem[]>("/me/looped-events");
-  return response.data;
 }
 
 export type MediaPurpose =
