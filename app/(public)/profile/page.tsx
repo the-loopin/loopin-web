@@ -18,8 +18,8 @@ import {
   AlertCircle
 } from "lucide-react";
 import { SiteShell } from "@/app/site";
+import { toEventItem } from "@/lib/api";
 
-// Proper modular hooks based on existing API architecture
 import { useProfile } from "@/hooks/useProfile";
 import { useMyLoopedEvents, useEvents } from "@/hooks/useEvents";
 import { useBadges } from "@/hooks/useBadges";
@@ -51,19 +51,26 @@ export default function CompleteProfilePage() {
   const profile = userData?.profile;
 
   // Suggested events derived from general events endpoint
-  const suggestedEvents = allEvents ? allEvents.slice(0, 3) : [];
+  const suggestedEvents = allEvents?.content ? allEvents.content.slice(0, 3) : [];
+
+  const loopedEventsList = useMemo(() => {
+    return (upcomingEvents?.content || [])
+      .filter((item) => item.event)
+      .map((item) => ({
+        ...toEventItem(item.event!),
+        loopedCount: item.loopedCount ?? 0,
+      }));
+  }, [upcomingEvents]);
 
   // Derive initial/display name
   const displayName = user?.name || profile?.name || "Anonymous User";
   const initials = displayName.split(" ").map((n: string) => n[0]).join("").toUpperCase().substring(0, 2);
   const location = profile?.city || "Unknown Location";
-  const onlineStatus = profile?.onlineStatus === "online" || true;
 
   // Dynamic Profile Completion
   const { completionPercentage, missingFields } = useMemo(() => {
     if (!profile) return { completionPercentage: 0, missingFields: [] };
     const fields = [
-      { name: "avatar", label: "Upload profile avatar", complete: !!profile.avatar },
       { name: "bio", label: "Write a short bio", complete: !!profile.bio },
       { name: "city", label: "Add your city", complete: !!profile.city },
       { name: "interests", label: "Complete your interests", complete: !!(profile.interests && profile.interests.length > 0) },
@@ -111,18 +118,9 @@ export default function CompleteProfilePage() {
           <motion.section variants={itemVariants} className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
             <div className="flex items-center gap-6">
               <div className="relative">
-                {profile?.avatar ? (
-                  <img src={profile.avatar} alt={displayName} className="w-24 h-24 rounded-[24px] object-cover shadow-xl shadow-[var(--color-accent)]/20 border border-[var(--line)]" />
-                ) : (
                   <div className="w-24 h-24 rounded-[24px] bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-coral)] flex items-center justify-center text-3xl font-black text-white shadow-xl shadow-[var(--color-accent)]/20 border border-white/10 overflow-hidden">
                     {initials}
                   </div>
-                )}
-                {onlineStatus && (
-                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-[var(--background)] rounded-full flex items-center justify-center transition-colors">
-                    <div className="w-3.5 h-3.5 bg-green-500 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
-                  </div>
-                )}
               </div>
               
               <div className="flex flex-col">
@@ -134,18 +132,12 @@ export default function CompleteProfilePage() {
                     <MapPin size={14} className="text-[var(--color-coral)]" />
                     <span>{location}</span>
                   </div>
-                  {onlineStatus && (
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-                      <span>Online</span>
-                    </div>
-                  )}
                 </div>
 
                 <div className="flex items-center gap-2 text-xs font-semibold text-[var(--color-ink)]/70 flex-wrap">
                   {profile?.interests?.map((interest, idx) => (
-                    <React.Fragment key={interest}>
-                      <span>{interest}</span>
+                    <React.Fragment key={interest.id}>
+                      <span>{interest.name}</span>
                       {idx < profile.interests!.length - 1 && <span className="w-1 h-1 rounded-full bg-[var(--color-accent)]" />}
                     </React.Fragment>
                   ))}
@@ -173,7 +165,7 @@ export default function CompleteProfilePage() {
           {/* SECTION 2 — QUICK STATS */}
           <motion.section variants={containerVariants} className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
             {[
-              { label: "Events Joined", value: upcomingEvents?.length ?? 0, icon: Calendar, pending: eventsPending },
+              { label: "Events Joined", value: upcomingEvents?.totalElements ?? 0, icon: Calendar, pending: eventsPending },
               { label: "Active Groups", value: "-", icon: Users, pending: false }, // Explicitly missing backend endpoint
               { label: "Badges Earned", value: myBadges?.length ?? 0, icon: Award, pending: badgesPending },
             ].map((stat, i) => (
@@ -220,16 +212,17 @@ export default function CompleteProfilePage() {
                   </div>
                 )}
 
-                {upcomingEvents?.length === 0 && (
+                {loopedEventsList.length === 0 && (
                   <div className="p-8 rounded-[20px] border border-[var(--line)] border-dashed bg-[var(--panel)] text-center text-[var(--muted)] text-sm">
                     No upcoming events yet. <Link href="/events" className="text-[var(--color-coral)] hover:underline">Explore events to join one!</Link>
                   </div>
                 )}
 
-                {upcomingEvents && upcomingEvents.length > 0 && (
+                {loopedEventsList.length > 0 && (
                   <div className="flex flex-col gap-3">
-                    {upcomingEvents.map((event: any) => {
-                      const dateObj = new Date(event.startDateTime || Date.now());
+                    {loopedEventsList.map((event) => {
+                      // eslint-disable-next-line react-hooks/purity
+                      const dateObj = new Date(event.startDateTime || new Date().toISOString());
                       const month = dateObj.toLocaleString('en-US', { month: 'short' });
                       const day = dateObj.getDate();
                       const time = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -393,8 +386,9 @@ export default function CompleteProfilePage() {
 
                 {suggestedEvents && suggestedEvents.length > 0 && (
                   <div className="flex flex-col gap-3">
-                    {suggestedEvents.map((event: any) => {
-                      const dateObj = new Date(event.startDateTime || Date.now());
+                    {suggestedEvents.map((event) => {
+                      // eslint-disable-next-line react-hooks/purity
+                      const dateObj = new Date(event.startDateTime || new Date().toISOString());
                       return (
                         <div key={event.id} className="p-4 rounded-[16px] bg-[var(--panel)] border border-[var(--line)] hover:border-[var(--color-coral)]/50 transition-colors group shadow-sm flex flex-col justify-between">
                           <h4 className="text-sm font-bold text-[var(--color-ink)] mb-1 group-hover:text-[var(--color-coral)] transition-colors line-clamp-1">{event.title}</h4>

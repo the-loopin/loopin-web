@@ -1,6 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { getUserProfile, getUsers, updateProfile } from "../lib/api/users";
-import type { UserProfile } from "../lib/types/user";
+import { getUserProfile, getUsers, updateProfile, UpdateUserProfileRequest } from "../lib/api";
 
 export function useUsers() {
   return useQuery({ queryKey: ["users"], queryFn: getUsers });
@@ -15,5 +14,5 @@ export function useUserProfile(userId: string | undefined) {
 }
 
 export function useUpdateProfile() {
-  return useMutation({ mutationFn: (profile: UserProfile) => updateProfile(profile) });
+  return useMutation({ mutationFn: (profile: UpdateUserProfileRequest) => updateProfile(profile) });
 }

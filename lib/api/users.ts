@@ -1,14 +1,22 @@
-import type { User, UserProfile } from "../types/user";
+import apiClient from "./client";
+import type { UserResponse } from "./contracts";
 
-export async function getUsers(): Promise<User[]> {
-  return [];
+export async function getCurrentUser(): Promise<UserResponse> {
+  const response = await apiClient.get<UserResponse>("/users/me");
+  return response.data;
 }
 
-export async function getUserProfile(userId: string): Promise<UserProfile | null> {
-  void userId;
-  return null;
+// Keep stubs for unused hooks/caller compatibility
+export async function getUsers(): Promise<UserResponse[]> {
+  const response = await apiClient.get<UserResponse[]>("/users");
+  return response.data;
 }
 
-export async function updateProfile(profile: UserProfile): Promise<UserProfile> {
-  return profile;
+export async function getUserById(userId: string): Promise<UserResponse> {
+  const response = await apiClient.get<UserResponse>(`/users/${userId}`);
+  return response.data;
+}
+
+export async function getUserProfile(userId: string): Promise<UserResponse> {
+  return getUserById(userId);
 }

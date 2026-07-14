@@ -1,19 +1,18 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createGroup, getGroupById, getGroupsByEvent } from "../lib/api/groups";
-import type { EventGroup } from "../lib/types/group";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createGroup, getGroup, CreateGroupRequest } from "../lib/api";
+import { useQuery } from "@tanstack/react-query";
 
-export function useGroupsByEvent(eventId: string | undefined) {
-  return useQuery({
-    queryKey: ["groups", eventId],
-    queryFn: () => getGroupsByEvent(eventId ?? ""),
-    enabled: Boolean(eventId),
-  });
-}
+/**
+ * useGroupsByEvent is NOT available — the backend does not expose a group listing
+ * endpoint for a given event. Do not add a fake queryFn here.
+ *
+ * To show a group list in the UI, display an explicit "unavailable" state.
+ */
 
 export function useGroup(groupId: string | undefined) {
   return useQuery({
     queryKey: ["groups", groupId],
-    queryFn: () => getGroupById(groupId ?? ""),
+    queryFn: () => getGroup(groupId ?? ""),
     enabled: Boolean(groupId),
   });
 }
@@ -22,9 +21,11 @@ export function useCreateGroup() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (group: EventGroup) => createGroup(group),
-    onSuccess: (_, group) => {
-      void queryClient.invalidateQueries({ queryKey: ["groups", group.eventId] });
+    mutationFn: (group: CreateGroupRequest) => createGroup(group),
+    onSuccess: (data) => {
+      // Invalidate the individual group cache so that navigating to the group
+      // detail page shows fresh data.
+      void queryClient.invalidateQueries({ queryKey: ["groups", data.id] });
     },
   });
 }

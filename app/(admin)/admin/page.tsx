@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getAdminStats } from "@/lib/api/loopin";
+import { getAdminStats, DashboardStatsResponse } from "@/lib/api";
 import { SiteShell, PageHeader, Panel } from "../../site";
 
 export default function AdminDashboardPage() {
-  const [stats, setStats] = useState<Record<string, number>>({});
+  const [stats, setStats] = useState<DashboardStatsResponse>({});
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,15 +32,15 @@ export default function AdminDashboardPage() {
   const dashboardStats = [
     {
       title: "Total Users",
-      value: stats.users ?? 0, // Backend-dən gələn açara uyğun dəyişə bilərsiniz (məs: totalUsers)
+      value: stats.totalUsers ?? 0,
       icon: "👥",
       gradient: "from-blue-500/10 to-indigo-500/5",
       textColor: "text-blue-500",
       borderColor: "hover:border-blue-500/30",
     },
     {
-      title: "Total Events",
-      value: stats.events ?? 0,
+      title: "Active Events",
+      value: stats.activeEvents ?? 0,
       icon: "🎟️",
       gradient: "from-amber-500/10 to-orange-500/5",
       textColor: "text-amber-500",
@@ -48,7 +48,7 @@ export default function AdminDashboardPage() {
     },
     {
       title: "Total Groups",
-      value: stats.groups ?? 0,
+      value: stats.totalGroups ?? 0,
       icon: "👥",
       gradient: "from-emerald-500/10 to-teal-500/5",
       textColor: "text-emerald-500",

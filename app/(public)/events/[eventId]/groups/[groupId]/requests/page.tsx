@@ -9,7 +9,7 @@ import {
   getMyJoinRequests,
   JoinRequestItem,
   rejectJoinRequest,
-} from "@/lib/api/loopin";
+} from "@/lib/api";
 import { EmptyState, ErrorMessage, PageHeader, Panel, SiteShell } from "../../../../../../site";
 
 export default function GroupRequestsPage() {

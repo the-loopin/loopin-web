@@ -11,7 +11,7 @@ import {
 } from "react";
 import { LoaderCircle } from "lucide-react";
 
-import { googleLogin } from "@/lib/api/loopin";
+import { googleLogin } from "@/lib/api";
 import {
   setAuthRole,
   setAuthToken,
@@ -69,10 +69,9 @@ export function GoogleIdentityButton({
           response.credential,
         );
 
-        /*
-         * Store the Loopin application JWT returned by
-         * the backend, not the Google ID token.
-         */
+        if (!authResponse.token || !authResponse.role) {
+          throw new Error("Invalid authentication response received.");
+        }
         setAuthToken(authResponse.token);
         setAuthRole(authResponse.role);
 

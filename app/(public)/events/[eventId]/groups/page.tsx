@@ -8,9 +8,9 @@ import {
   createJoinRequest,
   EventItem,
   getEvent,
-  getGroupsByEvent,
   GroupItem,
-} from "@/lib/api/loopin";
+  GroupSize,
+} from "@/lib/api";
 import { EmptyState, ErrorMessage, Input, PageHeader, Select, SiteShell, Textarea } from "../../../../site";
 import { ArrowLeft, MessageCircle, Plus, Send, Users } from "lucide-react";
 
@@ -42,12 +42,10 @@ export default function EventGroupsPage() {
     setError("");
     setLoading(true);
     try {
-      const [loadedEvent, loadedGroups] = await Promise.all([
-        getEvent(params.eventId),
-        getGroupsByEvent(params.eventId),
-      ]);
+      const loadedEvent = await getEvent(params.eventId);
       setEventItem(loadedEvent);
-      setGroups(loadedGroups);
+      // Group listing is not yet available on the backend
+      setGroups([]);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not load groups.");
     } finally {
@@ -56,6 +54,7 @@ export default function EventGroupsPage() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadGroups();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.eventId]);
@@ -68,7 +67,7 @@ export default function EventGroupsPage() {
       const group = await createGroup({
         eventId: params.eventId,
         title: form.title,
-        groupSize: form.groupSize,
+        groupSize: form.groupSize as GroupSize,
         maxMembers: groupSizeToMaxMembers[form.groupSize],
         groupNote: form.groupNote,
       });
@@ -166,7 +165,9 @@ export default function EventGroupsPage() {
                 ))}
               </div>
             ) : (
-              <EmptyState>No groups yet. Create the first one for this {eventItem?.type === "ACTIVITY" ? "activity" : "event"}.</EmptyState>
+              <EmptyState>
+                Group listing is unavailable because the current API does not expose an event-groups endpoint. You can still create a group for this {eventItem?.type === "ACTIVITY" ? "activity" : "event"} and share its link.
+              </EmptyState>
             )}
           </section>
 

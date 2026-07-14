@@ -6,7 +6,7 @@ import { ArrowUpRight, MapPin } from "lucide-react";
 import { SiteShell } from "../site";
 import { EventSlider, EventCardItem } from "@/components/EventSlider/EventSlider";
 import BakuHeroMap from "@/components/ui/BakuHeroMap";
-import { EventItem, getEvents } from "@/lib/api/loopin";
+import { EventItem, getEvents } from "@/lib/api";
 
 function normalizeOpportunity(item: EventItem): EventCardItem {
   const type = item.type?.toUpperCase() === "ACTIVITY" ? "ACTIVITY" : "EVENT";
@@ -39,9 +39,9 @@ export default function PublicHomePage() {
     let alive = true;
 
     getEvents()
-      .then((items) => {
+      .then((page) => {
         if (!alive) return;
-        setOpportunities(items.map(normalizeOpportunity));
+        setOpportunities((page.content || []).map(normalizeOpportunity));
       })
       .catch(() => {
         if (!alive) return;

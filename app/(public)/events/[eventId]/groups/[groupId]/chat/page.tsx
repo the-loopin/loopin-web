@@ -20,7 +20,7 @@ import {
   WifiOff,
 } from "lucide-react";
 import { createGroupMessageClient, publishGroupMessage } from "@/lib/api/realtimeMessages";
-import { getCurrentUser, getGroup } from "@/lib/api/loopin";
+import { getCurrentUser, getGroup } from "@/lib/api";
 import type { GroupMessage } from "@/lib/types/message";
 import { useMessages } from "@/hooks/useMessages";
 import { SiteShell } from "../../../../../../site";
@@ -129,8 +129,12 @@ export default function GroupChatPage() {
     const messageById = new Map<string, GroupMessage>();
     const liveMessages = liveMessageState.groupId === groupId ? liveMessageState.messages : [];
 
-    for (const message of initialMessages) messageById.set(message.id, message);
-    for (const message of liveMessages) messageById.set(message.id, message);
+    for (const message of initialMessages) {
+      if (message.id) messageById.set(message.id, message);
+    }
+    for (const message of liveMessages) {
+      if (message.id) messageById.set(message.id, message);
+    }
 
     return Array.from(messageById.values()).sort(
       (left, right) => new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime(),

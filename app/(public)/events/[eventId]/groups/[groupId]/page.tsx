@@ -13,7 +13,9 @@ import {
   removeGroupMember,
   updateGroup,
   updateGroupStatus,
-} from "@/lib/api/loopin";
+  GroupSize,
+  GroupStatus,
+} from "@/lib/api";
 import { EmptyState, ErrorMessage, Input, PageHeader, Panel, Select, SiteShell, Textarea } from "../../../../../site";
 
 export default function GroupDetailPage() {
@@ -40,7 +42,7 @@ export default function GroupDetailPage() {
         title: loaded.title,
         groupSize: loaded.groupSize,
         maxMembers: String(loaded.maxMembers),
-        groupNote: loaded.groupNote,
+        groupNote: loaded.groupNote || "",
         status: loaded.status,
       });
     } catch (caught) {
@@ -69,9 +71,8 @@ export default function GroupDetailPage() {
     event.preventDefault();
     try {
       setGroup(await updateGroup(params.groupId, {
-        eventId: params.eventId,
         title: form.title,
-        groupSize: form.groupSize,
+        groupSize: form.groupSize as GroupSize,
         maxMembers: Number(form.maxMembers),
         groupNote: form.groupNote,
       }));
@@ -82,7 +83,7 @@ export default function GroupDetailPage() {
 
   async function handleStatus() {
     try {
-      setGroup(await updateGroupStatus(params.groupId, form.status));
+      setGroup(await updateGroupStatus(params.groupId, { status: form.status as GroupStatus }));
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not update status.");
     }

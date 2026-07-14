@@ -34,7 +34,7 @@ export function BadgeSummary({ totalXP, unlockedCount, totalCount }: BadgeSummar
           
           <div className="flex flex-col text-center md:text-left">
             <h2 className="text-2xl font-extrabold text-[var(--color-ink)]">Level {level} Explorer</h2>
-            <p className="text-[var(--muted)] text-sm mb-2">You're making great progress!</p>
+            <p className="text-[var(--muted)] text-sm mb-6">Complete activities, connect with others, and explore your city to earn more badges. Your achievements will appear here.</p>
             
             <div className="flex gap-4 justify-center md:justify-start">
               <div className="flex flex-col">

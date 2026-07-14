@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { getGroup, GroupItem } from "@/lib/api/loopin";
+import { getGroup, GroupItem } from "@/lib/api";
 import { EmptyState, ErrorMessage, Input, PageHeader, Panel, SiteShell } from "../../../site";
 
 export default function AdminGroupsPage() {
@@ -155,11 +155,11 @@ export default function AdminGroupsPage() {
               <div className="w-full bg-[var(--color-background)] rounded-full h-3 overflow-hidden border border-[var(--line)]">
                 <div 
                   className={`h-full rounded-full transition-all duration-500 ${
-                    getCapacityPercentage(group.memberCount, group.maxMembers) >= 100 
+                    getCapacityPercentage(group.memberCount ?? 0, group.maxMembers ?? 0) >= 100
                       ? "bg-rose-500" 
                       : "bg-[var(--color-accent)]"
                   }`}
-                  style={{ width: `${getCapacityPercentage(group.memberCount, group.maxMembers)}%` }}
+                  style={{ width: `${getCapacityPercentage(group.memberCount ?? 0, group.maxMembers ?? 0)}%` }}
                 ></div>
               </div>
             </div>

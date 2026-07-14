@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getBadges } from "../lib/api/loopin";
+import { getBadges } from "../lib/api";
 
 export function useBadges() {
   return useQuery({
