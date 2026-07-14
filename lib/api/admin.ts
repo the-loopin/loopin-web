@@ -47,9 +47,3 @@ export async function getDashboardStats(): Promise<DashboardStatsResponse> {
 export async function cancelEvent(eventId: string): Promise<void> {
   await apiClient.post(`/events/${eventId}/cancel`);
 }
-
-export async function getAdminGroups(): Promise<unknown[]> {
-  // Gaps: Backend lacks admin group list/management endpoints
-  const response = await apiClient.get<unknown[]>("/admin/groups");
-  return response.data;
-}
