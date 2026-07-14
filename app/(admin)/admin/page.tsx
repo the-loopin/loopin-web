@@ -39,7 +39,7 @@ export default function AdminDashboardPage() {
       borderColor: "hover:border-blue-500/30",
     },
     {
-      title: "Total Events",
+      title: "Active Events",
       value: stats.activeEvents ?? 0,
       icon: "🎟️",
       gradient: "from-amber-500/10 to-orange-500/5",
