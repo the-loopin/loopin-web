@@ -6,6 +6,7 @@ import type {
   LoopedEventResponse,
   EventType,
   EventCategory,
+  EventItem,
 } from "./contracts";
 import type { SpringPage } from "./pagination";
 
@@ -22,24 +23,48 @@ export interface GetEventsParams {
   sort?: string[];
 }
 
-export async function getEvents(params?: GetEventsParams): Promise<SpringPage<EventResponse>> {
+export function toEventItem(event: EventResponse): EventItem {
+  if (!event.id) {
+    throw new Error("The events API returned an event without an id.");
+  }
+
+  return {
+    ...event,
+    id: event.id,
+    title: event.title ?? "Untitled event",
+    description: event.description ?? "",
+    type: event.type ?? "EVENT",
+    category: event.category ?? "OTHER",
+    city: event.city ?? "",
+    address: event.address ?? "",
+    startDateTime: event.startDateTime ?? "",
+    endDateTime: event.endDateTime ?? "",
+    isFree: event.isFree ?? true,
+    price: event.price ?? 0,
+    organizerName: event.organizerName ?? "",
+    status: event.status ?? "DRAFT",
+    interests: event.interests ?? [],
+  };
+}
+
+export async function getEvents(params?: GetEventsParams): Promise<SpringPage<EventItem>> {
   const response = await apiClient.get<SpringPage<EventResponse>>("/events", { params });
-  return response.data;
+  return { ...response.data, content: (response.data.content ?? []).map(toEventItem) };
 }
 
-export async function getEvent(id: string): Promise<EventResponse> {
+export async function getEvent(id: string): Promise<EventItem> {
   const response = await apiClient.get<EventResponse>(`/events/${id}`);
-  return response.data;
+  return toEventItem(response.data);
 }
 
-export async function createEvent(payload: EventCreateRequest): Promise<EventResponse> {
+export async function createEvent(payload: EventCreateRequest): Promise<EventItem> {
   const response = await apiClient.post<EventResponse>("/events", payload);
-  return response.data;
+  return toEventItem(response.data);
 }
 
-export async function updateEvent(id: string, payload: EventUpdateRequest): Promise<EventResponse> {
+export async function updateEvent(id: string, payload: EventUpdateRequest): Promise<EventItem> {
   const response = await apiClient.put<EventResponse>(`/events/${id}`, payload);
-  return response.data;
+  return toEventItem(response.data);
 }
 
 export async function deleteEvent(id: string): Promise<void> {
@@ -58,9 +83,4 @@ export async function unloopEvent(eventId: string): Promise<void> {
 export async function getMyLoopedEvents(params?: { page?: number; size?: number }): Promise<SpringPage<LoopedEventResponse>> {
   const response = await apiClient.get<SpringPage<LoopedEventResponse>>("/me/looped-events", { params });
   return response.data;
-}
-
-// Keep old alias for compatibility
-export async function getEventById(id: string): Promise<EventResponse> {
-  return getEvent(id);
 }

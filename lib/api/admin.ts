@@ -3,8 +3,10 @@ import type {
   DashboardStatsResponse,
   UserResponse,
   EventResponse,
+  EventItem,
   EventStatus,
 } from "./contracts";
+import { toEventItem } from "./events";
 import type { SpringPage } from "./pagination";
 
 export async function getAdminStats(): Promise<DashboardStatsResponse> {
@@ -19,11 +21,11 @@ export async function getAdminUsers(page = 0, size = 10): Promise<SpringPage<Use
   return response.data;
 }
 
-export async function getAdminEvents(status?: EventStatus, page = 0, size = 10): Promise<SpringPage<EventResponse>> {
+export async function getAdminEvents(status?: EventStatus, page = 0, size = 10): Promise<SpringPage<EventItem>> {
   const response = await apiClient.get<SpringPage<EventResponse>>("/admin/events", {
     params: { status, page, size },
   });
-  return response.data;
+  return { ...response.data, content: (response.data.content ?? []).map(toEventItem) };
 }
 
 export async function updateUserRole(userId: string, role: "USER" | "ADMIN"): Promise<UserResponse> {
@@ -37,11 +39,6 @@ export async function deleteUser(userId: string): Promise<void> {
 
 export async function deleteAdminEvent(eventId: string): Promise<void> {
   await apiClient.delete(`/admin/events/${eventId}`);
-}
-
-// Keep old camelCase/getDashboardStats alias or stubs for compatibility
-export async function getDashboardStats(): Promise<DashboardStatsResponse> {
-  return getAdminStats();
 }
 
 export async function cancelEvent(eventId: string): Promise<void> {
