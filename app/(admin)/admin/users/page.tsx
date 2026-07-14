@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { SiteShell, PageHeader, Panel } from "@/app/site";
-import { getAdminUsers, updateUserRole, deleteUser, UserItem } from "@/lib/api/loopin";
+import { getAdminUsers, updateUserRole, deleteUser, UserItem } from "@/lib/api";
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<UserItem[]>([]);
@@ -40,11 +40,11 @@ export default function AdminUsersPage() {
 
     try {
       setActionLoadingId(userId);
-      await updateUserRole(userId, newRole);
+      await updateUserRole(userId, newRole as "USER" | "ADMIN");
       
       // Optimistic UI update
       setUsers((prevUsers) =>
-        prevUsers.map((u) => (String(u.id) === userId ? { ...u, role: newRole } : u))
+        prevUsers.map((u) => (String(u.id) === userId ? { ...u, role: newRole as "USER" | "ADMIN" } : u))
       );
     } catch (err) {
       alert("Could not update user role. Please try again.");
@@ -149,7 +149,7 @@ export default function AdminUsersPage() {
                         </div>
                       </td>
                       <td className="py-4 px-6">
-                        <span className={`inline-flex items-center rounded-md px-2.5 py-1 text-xs font-bold tracking-wide uppercase ${getRoleBadgeClass(user.role)}`}>
+                        <span className={`inline-flex items-center rounded-md px-2.5 py-1 text-xs font-bold tracking-wide uppercase ${getRoleBadgeClass(user.role || "")}`}>
                           {user.role}
                         </span>
                       </td>
