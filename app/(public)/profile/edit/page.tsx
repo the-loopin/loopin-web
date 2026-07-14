@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, AlignLeft, MapPin, User } from "lucide-react";
 
-import { getProfile, updateProfile } from "@/lib/api/loopin";
+import { getProfile, updateProfile } from "@/lib/api";
 
 import {
   ErrorMessage,
