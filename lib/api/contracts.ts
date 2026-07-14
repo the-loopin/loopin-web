@@ -24,11 +24,7 @@ export type MediaReferenceResponse = {
   url?: string | null;
 };
 
-export type UserProfileResponse = Omit<SchemaOf<"UserProfileResponse">, "interests"> & {
-  avatar?: MediaReferenceResponse | null;
-  interests?: InterestResponse[];
-  onlineStatus?: string | null;
-};
+export type UserProfileResponse = SchemaOf<"UserProfileResponse">;
 
 export type UpdateUserProfileRequest = SchemaOf<"UpdateUserProfileRequest">;
 export type UpdateUserAvatarRequest = {
@@ -61,12 +57,8 @@ export type EventResponse = {
   loopedCount?: number;
   displayCategory?: string;
 };
-export type EventCreateRequest = SchemaOf<"EventCreateRequest"> & {
-  imageMediaId?: string | null;
-};
-export type EventUpdateRequest = SchemaOf<"EventUpdateRequest"> & {
-  imageMediaId?: string | null;
-};
+export type EventCreateRequest = SchemaOf<"EventCreateRequest">;
+export type EventUpdateRequest = SchemaOf<"EventUpdateRequest">;
 export type LoopedEventResponse = {
   event?: EventResponse;
   loopedCount?: number;
