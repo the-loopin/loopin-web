@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState, useCallback } from "react";
-import { deleteAdminEvent, EventItem, getAdminEvents } from "@/lib/api/loopin";
+import { deleteAdminEvent, EventItem, getAdminEvents, EventStatus } from "@/lib/api";
 import { EmptyState, ErrorMessage, PageHeader, Panel, SiteShell } from "../../../site";
 
 export default function AdminEventsPage() {
@@ -28,7 +28,7 @@ export default function AdminEventsPage() {
     setLoading(true);
     try {
       // Maps 'ALL' filter to undefined so backend gets standard null values
-      const resolvedStatus = status === "ALL" ? undefined : status;
+      const resolvedStatus = status === "ALL" ? undefined : (status as EventStatus);
       
       // Hits: GET /v1/admin/events?status=...&page=...&size=10
       const data = await getAdminEvents(resolvedStatus, page, 10);
@@ -125,10 +125,10 @@ export default function AdminEventsPage() {
               className="w-full px-3 py-2 text-sm rounded-lg border border-[var(--line)] bg-[var(--color-background)] text-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)] appearance-none cursor-pointer font-medium"
             >
               <option value="ALL">All Statuses</option>
-              <option value="ACTIVE">Active</option>
-              <option value="UPCOMING">Upcoming</option>
               <option value="DRAFT">Draft</option>
+              <option value="PUBLISHED">Published</option>
               <option value="COMPLETED">Completed</option>
+              <option value="CANCELLED">Cancelled</option>
             </select>
             <span className="absolute right-3 top-3 pointer-events-none text-xs text-[var(--color-muted)]">▼</span>
           </div>
@@ -163,7 +163,7 @@ export default function AdminEventsPage() {
                         <h3 className="font-bold text-base text-[var(--color-ink)]">{event.title}</h3>
                         
                         <span className={`text-[10px] tracking-wide font-bold px-2 py-0.5 uppercase rounded border ${
-                          event.status === "ACTIVE" 
+                          event.status === "PUBLISHED" 
                             ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" 
                             : event.status === "COMPLETED"
                             ? "bg-neutral-500/10 text-neutral-500 border-neutral-500/20"
