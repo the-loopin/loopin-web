@@ -90,8 +90,9 @@ export function MatchArcs() {
 
     if (pulseRef.current) {
       pulseRef.current.scale.setScalar(pulseScale);
-      pulseRef.current.children.forEach((child: any) => {
-        if (child.material) child.material.opacity = pulseOpacity;
+      pulseRef.current.children.forEach((child: unknown) => {
+        const mesh = child as THREE.Mesh;
+        if (mesh.material) (mesh.material as THREE.Material).opacity = pulseOpacity;
       });
     }
   });
