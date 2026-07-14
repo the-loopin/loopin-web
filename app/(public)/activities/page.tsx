@@ -17,7 +17,7 @@ import { withUploadedMedia } from "@/lib/media/withUploadedMedia";
 import { getAuthToken } from "@/lib/auth/session";
 import LocationPickerMap from "@/components/ui/LocationPickerMap";
 import { EmptyState, ErrorMessage, Input, PageHeader, Select, SiteShell } from "../../site";
-import { ArrowLeft, CalendarDays, CheckCircle2, CircleMinus, Clock, FileText, ImagePlus, Info, MapPin, Navigation, Plus, RefreshCw, Save, Search, Send, Ticket, Users } from "lucide-react";
+import { ArrowLeft, CalendarDays, CheckCircle2, CircleMinus, Clock, FileText, ImagePlus, Info, MapPin, Navigation, Pencil, Plus, RefreshCw, Save, Search, Send, Ticket, Users } from "lucide-react";
 
 const categories = ["TECH", "STARTUP", "HR", "EDUCATION", "TRAVEL", "SPORT", "SOCIAL", "LANGUAGE", "CREATIVE", "OTHER"];
 const bakuCenter = { latitude: 40.3777, longitude: 49.892 };
@@ -722,7 +722,7 @@ export default function ActivitiesPage() {
         />
         <ErrorMessage message={error} />
         {actionToast ? (
-          <div className={`action-toast action-toast-${actionToast.type}`} role="status">
+          <div className={`action-toast action-toast-${actionToast.type} ${showCreateForm ? "action-toast-inline" : ""}`} role="status">
             <span className="action-toast-icon">
               {actionToast.type === "added" ? <CheckCircle2 size={18} /> : actionToast.type === "removed" ? <CircleMinus size={18} /> : <Info size={18} />}
             </span>
@@ -1058,6 +1058,9 @@ export default function ActivitiesPage() {
                             <button className="more-info-button" type="button" onClick={(clickEvent) => { clickEvent.stopPropagation(); toggleMoreInfo(activity.id); }}>
                               <Info size={14} /> More info
                             </button>
+                            <button className="edit-card-button" type="button" onClick={(clickEvent) => { clickEvent.stopPropagation(); router.push(`/events/${activity.id}`); }}>
+                              <Pencil size={14} /> Edit
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -1082,6 +1085,9 @@ export default function ActivitiesPage() {
                             <span>{activity.organizerName}</span>
                           </div>
                           <div className="event-card-actions event-back-actions">
+                            <button className="edit-card-button" type="button" onClick={(clickEvent) => { clickEvent.stopPropagation(); router.push(`/events/${activity.id}`); }}>
+                              <Pencil size={14} /> Edit
+                            </button>
                             <button
                               className={`loopin-button ${isLooped ? "is-looped" : ""}`}
                               type="button"

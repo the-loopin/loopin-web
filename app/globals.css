@@ -2183,6 +2183,7 @@ button:disabled {
 .loopin-button,
 .groups-button,
 .more-info-button,
+.edit-card-button,
 .card-back-button {
   display: inline-flex;
   align-items: center;
@@ -2214,6 +2215,13 @@ button:disabled {
   background: color-mix(in srgb, var(--page-accent) 10%, transparent);
 }
 
+.edit-card-button {
+  padding: 0 13px;
+  color: var(--color-ink);
+  border: 1px solid color-mix(in srgb, var(--page-accent) 30%, var(--line));
+  background: color-mix(in srgb, var(--page-accent) 11%, transparent);
+}
+
 .more-info-button,
 .card-back-button {
   padding: 0 13px;
@@ -2225,12 +2233,14 @@ button:disabled {
 .loopin-button:hover,
 .groups-button:hover,
 .more-info-button:hover,
+.edit-card-button:hover,
 .card-back-button:hover {
   transform: translateY(-2px);
 }
 
 .groups-button:hover,
 .more-info-button:hover,
+.edit-card-button:hover,
 .card-back-button:hover {
   border-color: var(--page-accent);
   background: color-mix(in srgb, var(--page-accent) 12%, transparent);
@@ -2418,6 +2428,16 @@ button:disabled {
     color-mix(in srgb, var(--panel) 94%, black 6%);
   box-shadow: 0 18px 52px rgba(0, 0, 0, 0.34);
   animation: action-toast-in 220ms ease both;
+}
+
+.action-toast-inline {
+  position: sticky;
+  top: 88px;
+  right: auto;
+  bottom: auto;
+  z-index: 12;
+  width: min(520px, 100%);
+  margin: 0 0 14px auto;
 }
 
 .action-toast-added {
