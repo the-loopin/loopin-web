@@ -4,7 +4,6 @@ import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   createEvent,
-  deleteMedia,
   type EventItem,
   type EventPayload,
   getEvents,
@@ -12,9 +11,9 @@ import {
   loopInEvent,
   unloopEvent,
   EventCategory,
-  EventStatus,
+  type SpringPage,
 } from "@/lib/api";
-import { uploadMedia } from "@/lib/media/uploadMedia";
+import { assertEventImageContract } from "@/lib/media/eventImageContract";
 import { getAuthToken } from "@/lib/auth/session";
 import LocationPickerMap from "@/components/ui/LocationPickerMap";
 import { EmptyState, ErrorMessage, Input, PageHeader, Select, SiteShell } from "../../site";
@@ -210,12 +209,14 @@ function getMapUrl(latitude: number, longitude: number, span = 0.018, showMarker
 export default function EventsPage() {
   const router = useRouter();
   const [events, setEvents] = useState<EventItem[]>([]);
+  const [pageData, setPageData] = useState<SpringPage<EventItem> | null>(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const pageSize = 20;
   const [form, setForm] = useState(() => createInitialForm());
   const [customCategory, setCustomCategory] = useState("");
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState("");
-  const [uploadingImage, setUploadingImage] = useState(false);
   const [locatingAddress, setLocatingAddress] = useState(false);
   const [filters, setFilters] = useState(initialFilters);
   const [error, setError] = useState("");
@@ -227,20 +228,23 @@ export default function EventsPage() {
   const [actionToast, setActionToast] = useState<ActionToast | null>(null);
   const [activeCreateStep, setActiveCreateStep] = useState(createSteps[0].href);
 
-  async function loadEvents() {
+  async function loadEvents(page = 0) {
     setLoading(true);
     setError("");
     try {
       const params = {
+        type: "EVENT" as const,
         city: filters.city || undefined,
         category: filters.category ? (filters.category as EventCategory) : undefined,
         search: filters.search || undefined,
         isFree: filters.isFree === "true" ? true : filters.isFree === "false" ? false : undefined,
+        page,
+        size: pageSize,
       };
       const data = await getEvents(params);
-      // Filter client-side to only show events of type EVENT
-      const filtered = data.content.filter(e => e.type === "EVENT");
-      setEvents(filtered);
+      setEvents(data.content);
+      setPageData(data);
+      setCurrentPage(data.number ?? page);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not load events.");
     } finally {
@@ -250,9 +254,11 @@ export default function EventsPage() {
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    void loadEvents();
+    setCurrentPage(0);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadEvents(0);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.category, filters.city, filters.isFree, filters.search]); // auto-trigger on simple filters
+  }, [filters.category, filters.city, filters.isFree, filters.search]); // reset page when filters change
 
   useEffect(() => {
     if (!getAuthToken()) {
@@ -436,20 +442,6 @@ export default function EventsPage() {
     }
   }
 
-  async function uploadImageIfNeeded(): Promise<string | undefined> {
-    if (!imageFile) {
-      return undefined;
-    }
-
-    setUploadingImage(true);
-
-    try {
-      return await uploadMedia(imageFile, "EVENT_IMAGE");
-    } finally {
-      setUploadingImage(false);
-    }
-  }
-
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -473,10 +465,8 @@ export default function EventsPage() {
 
     setError("");
 
-    let uploadedMediaId: string | undefined;
-
     try {
-      uploadedMediaId = await uploadImageIfNeeded();
+      assertEventImageContract(imageFile);
 
       const created = await createEvent({
         title: form.title.trim(),
@@ -492,11 +482,9 @@ export default function EventsPage() {
         isFree: form.isFree,
         price: form.isFree ? 0 : Number(form.price),
         organizerName: form.organizerName.trim(),
-        imageMediaId: uploadedMediaId,
+        imageUrl: form.imageUrl || undefined,
         interestIds: [],
       });
-
-      uploadedMediaId = undefined;
 
       const displayCategory = form.category === "OTHER" ? customCategory.trim() : "";
       const createdForDisplay = {
@@ -519,10 +507,6 @@ export default function EventsPage() {
       setImagePreviewUrl("");
       setFormErrors({});
     } catch (caught) {
-      if (uploadedMediaId) {
-        await deleteMedia(uploadedMediaId).catch(() => undefined);
-      }
-
       const apiError = getApiErrorResponse(caught);
       const message = getApiErrorMessage(caught, "Could not create event.");
 
@@ -713,8 +697,8 @@ export default function EventsPage() {
               <button className="secondary-button" type="button" onClick={handleSaveDraft}>
                 <Save size={15} /> Save Draft
               </button>
-              <button className="primary-button" disabled={uploadingImage} form="create-event-form" type="submit">
-                <Send size={15} /> {uploadingImage ? "Uploading..." : "Publish Event"}
+              <button className="primary-button" form="create-event-form" type="submit">
+                <Send size={15} /> Publish Event
               </button>
             </div>
           </div>
@@ -863,13 +847,14 @@ export default function EventsPage() {
                   </div>
                   <div className="image-upload-body">
                     <strong>{imageFile ? imageFile.name : "Cover image"}</strong>
-                    <span>Recommended size: 1200x600. JPG, PNG, or WebP.</span>
+                    <span>Local file attachment is unavailable until the API supports media attachment. Use an image URL instead.</span>
                     <div className="image-upload-actions">
-                      <label className="upload-button">
-                        <ImagePlus size={16} /> {eventPreviewImage ? "Change image" : "Choose image"}
+                      <label className="upload-button opacity-50 cursor-not-allowed" aria-disabled="true">
+                        <ImagePlus size={16} /> File uploads unavailable
                         <input
                           accept="image/*"
                           type="file"
+                          disabled
                           onChange={(event) => {
                             const file = event.target.files?.[0] ?? null;
                             setImageFile(file);
@@ -881,6 +866,10 @@ export default function EventsPage() {
                         <button className="secondary-button" type="button" onClick={removeSelectedImage}>Remove</button>
                       ) : null}
                     </div>
+                    <label className="form-field mt-3">
+                      <span>Image URL</span>
+                      <input type="url" value={form.imageUrl} placeholder="https://example.com/cover.jpg" onChange={(event) => updateFormField("imageUrl", event.target.value)} />
+                    </label>
                   </div>
                 </div>
               </section>
@@ -933,7 +922,7 @@ export default function EventsPage() {
                 <div className="create-form-actions">
                   <button className="secondary-button" type="button" onClick={() => setShowCreateForm(false)}>Cancel</button>
                   <button className="secondary-button" type="button" onClick={handleSaveDraft}><Save size={15} /> Save Draft</button>
-                  <button className="primary-button" disabled={uploadingImage} type="submit"><Send size={15} /> {uploadingImage ? "Uploading..." : "Publish Event"}</button>
+                  <button className="primary-button" type="submit"><Send size={15} /> Publish Event</button>
                 </div>
               </section>
             </form>
@@ -1060,6 +1049,15 @@ export default function EventsPage() {
               );
             }) : <EmptyState>No planned events matched your filters.</EmptyState>}
           </div>
+          {pageData && pageData.totalPages > 1 ? (
+            <nav className="mt-5 flex items-center justify-between gap-3" aria-label="Event pages">
+              <span className="text-sm text-[var(--muted)]">Page {pageData.number + 1} of {pageData.totalPages}</span>
+              <div className="flex gap-2">
+                <button className="secondary-button" type="button" disabled={pageData.first || loading} onClick={() => void loadEvents(currentPage - 1)}>Previous</button>
+                <button className="secondary-button" type="button" disabled={pageData.last || loading} onClick={() => void loadEvents(currentPage + 1)}>Next</button>
+              </div>
+            </nav>
+          ) : null}
         </div>
 
         {selectedEvent && (

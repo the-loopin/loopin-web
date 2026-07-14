@@ -18,8 +18,8 @@ import {
   AlertCircle
 } from "lucide-react";
 import { SiteShell } from "@/app/site";
+import { toEventItem } from "@/lib/api";
 
-// Proper modular hooks based on existing API architecture
 import { useProfile } from "@/hooks/useProfile";
 import { useMyLoopedEvents, useEvents } from "@/hooks/useEvents";
 import { useBadges } from "@/hooks/useBadges";
@@ -57,8 +57,8 @@ export default function CompleteProfilePage() {
     return (upcomingEvents?.content || [])
       .filter((item) => item.event)
       .map((item) => ({
-        ...item.event,
-        loopedCount: item.loopedCount ?? item.event?.loopedCount ?? 0,
+        ...toEventItem(item.event!),
+        loopedCount: item.loopedCount ?? 0,
       }));
   }, [upcomingEvents]);
 
@@ -220,7 +220,7 @@ export default function CompleteProfilePage() {
 
                 {loopedEventsList.length > 0 && (
                   <div className="flex flex-col gap-3">
-                    {loopedEventsList.map((event: EventItem) => {
+                    {loopedEventsList.map((event) => {
                       // eslint-disable-next-line react-hooks/purity
                       const dateObj = new Date(event.startDateTime || new Date().toISOString());
                       const month = dateObj.toLocaleString('en-US', { month: 'short' });
@@ -386,7 +386,7 @@ export default function CompleteProfilePage() {
 
                 {suggestedEvents && suggestedEvents.length > 0 && (
                   <div className="flex flex-col gap-3">
-                    {suggestedEvents.map((event: EventItem) => {
+                    {suggestedEvents.map((event) => {
                       // eslint-disable-next-line react-hooks/purity
                       const dateObj = new Date(event.startDateTime || new Date().toISOString());
                       return (

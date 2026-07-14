@@ -166,7 +166,7 @@ export default function EventGroupsPage() {
               </div>
             ) : (
               <EmptyState>
-                Listing groups is coming soon! You can create a new group for this {eventItem?.type === "ACTIVITY" ? "activity" : "event"} and share the link.
+                Group listing is unavailable because the current API does not expose an event-groups endpoint. You can still create a group for this {eventItem?.type === "ACTIVITY" ? "activity" : "event"} and share its link.
               </EmptyState>
             )}
           </section>

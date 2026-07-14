@@ -3,12 +3,10 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
-import { deleteEvent, EventItem, EventPayload, getEvent, updateEvent, EventCategory, EventStatus, EventUpdateRequest } from "@/lib/api";
+import { deleteEvent, EventItem, EventPayload, getEvent, updateEvent, EventCategory, EventUpdateRequest } from "@/lib/api";
 import { ErrorMessage, Input, PageHeader, Panel, Select, SiteShell, Textarea } from "../../../site";
 
 const categories = ["TECH", "STARTUP", "HR", "EDUCATION", "TRAVEL", "SPORT", "SOCIAL", "LANGUAGE", "CREATIVE", "OTHER"];
-const statuses = ["DRAFT", "PUBLISHED", "COMPLETED", "CANCELLED"];
-
 export default function EventDetailRoutePage() {
   const params = useParams<{ eventId: string }>();
   const router = useRouter();
@@ -25,6 +23,8 @@ export default function EventDetailRoutePage() {
       setForm({
         ...loaded,
         address: loaded.address ?? "",
+        latitude: loaded.latitude ?? 0,
+        longitude: loaded.longitude ?? 0,
         price: Number(loaded.price ?? 0),
         imageUrl: loaded.imageUrl ?? "",
       });
@@ -94,7 +94,7 @@ export default function EventDetailRoutePage() {
               <Textarea label="Description" value={form.description} onChange={(description) => setForm((c) => c && { ...c, description })} />
               <div className="grid gap-3 md:grid-cols-2">
                 <Select label="Category" value={form.category} options={categories} onChange={(category) => setForm((c) => c && { ...c, category: category as EventCategory })} />
-                <Select label="Status" value={form.status} options={statuses} onChange={(status) => setForm((c) => c && { ...c, status: status as EventStatus })} />
+                <div className="grid gap-1"><span className="text-sm font-medium">Status</span><p className="rounded-md border border-[var(--line)] px-3 py-2 text-sm text-[var(--muted)]">{event?.status ?? "DRAFT"}</p></div>
                 <Input label="City" value={form.city} onChange={(city) => setForm((c) => c && { ...c, city })} />
                 <Input label="Address" value={form.address} onChange={(address) => setForm((c) => c && { ...c, address })} />
                 <Input label="Start" value={form.startDateTime} onChange={(startDateTime) => setForm((c) => c && { ...c, startDateTime })} />

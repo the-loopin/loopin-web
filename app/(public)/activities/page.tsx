@@ -4,7 +4,6 @@ import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   createEvent,
-  deleteMedia,
   type EventItem,
   type EventPayload,
   getEvents,
@@ -12,10 +11,9 @@ import {
   loopInEvent,
   unloopEvent,
   EventCategory,
-  EventStatus,
   SpringPage,
 } from "@/lib/api";
-import { uploadMedia } from "@/lib/media/uploadMedia";
+import { assertEventImageContract } from "@/lib/media/eventImageContract";
 import { getAuthToken } from "@/lib/auth/session";
 import LocationPickerMap from "@/components/ui/LocationPickerMap";
 import { EmptyState, ErrorMessage, Input, PageHeader, Select, SiteShell } from "../../site";
@@ -217,7 +215,6 @@ export default function ActivitiesPage() {
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState("");
-  const [uploadingImage, setUploadingImage] = useState(false);
   const [locatingAddress, setLocatingAddress] = useState(false);
   const [filters, setFilters] = useState(initialFilters);
   const [error, setError] = useState("");
@@ -452,20 +449,6 @@ export default function ActivitiesPage() {
     }
   }
 
-  async function uploadImageIfNeeded(): Promise<string | undefined> {
-    if (!imageFile) {
-      return undefined;
-    }
-
-    setUploadingImage(true);
-
-    try {
-      return await uploadMedia(imageFile, "EVENT_IMAGE");
-    } finally {
-      setUploadingImage(false);
-    }
-  }
-
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -491,10 +474,8 @@ export default function ActivitiesPage() {
 
     setError("");
 
-    let uploadedMediaId: string | undefined;
-
     try {
-      uploadedMediaId = await uploadImageIfNeeded();
+      assertEventImageContract(imageFile);
 
       const created = await createEvent({
         title: form.title.trim(),
@@ -517,8 +498,6 @@ export default function ActivitiesPage() {
        * createEvent succeeded, so the backend attached the media to the event.
        * Do not delete it in the catch block after this point.
        */
-      uploadedMediaId = undefined;
-
       const displayCategory =
         form.category === "OTHER" ? customCategory.trim() : "";
 
@@ -553,10 +532,6 @@ export default function ActivitiesPage() {
        * Upload completed but event creation failed.
        * Delete the unattached media asset to avoid an orphan object.
        */
-      if (uploadedMediaId) {
-        await deleteMedia(uploadedMediaId).catch(() => undefined);
-      }
-
       const apiError = getApiErrorResponse(caught);
       const message = getApiErrorMessage(
         caught,
@@ -750,8 +725,8 @@ export default function ActivitiesPage() {
               <button className="secondary-button" type="button" onClick={handleSaveDraft}>
                 <Save size={15} /> Save Draft
               </button>
-              <button className="primary-button" disabled={uploadingImage} form="create-activity-form" type="submit">
-                <Send size={15} /> {uploadingImage ? "Uploading..." : "Host Activity"}
+              <button className="primary-button" form="create-activity-form" type="submit">
+                <Send size={15} /> Host Activity
               </button>
             </div>
           </div>
@@ -893,13 +868,14 @@ export default function ActivitiesPage() {
                   </div>
                   <div className="image-upload-body">
                     <strong>{imageFile ? imageFile.name : "Cover image"}</strong>
-                    <span>Recommended size: 1200x600. JPG, PNG, or WebP.</span>
+                    <span>Local file attachment is unavailable until the API supports media attachment. Use an image URL instead.</span>
                     <div className="image-upload-actions">
-                      <label className="upload-button">
-                        <ImagePlus size={16} /> {activityPreviewImage ? "Change image" : "Choose image"}
+                      <label className="upload-button opacity-50 cursor-not-allowed" aria-disabled="true">
+                        <ImagePlus size={16} /> File uploads unavailable
                         <input
                           accept="image/jpeg,image/png,image/webp"
                           type="file"
+                          disabled
                           onChange={(event) => {
                             const file = event.target.files?.[0] ?? null;
                             setImageFile(file);
@@ -911,6 +887,10 @@ export default function ActivitiesPage() {
                         <button className="secondary-button" type="button" onClick={removeSelectedImage}>Remove</button>
                       ) : null}
                     </div>
+                    <label className="form-field mt-3">
+                      <span>Image URL</span>
+                      <input type="url" value={form.imageUrl} placeholder="https://example.com/cover.jpg" onChange={(event) => updateFormField("imageUrl", event.target.value)} />
+                    </label>
                   </div>
                 </div>
               </section>
@@ -963,7 +943,7 @@ export default function ActivitiesPage() {
                 <div className="create-form-actions">
                   <button className="secondary-button" type="button" onClick={() => setShowCreateForm(false)}>Cancel</button>
                   <button className="secondary-button" type="button" onClick={handleSaveDraft}><Save size={15} /> Save Draft</button>
-                  <button className="primary-button" disabled={uploadingImage} type="submit"><Send size={15} /> {uploadingImage ? "Uploading..." : "Host Activity"}</button>
+                  <button className="primary-button" type="submit"><Send size={15} /> Host Activity</button>
                 </div>
               </section>
             </form>
