@@ -242,6 +242,54 @@
         }
       }
     },
+    "/v1/me/avatar": {
+      "put": {
+        "tags": [
+          "user-profile-controller"
+        ],
+        "operationId": "updateMyAvatar",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserAvatarRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfileResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "user-profile-controller"
+        ],
+        "operationId": "removeMyAvatar",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfileResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/groups/{groupId}": {
       "get": {
         "tags": [
@@ -298,6 +346,76 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/groups/{groupId}/image": {
+      "put": {
+        "tags": [
+          "group-controller"
+        ],
+        "operationId": "updateGroupImage",
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateGroupImageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "group-controller"
+        ],
+        "operationId": "removeGroupImage",
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -1086,17 +1204,17 @@
         ]
       }
     },
-    "/v1/auth/google": {
+    "/v1/dev/auth/login": {
       "post": {
         "tags": [
-          "auth-controller"
+          "dev-auth-controller"
         ],
-        "operationId": "authenticateGoogleUser",
+        "operationId": "devLogin",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/GoogleLoginRequest"
+                "$ref": "#/components/schemas/DevLoginRequest"
               }
             }
           },
@@ -1108,7 +1226,7 @@
             "content": {
               "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/AuthResponse"
+                  "$ref": "#/components/schemas/DevLoginResult"
                 }
               }
             }
@@ -1116,17 +1234,17 @@
         }
       }
     },
-    "/v1/auth/dev-login": {
+    "/v1/auth/google": {
       "post": {
         "tags": [
-          "dev-auth-controller"
+          "auth-controller"
         ],
-        "operationId": "devLogin",
+        "operationId": "authenticateGoogleUser",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/DevLoginRequest"
+                "$ref": "#/components/schemas/GoogleLoginRequest"
               }
             }
           },
@@ -1728,29 +1846,6 @@
         }
       }
     },
-    "/v1/health": {
-      "get": {
-        "tags": [
-          "health-controller"
-        ],
-        "operationId": "healthCheck",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/v1/groups/{groupId}/members/{userId}": {
       "get": {
         "tags": [
@@ -2317,6 +2412,22 @@
           }
         }
       },
+      "MediaReferenceResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "contentType": {
+            "type": "string"
+          },
+          "sizeBytes": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
       "UserProfileResponse": {
         "type": "object",
         "properties": {
@@ -2338,6 +2449,9 @@
           },
           "bio": {
             "type": "string"
+          },
+          "avatar": {
+            "$ref": "#/components/schemas/MediaReferenceResponse"
           },
           "interests": {
             "type": "array",
@@ -2381,6 +2495,18 @@
         },
         "required": [
           "interestId"
+        ]
+      },
+      "UpdateUserAvatarRequest": {
+        "type": "object",
+        "properties": {
+          "mediaId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "mediaId"
         ]
       },
       "UpdateGroupRequest": {
@@ -2454,6 +2580,9 @@
           "groupNote": {
             "type": "string"
           },
+          "image": {
+            "$ref": "#/components/schemas/MediaReferenceResponse"
+          },
           "memberCount": {
             "type": "integer",
             "format": "int32"
@@ -2463,6 +2592,18 @@
             "format": "date-time"
           }
         }
+      },
+      "UpdateGroupImageRequest": {
+        "type": "object",
+        "properties": {
+          "mediaId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "mediaId"
+        ]
       },
       "EventUpdateRequest": {
         "type": "object",
@@ -2538,10 +2679,9 @@
             "maxLength": 120,
             "minLength": 0
           },
-          "imageUrl": {
+          "imageMediaId": {
             "type": "string",
-            "maxLength": 500,
-            "minLength": 0
+            "format": "uuid"
           },
           "interestIds": {
             "type": "array",
@@ -2628,7 +2768,11 @@
             "type": "string"
           },
           "imageUrl": {
-            "type": "string"
+            "type": "string",
+            "deprecated": true
+          },
+          "image": {
+            "$ref": "#/components/schemas/MediaReferenceResponse"
           },
           "status": {
             "type": "string",
@@ -2845,7 +2989,9 @@
             "format": "uuid"
           },
           "title": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 0
           },
           "groupSize": {
             "type": "string",
@@ -2862,7 +3008,13 @@
             "minimum": 1
           },
           "groupNote": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 0
+          },
+          "imageMediaId": {
+            "type": "string",
+            "format": "uuid"
           }
         },
         "required": [
@@ -3059,10 +3211,9 @@
             "maxLength": 120,
             "minLength": 0
           },
-          "imageUrl": {
+          "imageMediaId": {
             "type": "string",
-            "maxLength": 500,
-            "minLength": 0
+            "format": "uuid"
           },
           "interestIds": {
             "type": "array",
@@ -3096,6 +3247,35 @@
           }
         }
       },
+      "DevLoginRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "DevLoginResult": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "tokenType": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string"
+          }
+        }
+      },
       "GoogleLoginRequest": {
         "type": "object",
         "properties": {
@@ -3125,14 +3305,6 @@
               "USER",
               "ADMIN"
             ]
-          }
-        }
-      },
-      "DevLoginRequest": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string"
           }
         }
       },
@@ -3378,14 +3550,14 @@
           "unpaged": {
             "type": "boolean"
           },
-          "pageNumber": {
-            "type": "integer",
-            "format": "int32"
-          },
           "paged": {
             "type": "boolean"
           },
           "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageNumber": {
             "type": "integer",
             "format": "int32"
           },
