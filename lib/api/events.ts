@@ -73,6 +73,7 @@ export function toEventItem(
     ),
     status: requireValue(event.status, "a status"),
     interests: event.interests ?? [],
+    imageUrl: event.image?.url ?? event.imageUrl
   };
 }
 
