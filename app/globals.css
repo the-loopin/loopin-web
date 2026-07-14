@@ -2430,6 +2430,16 @@ button:disabled {
   animation: action-toast-in 220ms ease both;
 }
 
+.action-toast-inline {
+  position: sticky;
+  top: 88px;
+  right: auto;
+  bottom: auto;
+  z-index: 12;
+  width: min(520px, 100%);
+  margin: 0 0 14px auto;
+}
+
 .action-toast-added {
   --toast-border: color-mix(in srgb, #43d17a 55%, var(--line));
   --toast-glow: color-mix(in srgb, #43d17a 20%, transparent);
