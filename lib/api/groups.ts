@@ -43,6 +43,15 @@ export async function getGroup(groupId: string): Promise<GroupItem> {
   return toGroupItem(response.data);
 }
 
+export async function getMyGroups(): Promise<GroupItem[]> {
+  const response =
+    await apiClient.get<GroupResponse[]>(
+      "/me/groups",
+    );
+
+  return response.data.map(toGroupItem);
+}
+
 export async function updateGroup(groupId: string, payload: UpdateGroupRequest): Promise<GroupItem> {
   const response = await apiClient.put<GroupResponse>(`/groups/${groupId}`, payload);
   return toGroupItem(response.data);
