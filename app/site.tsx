@@ -227,9 +227,6 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
               <div className="dropdown-menu">
                 {hasToken ? (
                   <>
-                    <div className="dropdown-header">
-                      Role: {role || "USER"}
-                    </div>
                     <button className="dropdown-item group" onClick={() => { router.push("/profile"); setShowProfile(false); }}>
                       <User size={16} /> <RollText text="View Profile" />
                     </button>

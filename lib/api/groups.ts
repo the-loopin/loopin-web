@@ -12,6 +12,7 @@ import type {
   JoinRequestItem,
 } from "./contracts";
 import { encodeApiIdentifier, normalizeApiIdentifier } from "./path";
+import { toDisplayName } from "../user/displayName";
 
 function requireId(value: string | undefined, label: string): string {
   if (!value) throw new Error(`The groups API returned a record without ${label}.`);
@@ -22,7 +23,7 @@ function toGroupItem(group: GroupResponse): GroupItem {
   return {
     ...group,
     id: requireId(group.id, "groupId"), eventId: requireId(group.eventId, "eventId"), adminId: requireId(group.adminId, "adminId"),
-    adminUsername: group.adminUsername ?? "", title: group.title ?? "Untitled group",
+    adminUsername: toDisplayName(group.adminUsername), title: group.title ?? "Untitled group",
     groupSize: group.groupSize ?? "FOUR", maxMembers: group.maxMembers ?? 0,
     status: group.status ?? "OPEN", groupNote: group.groupNote ?? "", memberCount: group.memberCount ?? 0,
   };

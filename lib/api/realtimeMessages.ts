@@ -4,6 +4,8 @@ import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import { getWebSocketAuthToken } from "../auth/session";
 import { normalizeApiIdentifier } from "./path";
+import { toGroupMessage } from "./messages";
+import type { GroupMessageResponse } from "./contracts";
 import type {
   CreateGroupMessageRequest,
   GroupMessage,
@@ -86,10 +88,16 @@ export function createGroupMessageClient(
         hasConnected ? "Reconnecting" : "Connecting",
       );
 
-      const token = await getWebSocketAuthToken();
-      client.connectHeaders = {
-        Authorization: `Bearer ${token}`,
-      };
+      try {
+        const token = await getWebSocketAuthToken();
+        client.connectHeaders = {
+          Authorization: `Bearer ${token}`,
+        };
+      } catch (error) {
+        client.connectHeaders = {};
+        onStatusChange?.("Authentication failed");
+        throw error;
+      }
     },
 
     onConnect: () => {
@@ -101,7 +109,9 @@ export function createGroupMessageClient(
         (frame) => {
           try {
             onMessage(
-              JSON.parse(frame.body) as GroupMessage,
+              toGroupMessage(
+                JSON.parse(frame.body) as GroupMessageResponse,
+              ),
             );
           } catch (error) {
             console.error(

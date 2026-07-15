@@ -9,10 +9,8 @@ import {
   useRouter,
 } from "next/navigation";
 
-import {
-  createGroup,
-  type GroupSize,
-} from "@/lib/api";
+import { type GroupSize } from "@/lib/api";
+import { useCreateGroup } from "@/hooks/useGroups";
 import { withUploadedMedia } from "@/lib/media/withUploadedMedia";
 
 import {
@@ -29,6 +27,7 @@ export default function NewGroupPage() {
   const params =
     useParams<{ eventId: string }>();
   const router = useRouter();
+  const createGroupMutation = useCreateGroup();
 
   const [form, setForm] = useState({
     title: "Loopin meetup group",
@@ -76,7 +75,7 @@ export default function NewGroupPage() {
           file: imageFile,
           purpose: "GROUP_IMAGE",
           commit: (imageMediaId) =>
-            createGroup({
+            createGroupMutation.mutateAsync({
               eventId: params.eventId,
               title: form.title.trim(),
               groupSize:
