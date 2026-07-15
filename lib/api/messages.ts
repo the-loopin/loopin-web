@@ -3,14 +3,25 @@ import type { CreateGroupMessageRequest, GroupMessageResponse } from "./contract
 import type { SpringPage } from "./pagination";
 import type { GroupMessage } from "../types/message";
 import { encodeApiIdentifier, normalizeApiIdentifier } from "./path";
+import { toDisplayName } from "../user/displayName";
 
-function toGroupMessage(message: GroupMessageResponse): GroupMessage {
-  if (!message.id) throw new Error("The messages API returned a message without an id.");
+function requireMessageIdentifier(
+  value: string | undefined,
+  label: string,
+): string {
+  if (!value) {
+    throw new Error(`The messages API returned a message without ${label}.`);
+  }
+
+  return normalizeApiIdentifier(value, label);
+}
+
+export function toGroupMessage(message: GroupMessageResponse): GroupMessage {
   return {
-    id: normalizeApiIdentifier(message.id, "messageId"),
-    groupId: message.groupId ?? "",
-    senderId: message.senderId ?? "",
-    senderName: message.senderName ?? "",
+    id: requireMessageIdentifier(message.id, "messageId"),
+    groupId: requireMessageIdentifier(message.groupId, "groupId"),
+    senderId: requireMessageIdentifier(message.senderId, "senderId"),
+    senderName: toDisplayName(message.senderName),
     messageText: message.messageText ?? "",
     createdAt: message.createdAt ?? "",
   };
