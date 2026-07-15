@@ -6,6 +6,8 @@ import { clearAuthToken, getAuthRole, getAuthToken } from "@/lib/auth/session";
 import { useEffect, useRef, useState } from "react";
 import { Bell, User, LogOut, Settings, HelpCircle, Flag, Users, Award, Sun, Moon, ChevronDown } from "lucide-react";
 import { RollText } from "@/components/ui/RollText";
+import { getGroup, type NotificationResponse, } from "@/lib/api";
+import { useMarkNotificationAsRead, useUnreadNotifications, } from "@/hooks/useNotifications";
 
 export function SiteShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -40,10 +42,17 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
 
-  const [notifications, setNotifications] = useState([
-    { id: 1, text: "A new event matching your interests 'Neon Startup Night' was created.", type: "info" },
-    { id: 2, text: "Maya requested to join your group 'Focus builders'.", type: "request", group: "Focus builders", user: "Maya" }
-  ]);
+  const {
+  data: notificationPage,
+  isPending: notificationsPending,
+  isError: notificationsError,
+} = useUnreadNotifications(hasToken);
+
+  const markNotificationAsRead =
+    useMarkNotificationAsRead();
+
+  const notifications =
+    notificationPage?.content ?? [];
 
   function logout() {
     clearAuthToken();
@@ -53,15 +62,43 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
     router.push("/login");
   }
 
-  const handleAccept = (id: number) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
-    alert("Accepted join request!");
-  };
+  async function handleNotificationClick(
+  notification: NotificationResponse,
+) {
+  try {
+    if (
+      notification.id &&
+      notification.status === "UNREAD"
+    ) {
+      await markNotificationAsRead.mutateAsync(
+        notification.id,
+      );
+    }
 
-  const handleReject = (id: number) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
-    alert("Rejected join request!");
-  };
+    setShowNotifications(false);
+
+    if (
+      notification.referenceType ===
+        "GROUP" &&
+      notification.referenceId
+    ) {
+      const group = await getGroup(
+        notification.referenceId,
+      );
+
+      router.push(
+        `/events/${group.eventId}` +
+          `/groups/${group.id}` +
+          `/requests`,
+      );
+    }
+  } catch (error) {
+    console.error(
+      "Could not open notification",
+      error,
+    );
+  }
+}
 
   return (
     <main className="prototype-shell min-h-screen">
@@ -117,26 +154,44 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
                 }} />
               )}
             </button>
-            {showNotifications && (
-              <div className="dropdown-menu notification-dropdown">
-                <div className="dropdown-header">Notifications</div>
-                {notifications.length === 0 ? (
-                  <div className="notification-item">No new notifications</div>
-                ) : (
-                  notifications.map(n => (
-                    <div key={n.id} className="notification-item">
-                      <p className="mb-2">{n.text}</p>
-                      {n.type === "request" && (
-                        <div className="notification-actions">
-                          <button className="notification-btn-accept" onClick={() => handleAccept(n.id)}>Accept</button>
-                          <button className="notification-btn-reject" onClick={() => handleReject(n.id)}>Reject</button>
-                        </div>
-                      )}
-                    </div>
-                  ))
-                )}
-              </div>
-            )}
+              {notificationsPending ? (
+                <div className="notification-item">
+                  Loading notifications...
+                </div>
+              ) : notificationsError ? (
+                <div className="notification-item">
+                  Could not load notifications.
+                </div>
+              ) : notifications.length === 0 ? (
+                <div className="notification-item">
+                  No new notifications
+                </div>
+              ) : (
+                notifications.map((notification) => (
+                  <button
+                    key={notification.id}
+                    type="button"
+                    className="notification-item w-full text-left"
+                    disabled={
+                      markNotificationAsRead.isPending
+                    }
+                    onClick={() =>
+                      void handleNotificationClick(
+                        notification,
+                      )
+                    }
+                  >
+                    <strong className="mb-1 block text-sm">
+                      {notification.title ??
+                        "Notification"}
+                    </strong>
+
+                    <p className="text-xs text-[var(--muted)]">
+                      {notification.message}
+                    </p>
+                  </button>
+                ))
+              )}
           </div>
 
           {/* Profile Dropdown */}
