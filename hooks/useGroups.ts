@@ -3,6 +3,7 @@ import {
   getGroup,
   getMyGroups,
   type CreateGroupRequest,
+  type GroupItem,
 } from "../lib/api";
 
 import {
@@ -12,10 +13,8 @@ import {
 } from "@tanstack/react-query";
 
 /**
- * useGroupsByEvent is NOT available — the backend does not expose a group listing
- * endpoint for a given event. Do not add a fake queryFn here.
- *
- * To show a group list in the UI, display an explicit "unavailable" state.
+ * The backend currently exposes the current user's groups through /me/groups.
+ * Event pages filter that server-backed list by eventId.
  */
 
 export function useGroup(groupId: string | undefined) {
@@ -40,9 +39,21 @@ export function useCreateGroup() {
   return useMutation({
     mutationFn: (group: CreateGroupRequest) => createGroup(group),
     onSuccess: (data) => {
-      // Invalidate the individual group cache so that navigating to the group
-      // detail page shows fresh data.
-      void queryClient.invalidateQueries({ queryKey: ["groups", data.id] });
+      queryClient.setQueryData<GroupItem[]>(
+        ["groups", "me"],
+        (current = []) => [
+          data,
+          ...current.filter((group) => group.id !== data.id),
+        ],
+      );
+      queryClient.setQueryData(
+        ["groups", data.id],
+        data,
+      );
+
+      void queryClient.invalidateQueries({
+        queryKey: ["groups", "me"],
+      });
     },
   });
 }
