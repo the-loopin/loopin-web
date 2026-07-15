@@ -9,6 +9,7 @@ import type {
   LoopedEventResponse,
 } from "./contracts";
 import type { SpringPage } from "./pagination";
+import { encodeApiIdentifier, normalizeApiIdentifier } from "./path";
 
 export interface GetEventsParams {
   type?: EventType;
@@ -41,7 +42,10 @@ export function toEventItem(
 ): EventItem {
   return {
     ...event,
-    id: requireValue(event.id, "an id"),
+    id: normalizeApiIdentifier(
+      requireValue(event.id, "an id"),
+      "eventId",
+    ),
     title: requireValue(event.title, "a title"),
     description: requireValue(
       event.description,
@@ -99,7 +103,7 @@ export async function getEvent(
 ): Promise<EventItem> {
   const response =
     await apiClient.get<EventResponse>(
-      `/events/${id}`,
+      `/events/${encodeApiIdentifier(id, "eventId")}`,
     );
 
   return toEventItem(response.data);
@@ -123,7 +127,7 @@ export async function updateEvent(
 ): Promise<EventItem> {
   const response =
     await apiClient.put<EventResponse>(
-      `/events/${id}`,
+      `/events/${encodeApiIdentifier(id, "eventId")}`,
       payload,
     );
 
@@ -133,7 +137,7 @@ export async function updateEvent(
 export async function deleteEvent(
   id: string,
 ): Promise<void> {
-  await apiClient.delete(`/events/${id}`);
+  await apiClient.delete(`/events/${encodeApiIdentifier(id, "eventId")}`);
 }
 
 export async function loopInEvent(
@@ -141,7 +145,7 @@ export async function loopInEvent(
 ): Promise<LoopedEventResponse> {
   const response =
     await apiClient.post<LoopedEventResponse>(
-      `/events/${eventId}/loop-in`,
+      `/events/${encodeApiIdentifier(eventId, "eventId")}/loop-in`,
     );
 
   return response.data;
@@ -151,7 +155,7 @@ export async function unloopEvent(
   eventId: string,
 ): Promise<void> {
   await apiClient.delete(
-    `/events/${eventId}/loop-in`,
+    `/events/${encodeApiIdentifier(eventId, "eventId")}/loop-in`,
   );
 }
 

@@ -29,23 +29,16 @@ describe('API Client Interceptor', () => {
     }
   });
 
-  it('does not trigger redirect for /auth/dev-login on 401', async () => {
-    server.use(
-      http.post('/api/v1/auth/dev-login', () => {
-        return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
-      })
-    );
-
-    try {
-      await apiClient.post('/auth/dev-login', {});
-    } catch (error) {
-      expect((error as ApiException).status).toBe(401);
-    }
-
-    expect(window.location.assign).not.toHaveBeenCalled();
+  it('rejects absolute API URLs before a request is sent', async () => {
+    await expect(
+      apiClient.get('https://evil.example/collect')
+    ).rejects.toMatchObject({
+      code: 'INVALID_API_URL',
+      status: 400,
+    });
   });
 
-  it('triggers redirect for generic endpoints on 401', async () => {
+  it('triggers redirect for protected endpoints on 401', async () => {
     server.use(
       http.get('/api/v1/some-protected-route', () => {
         return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });

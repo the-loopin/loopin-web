@@ -5,6 +5,8 @@ import type {
   MediaCompletionResponse,
 } from "./contracts";
 
+import { encodeApiIdentifier } from "./path";
+
 export async function requestMediaUpload(
   payload: RequestMediaUploadRequest
 ): Promise<MediaUploadResponse> {
@@ -15,12 +17,14 @@ export async function requestMediaUpload(
 export async function completeMediaUpload(
   mediaId: string
 ): Promise<MediaCompletionResponse> {
+  const encodedMediaId = encodeApiIdentifier(mediaId, "mediaId");
   const response = await apiClient.post<MediaCompletionResponse>(
-    `/media/uploads/${mediaId}/complete`
+    `/media/uploads/${encodedMediaId}/complete`
   );
   return response.data;
 }
 
 export async function deleteMedia(mediaId: string): Promise<void> {
-  await apiClient.delete(`/media/${mediaId}`);
+  const encodedMediaId = encodeApiIdentifier(mediaId, "mediaId");
+  await apiClient.delete(`/media/${encodedMediaId}`);
 }

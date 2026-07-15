@@ -1,6 +1,7 @@
 import apiClient from "./client";
 import type { NotificationResponse, NotificationStatus } from "./contracts";
 import type { SpringPage } from "./pagination";
+import { encodeApiIdentifier } from "./path";
 
 export async function getNotifications(
   status?: NotificationStatus,
@@ -14,7 +15,7 @@ export async function getNotifications(
 }
 
 export async function markNotificationAsRead(id: string): Promise<NotificationResponse> {
-  const response = await apiClient.patch<NotificationResponse>(`/notifications/${id}/read`);
+  const response = await apiClient.patch<NotificationResponse>(`/notifications/${encodeApiIdentifier(id, "notificationId")}/read`);
   return response.data;
 }
 
@@ -23,5 +24,5 @@ export async function markAllNotificationsAsRead(): Promise<void> {
 }
 
 export async function archiveNotification(id: string): Promise<void> {
-  await apiClient.delete(`/notifications/${id}`);
+  await apiClient.delete(`/notifications/${encodeApiIdentifier(id, "notificationId")}`);
 }

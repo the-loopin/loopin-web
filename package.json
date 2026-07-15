@@ -14,7 +14,9 @@
     "api:generate": "openapi-typescript contracts/openapi.json -o lib/api/generated/schema.ts",
     "api:check": "npm run api:generate && git diff --exit-code -- contracts/openapi.json lib/api/generated/schema.ts",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "security:audit": "npm audit --omit=dev --audit-level=moderate",
+    "security:check": "npm run lint && npm run typecheck && npm test && npm run security:audit"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",

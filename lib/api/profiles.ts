@@ -4,6 +4,7 @@ import type {
   UpdateUserProfileRequest,
   UserProfileResponse,
 } from "./contracts";
+import { normalizeApiIdentifier } from "./path";
 
 export async function getProfile():
 Promise<UserProfileResponse> {
@@ -31,7 +32,7 @@ export async function updateProfileAvatar(
   mediaId: string,
 ): Promise<UserProfileResponse> {
   const payload: UpdateUserAvatarRequest = {
-    mediaId,
+    mediaId: normalizeApiIdentifier(mediaId, "mediaId"),
   };
 
   const response =
