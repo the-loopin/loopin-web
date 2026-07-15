@@ -199,11 +199,6 @@ function saveStoredLoopedIds(loopedIds: Record<string, boolean>) {
   window.localStorage.setItem(loopedEventsStorageKey, JSON.stringify(Object.keys(loopedIds)));
 }
 
-function getMapUrl(latitude: number, longitude: number, span = 0.018, showMarker = true) {
-  const marker = showMarker ? `&marker=${latitude}%2C${longitude}` : "";
-  return `https://www.openstreetmap.org/export/embed.html?bbox=${longitude - span}%2C${latitude - span * 0.66}%2C${longitude + span}%2C${latitude + span * 0.66}&layer=mapnik${marker}`;
-}
-
 export default function ActivitiesPage() {
   const router = useRouter();
   const [activities, setActivities] = useState<EventItem[]>([]);
@@ -602,7 +597,6 @@ export default function ActivitiesPage() {
 
   const selectedActivity = activities.find((activity) => activity.id === selectedActivityId) ?? null;
   const selectedLocation = selectedActivity ? getLocationForActivity(selectedActivity) : { latitude: 40.3777, longitude: 49.892, precise: false };
-  const selectedMapUrl = getMapUrl(selectedLocation.latitude, selectedLocation.longitude);
   const pickerLatitude = form.latitude ?? bakuCenter.latitude;
   const pickerLongitude = form.longitude ?? bakuCenter.longitude;
   const activityPreviewImage = imagePreviewUrl;
@@ -1151,11 +1145,11 @@ export default function ActivitiesPage() {
               <em>Location focused</em>
             </div>
             <div className="map-stage">
-              <iframe
-                className="real-map-frame"
-                key={`${selectedLocation.latitude}-${selectedLocation.longitude}`}
-                src={selectedMapUrl}
-                title={`${selectedActivity.title} map`}
+              <LocationPickerMap
+                latitude={selectedLocation.latitude}
+                longitude={selectedLocation.longitude}
+                label={`${selectedActivity.title} map`}
+                readOnly
               />
               <div className="selected-location-card">
                 <span><Navigation size={14} /> Selected location</span>

@@ -7,10 +7,11 @@ type LocationPickerMapProps = {
   latitude: number;
   longitude: number;
   label: string;
-  onChange: (latitude: number, longitude: number) => void;
+  onChange?: (latitude: number, longitude: number) => void;
+  readOnly?: boolean;
 };
 
-export default function LocationPickerMap({ latitude, longitude, label, onChange }: LocationPickerMapProps) {
+export default function LocationPickerMap({ latitude, longitude, label, onChange, readOnly = false }: LocationPickerMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<LeafletMap | null>(null);
   const markerRef = useRef<CircleMarker | null>(null);
@@ -50,12 +51,14 @@ export default function LocationPickerMap({ latitude, longitude, label, onChange
         fillOpacity: 1,
       }).addTo(map);
 
-      map.on("click", (event: LeafletMouseEvent) => {
-        const nextLatitude = Number(event.latlng.lat.toFixed(6));
-        const nextLongitude = Number(event.latlng.lng.toFixed(6));
-        marker.setLatLng([nextLatitude, nextLongitude]);
-        onChangeRef.current(nextLatitude, nextLongitude);
-      });
+      if (!readOnly) {
+        map.on("click", (event: LeafletMouseEvent) => {
+          const nextLatitude = Number(event.latlng.lat.toFixed(6));
+          const nextLongitude = Number(event.latlng.lng.toFixed(6));
+          marker.setLatLng([nextLatitude, nextLongitude]);
+          onChangeRef.current?.(nextLatitude, nextLongitude);
+        });
+      }
 
       mapRef.current = map;
       markerRef.current = marker;

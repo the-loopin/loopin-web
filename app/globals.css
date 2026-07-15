@@ -2321,6 +2321,19 @@ button.notification-item:hover {
   filter: saturate(0.88) contrast(0.96);
 }
 
+.map-stage .location-picker-leaflet {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  min-height: 100%;
+  border: 0;
+  border-radius: 0;
+}
+
+.map-stage .location-picker-leaflet .leaflet-container {
+  min-height: 100%;
+}
+
 .listing-page .event-card-body p,
 .listing-page .event-card-body a,
 .listing-page .split-view-map span.text-accent,
