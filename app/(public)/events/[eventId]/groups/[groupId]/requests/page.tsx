@@ -5,10 +5,12 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   approveJoinRequest,
+  getCurrentUser,
+  getGroup,
   getGroupJoinRequests,
   getMyJoinRequests,
-  JoinRequestItem,
   rejectJoinRequest,
+  type JoinRequestItem,
 } from "@/lib/api";
 import { EmptyState, ErrorMessage, PageHeader, Panel, SiteShell } from "../../../../../../site";
 
@@ -16,13 +18,29 @@ export default function GroupRequestsPage() {
   const params = useParams<{ eventId: string; groupId: string }>();
   const [requests, setRequests] = useState<JoinRequestItem[]>([]);
   const [mine, setMine] = useState<JoinRequestItem[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [error, setError] = useState("");
 
   async function loadRequests() {
     setError("");
+
     try {
-      setRequests(await getGroupJoinRequests(params.groupId));
-      setMine(await getMyJoinRequests());
+      const [group, currentUser, myRequests] = await Promise.all([
+        getGroup(params.groupId),
+        getCurrentUser(),
+        getMyJoinRequests(),
+      ]);
+      const userIsAdmin = currentUser.id === group.adminId;
+
+      setIsAdmin(userIsAdmin);
+      setMine(
+        myRequests.filter((request) => request.groupId === params.groupId),
+      );
+      setRequests(
+        userIsAdmin
+          ? await getGroupJoinRequests(params.groupId)
+          : [],
+      );
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not load requests.");
     }
@@ -37,6 +55,8 @@ export default function GroupRequestsPage() {
   }, [params.groupId]);
 
   async function approve(id: string) {
+    if (!isAdmin) return;
+
     try {
       await approveJoinRequest(params.groupId, id);
       await loadRequests();
@@ -46,6 +66,8 @@ export default function GroupRequestsPage() {
   }
 
   async function reject(id: string) {
+    if (!isAdmin) return;
+
     try {
       await rejectJoinRequest(params.groupId, id);
       await loadRequests();
@@ -65,7 +87,9 @@ export default function GroupRequestsPage() {
 
       <div className="grid gap-5 lg:grid-cols-2">
         <Panel title="Group requests">
-          {requests.length ? (
+          {!isAdmin ? (
+            <EmptyState>Only the group admin can manage incoming requests.</EmptyState>
+          ) : requests.length ? (
             <div className="grid gap-3">
               {requests.map((request) => (
                 <article className="rounded-md border border-[var(--line)] bg-[var(--color-surface)] p-4" key={request.id}>
@@ -76,10 +100,12 @@ export default function GroupRequestsPage() {
                     </div>
                     <span className="rounded-full bg-[color-mix(in_srgb,var(--color-ink)_8%,transparent)] border border-[var(--line)] px-2 py-1 text-xs text-[var(--muted)]">{request.status}</span>
                   </div>
-                  <div className="mt-3 flex gap-2">
-                    <button className="primary-button" onClick={() => void approve(request.id)} type="button">Approve</button>
-                    <button className="secondary-button" onClick={() => void reject(request.id)} type="button">Reject</button>
-                  </div>
+                  {request.status === "PENDING" ? (
+                    <div className="mt-3 flex gap-2">
+                      <button className="primary-button" onClick={() => void approve(request.id)} type="button">Approve</button>
+                      <button className="secondary-button" onClick={() => void reject(request.id)} type="button">Reject</button>
+                    </div>
+                  ) : null}
                 </article>
               ))}
             </div>
@@ -91,13 +117,13 @@ export default function GroupRequestsPage() {
             <div className="grid gap-3">
               {mine.map((request) => (
                 <div className="rounded-md border border-[var(--line)] bg-[var(--color-surface)] p-4 text-sm" key={request.id}>
-                  <p className="font-semibold text-[var(--color-ink)]">Group #{request.groupId}</p>
+                  <p className="font-semibold text-[var(--color-ink)]">This group</p>
                   <p className="mt-1 text-[var(--muted)]">{request.message || "No message"}</p>
                   <p className="mt-2 text-xs uppercase text-[var(--color-teal)]">{request.status}</p>
                 </div>
               ))}
             </div>
-          ) : <EmptyState>You have no join requests.</EmptyState>}
+          ) : <EmptyState>You have no join request for this group.</EmptyState>}
         </Panel>
       </div>
     </SiteShell>
