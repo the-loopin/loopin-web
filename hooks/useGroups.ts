@@ -1,6 +1,15 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createGroup, getGroup, CreateGroupRequest } from "../lib/api";
-import { useQuery } from "@tanstack/react-query";
+import {
+  createGroup,
+  getGroup,
+  getMyGroups,
+  type CreateGroupRequest,
+} from "../lib/api";
+
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 /**
  * useGroupsByEvent is NOT available — the backend does not expose a group listing
@@ -14,6 +23,14 @@ export function useGroup(groupId: string | undefined) {
     queryKey: ["groups", groupId],
     queryFn: () => getGroup(groupId ?? ""),
     enabled: Boolean(groupId),
+  });
+}
+
+export function useMyGroups() {
+  return useQuery({
+    queryKey: ["groups", "me"],
+    queryFn: getMyGroups,
+    staleTime: 60_000,
   });
 }
 

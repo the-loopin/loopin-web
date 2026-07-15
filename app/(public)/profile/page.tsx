@@ -22,6 +22,7 @@ import { toEventItem } from "@/lib/api";
 import { useProfile } from "@/hooks/useProfile";
 import { useMyLoopedEvents, useEvents } from "@/hooks/useEvents";
 import { useBadges } from "@/hooks/useBadges";
+import { useMyGroups } from "@/hooks/useGroups";  
 import { getBadgeUI } from "@/lib/data/badge-catalog";
 import { BadgeIcon } from "@/components/profile/badges/BadgeIcon";
 
@@ -47,9 +48,20 @@ export default function CompleteProfilePage() {
   const { data: upcomingEvents, isPending: eventsPending, isError: eventsError } = useMyLoopedEvents();
   const { data: allEvents, isPending: suggEventsPending } = useEvents();
   const { data: myBadges, isPending: badgesPending, isError: badgesError } = useBadges();
+  const { data: myGroups = [], isPending: groupsPending, isError: groupsError, } = useMyGroups();
 
   const user = userData?.user;
   const profile = userData?.profile;
+
+  const activeGroups = useMemo(
+  () =>
+    myGroups.filter(
+      (group) =>
+        group.status === "OPEN" ||
+        group.status === "FULL",
+    ),
+  [myGroups],
+);
 
   // Suggested events derived from general events endpoint
   const suggestedEvents = allEvents?.content ? allEvents.content.slice(0, 3) : [];
@@ -178,7 +190,7 @@ export default function CompleteProfilePage() {
           <motion.section variants={containerVariants} className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
             {[
               { label: "Events Joined", value: upcomingEvents?.totalElements ?? 0, icon: Calendar, pending: eventsPending },
-              { label: "Active Groups", value: "-", icon: Users, pending: false }, // Explicitly missing backend endpoint
+              { label: "Active Groups", value: activeGroups.length, icon: Users, pending: groupsPending, },
               { label: "Badges Earned", value: myBadges?.length ?? 0, icon: Award, pending: badgesPending },
             ].map((stat, i) => (
               <motion.div 
@@ -267,16 +279,136 @@ export default function CompleteProfilePage() {
                 )}
               </motion.section>
 
-              {/* My Groups (MISSING ENDPOINT) */}
-              <motion.section variants={itemVariants}>
-                <h2 className="text-sm font-bold text-[var(--muted)] uppercase tracking-wider mb-4 flex items-center gap-2">
-                  <Users size={14} /> My Groups
-                </h2>
-                <div className="p-8 rounded-[20px] border border-[var(--line)] border-dashed bg-[var(--panel)] flex flex-col items-center justify-center text-center">
-                  <Users size={32} className="text-[var(--muted)]/50 mb-3" />
-                  <h3 className="text-[var(--color-ink)] font-bold mb-1">Coming Soon</h3>
-                  <p className="text-[var(--muted)] text-sm max-w-sm">Group syncing is currently being rolled out. Check back soon to see your active groups.</p>
+              {/* My Groups */}
+              <motion.section
+                id="groups"
+                variants={itemVariants}
+              >
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-[var(--muted)]">
+                    <Users size={14} />
+                    My Groups
+                  </h2>
+
+                  {!groupsPending && myGroups.length > 0 && (
+                    <span className="text-xs font-semibold text-[var(--muted)]">
+                      {myGroups.length} total
+                    </span>
+                  )}
                 </div>
+
+                {groupsPending && (
+                  <div className="flex flex-col gap-3">
+                    <SkeletonCard className="h-28 w-full" />
+                    <SkeletonCard className="h-28 w-full" />
+                  </div>
+                )}
+
+                {groupsError && (
+                  <div className="rounded-[20px] border border-red-500/20 bg-red-500/5 p-6 text-sm text-red-500">
+                    Unable to load your groups.
+                  </div>
+                )}
+
+                {!groupsPending &&
+                  !groupsError &&
+                  myGroups.length === 0 && (
+                    <div className="flex flex-col items-center justify-center rounded-[20px] border border-dashed border-[var(--line)] bg-[var(--panel)] p-8 text-center">
+                      <Users
+                        size={32}
+                        className="mb-3 text-[var(--muted)]/50"
+                      />
+
+                      <h3 className="mb-1 font-bold text-[var(--color-ink)]">
+                        No groups yet
+                      </h3>
+
+                      <p className="max-w-sm text-sm text-[var(--muted)]">
+                        You have not joined any event groups yet.
+                        Explore an event and request to join a group.
+                      </p>
+
+                      <Link
+                        href="/events"
+                        className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[var(--color-coral)] px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                      >
+                        Explore Events
+                        <ArrowRight size={14} />
+                      </Link>
+                    </div>
+                  )}
+
+                {!groupsPending &&
+                  !groupsError &&
+                  myGroups.length > 0 && (
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                      {myGroups.map((group) => {
+                        const isActive =
+                          group.status === "OPEN" ||
+                          group.status === "FULL";
+
+                        return (
+                          <Link
+                            key={group.id}
+                            href={
+                              `/events/${group.eventId}` +
+                              `/groups/${group.id}`
+                            }
+                            className="group rounded-[20px] border border-[var(--line)] bg-[var(--panel)] p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--color-coral)]/50"
+                          >
+                            <div className="mb-4 flex items-start justify-between gap-4">
+                              <div className="flex min-w-0 items-center gap-3">
+                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] border border-[var(--color-accent)]/20 bg-[var(--color-accent)]/10">
+                                  <Users
+                                    size={20}
+                                    className="text-[var(--color-coral)]"
+                                  />
+                                </div>
+
+                                <div className="min-w-0">
+                                  <h3 className="truncate font-bold text-[var(--color-ink)] transition-colors group-hover:text-[var(--color-coral)]">
+                                    {group.title}
+                                  </h3>
+
+                                  <p className="mt-1 text-xs text-[var(--muted)]">
+                                    {group.memberCount} /{" "}
+                                    {group.maxMembers} members
+                                  </p>
+                                </div>
+                              </div>
+
+                              <ChevronRight
+                                size={18}
+                                className="shrink-0 text-[var(--muted)] transition-transform group-hover:translate-x-1 group-hover:text-[var(--color-coral)]"
+                              />
+                            </div>
+
+                            {group.groupNote && (
+                              <p className="mb-4 line-clamp-2 text-sm leading-relaxed text-[var(--muted)]">
+                                {group.groupNote}
+                              </p>
+                            )}
+
+                            <div className="flex items-center justify-between border-t border-[var(--line)] pt-3">
+                              <span
+                                className={
+                                  isActive
+                                    ? "rounded-full bg-[var(--color-accent)]/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--color-coral)]"
+                                    : "rounded-full bg-[var(--line)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--muted)]"
+                                }
+                              >
+                                {group.status}
+                              </span>
+
+                              <span className="text-xs font-semibold text-[var(--muted)]">
+                                View Group
+                              </span>
+                            </div>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
               </motion.section>
 
               {/* Recent Activity (MISSING ENDPOINT) */}

@@ -1777,6 +1777,29 @@
         ]
       }
     },
+    "/v1/me/groups": {
+      "get": {
+        "tags": [
+          "my-groups-controller"
+        ],
+        "operationId": "getMyGroups",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GroupResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/me/group-join-requests": {
       "get": {
         "tags": [
@@ -3553,14 +3576,14 @@
           "unpaged": {
             "type": "boolean"
           },
-          "pageNumber": {
-            "type": "integer",
-            "format": "int32"
-          },
           "paged": {
             "type": "boolean"
           },
           "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageNumber": {
             "type": "integer",
             "format": "int32"
           },
