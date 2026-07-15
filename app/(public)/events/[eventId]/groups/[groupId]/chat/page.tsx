@@ -113,7 +113,13 @@ export default function GroupChatPage() {
           };
         });
       },
-      setConnectionStatus,
+      (status) => {
+        setConnectionStatus(status);
+
+        if (status === "Connected") {
+          void refetch();
+        }
+      },
     );
 
     clientRef.current = client;
@@ -123,7 +129,7 @@ export default function GroupChatPage() {
       clientRef.current = null;
       void client.deactivate();
     };
-  }, [groupId]);
+  }, [groupId, refetch]);
 
   const messages = useMemo(() => {
     const messageById = new Map<string, GroupMessage>();
