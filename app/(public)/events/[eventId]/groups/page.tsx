@@ -4,15 +4,16 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import {
-  createGroup,
-  createJoinRequest,
-  EventItem,
+  getCurrentUser,
   getEvent,
-  GroupItem,
-  GroupSize,
+  getMyGroups,
+  type EventItem,
+  type GroupItem,
+  type GroupSize,
 } from "@/lib/api";
+import { useCreateGroup } from "@/hooks/useGroups";
 import { EmptyState, ErrorMessage, Input, PageHeader, Select, SiteShell, Textarea } from "../../../../site";
-import { ArrowLeft, MessageCircle, Plus, Send, Users } from "lucide-react";
+import { ArrowLeft, MessageCircle, Plus, Users } from "lucide-react";
 
 const groupSizes = ["TWO", "THREE", "FOUR", "FOUR_PLUS"];
 const groupSizeToMaxMembers: Record<string, number> = {
@@ -30,10 +31,11 @@ const initialGroupForm = {
 
 export default function EventGroupsPage() {
   const params = useParams<{ eventId: string }>();
+  const createGroupMutation = useCreateGroup();
   const [eventItem, setEventItem] = useState<EventItem | null>(null);
+  const [currentUserId, setCurrentUserId] = useState("");
   const [groups, setGroups] = useState<GroupItem[]>([]);
   const [form, setForm] = useState(initialGroupForm);
-  const [joinMessages, setJoinMessages] = useState<Record<string, string>>({});
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -42,10 +44,17 @@ export default function EventGroupsPage() {
     setError("");
     setLoading(true);
     try {
-      const loadedEvent = await getEvent(params.eventId);
+      const [loadedEvent, myGroups, currentUser] = await Promise.all([
+        getEvent(params.eventId),
+        getMyGroups(),
+        getCurrentUser(),
+      ]);
+
       setEventItem(loadedEvent);
-      // Group listing is not yet available on the backend
-      setGroups([]);
+      setCurrentUserId(currentUser.id ?? "");
+      setGroups(
+        myGroups.filter((group) => group.eventId === params.eventId),
+      );
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not load groups.");
     } finally {
@@ -64,33 +73,22 @@ export default function EventGroupsPage() {
     setError("");
     setMessage("");
     try {
-      const group = await createGroup({
+      const group = await createGroupMutation.mutateAsync({
         eventId: params.eventId,
-        title: form.title,
+        title: form.title.trim(),
         groupSize: form.groupSize as GroupSize,
         maxMembers: groupSizeToMaxMembers[form.groupSize],
-        groupNote: form.groupNote,
+        groupNote: form.groupNote.trim(),
       });
-      setGroups((current) => [group, ...current]);
+
+      setGroups((current) => [
+        group,
+        ...current.filter((currentGroup) => currentGroup.id !== group.id),
+      ]);
       setForm(initialGroupForm);
       setMessage("Group created. You are the group admin now.");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not create group.");
-    }
-  }
-
-  async function handleJoinRequest(group: GroupItem) {
-    setError("");
-    setMessage("");
-    try {
-      await createJoinRequest(
-        group.id,
-        joinMessages[group.id] || "I would like to join this group.",
-      );
-      setJoinMessages((current) => ({ ...current, [group.id]: "" }));
-      setMessage(`Join request sent to ${group.title}.`);
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Could not send join request.");
     }
   }
 
@@ -102,7 +100,7 @@ export default function EventGroupsPage() {
       <div className={`listing-page event-groups-page ${pageAccentClass}`}>
         <PageHeader
           title={eventItem ? `${eventItem.title} Groups` : "Event groups"}
-          subtitle="Create a group, request to join existing groups, and continue into chat once the group is ready."
+          subtitle="Create a group, open a group shared with you, and continue into chat once you are a member."
           action={
             <Link className="secondary-link" href={backHref}>
               <ArrowLeft size={16} /> Back
@@ -140,23 +138,15 @@ export default function EventGroupsPage() {
                       <span><Users size={14} /> {group.groupSize.replace("_", "+")}</span>
                       <span>{group.adminUsername}</span>
                     </div>
-                    <div className="join-request-box groups-page-request">
-                      <input
-                        placeholder="Optional request message"
-                        value={joinMessages[group.id] ?? ""}
-                        onChange={(changeEvent) => setJoinMessages((current) => ({ ...current, [group.id]: changeEvent.target.value }))}
-                      />
-                      <button className="small-action" type="button" onClick={() => void handleJoinRequest(group)}>
-                        <Send size={14} /> Request
-                      </button>
-                    </div>
                     <div className="group-card-actions">
                       <Link className="secondary-link" href={`/events/${params.eventId}/groups/${group.id}`}>
                         Details
                       </Link>
-                      <Link className="secondary-link" href={`/events/${params.eventId}/groups/${group.id}/requests`}>
-                        Requests
-                      </Link>
+                      {group.adminId === currentUserId ? (
+                        <Link className="secondary-link" href={`/events/${params.eventId}/groups/${group.id}/requests`}>
+                          Requests
+                        </Link>
+                      ) : null}
                       <Link className="primary-link" href={`/events/${params.eventId}/groups/${group.id}/chat`}>
                         <MessageCircle size={15} /> Chat
                       </Link>
@@ -166,7 +156,7 @@ export default function EventGroupsPage() {
               </div>
             ) : (
               <EmptyState>
-                Group listing is unavailable because the current API does not expose an event-groups endpoint. You can still create a group for this {eventItem?.type === "ACTIVITY" ? "activity" : "event"} and share its link.
+                You have not created or joined a group for this {eventItem?.type === "ACTIVITY" ? "activity" : "event"} yet. A shared group link can still be opened to send a join request.
               </EmptyState>
             )}
           </section>
@@ -177,8 +167,8 @@ export default function EventGroupsPage() {
               <Input label="Group title" value={form.title} onChange={(title) => setForm((current) => ({ ...current, title }))} required />
               <Select label="Size" value={form.groupSize} options={groupSizes} onChange={(groupSize) => setForm((current) => ({ ...current, groupSize }))} />
               <Textarea label="Group note" value={form.groupNote} onChange={(groupNote) => setForm((current) => ({ ...current, groupNote }))} />
-              <button className="primary-button" type="submit">
-                <Plus size={15} /> Create group
+              <button className="primary-button" type="submit" disabled={createGroupMutation.isPending}>
+                <Plus size={15} /> {createGroupMutation.isPending ? "Creating..." : "Create group"}
               </button>
             </form>
           </aside>
