@@ -1082,7 +1082,26 @@ button:disabled {
 }
 
 .notification-dropdown {
-  width: 320px;
+  width: min(360px, calc(100vw - 32px));
+  max-height: min(480px, calc(100vh - 110px));
+  overflow: hidden;
+}
+
+.notification-dropdown .notification-item:last-child {
+  border-bottom: 0;
+}
+
+.notification-item {
+  background: transparent;
+}
+
+button.notification-item:hover {
+  background:
+    color-mix(
+      in srgb,
+      var(--color-ink) 7%,
+      transparent
+    );
 }
 
 .notification-item {
