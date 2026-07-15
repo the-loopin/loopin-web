@@ -135,63 +135,83 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
           </button>
 
           {/* Notifications Dropdown */}
-          <div style={{ position: 'relative' }}>
+          <div style={{ position: "relative" }}>
             <button
               className="icon-button"
-              onClick={() => { setShowNotifications(!showNotifications); setShowProfile(false); }}
+              onClick={() => {
+                setShowNotifications(
+                  (current) => !current,
+                );
+                setShowProfile(false);
+              }}
               aria-label="Notifications"
+              aria-expanded={showNotifications}
             >
               <Bell size={18} />
+
               {notifications.length > 0 && (
-                <span style={{
-                  position: 'absolute',
-                  top: '-2px',
-                  right: '-2px',
-                  width: '8px',
-                  height: '8px',
-                  background: 'var(--orange)',
-                  borderRadius: '50%'
-                }} />
+                <span
+                  style={{
+                    position: "absolute",
+                    top: "-2px",
+                    right: "-2px",
+                    width: "8px",
+                    height: "8px",
+                    background: "var(--color-coral)",
+                    borderRadius: "50%",
+                  }}
+                />
               )}
             </button>
-              {notificationsPending ? (
-                <div className="notification-item">
-                  Loading notifications...
-                </div>
-              ) : notificationsError ? (
-                <div className="notification-item">
-                  Could not load notifications.
-                </div>
-              ) : notifications.length === 0 ? (
-                <div className="notification-item">
-                  No new notifications
-                </div>
-              ) : (
-                notifications.map((notification) => (
-                  <button
-                    key={notification.id}
-                    type="button"
-                    className="notification-item w-full text-left"
-                    disabled={
-                      markNotificationAsRead.isPending
-                    }
-                    onClick={() =>
-                      void handleNotificationClick(
-                        notification,
-                      )
-                    }
-                  >
-                    <strong className="mb-1 block text-sm">
-                      {notification.title ??
-                        "Notification"}
-                    </strong>
 
-                    <p className="text-xs text-[var(--muted)]">
-                      {notification.message}
-                    </p>
-                  </button>
-                ))
-              )}
+            {showNotifications && (
+              <div className="dropdown-menu notification-dropdown">
+                <div className="dropdown-header">
+                  Notifications
+                </div>
+
+                <div className="max-h-[420px] overflow-y-auto">
+                  {notificationsPending ? (
+                    <div className="notification-item">
+                      Loading notifications...
+                    </div>
+                  ) : notificationsError ? (
+                    <div className="notification-item">
+                      Could not load notifications.
+                    </div>
+                  ) : notifications.length === 0 ? (
+                    <div className="notification-item">
+                      No new notifications
+                    </div>
+                  ) : (
+                    notifications.map((notification) => (
+                      <button
+                        key={notification.id}
+                        type="button"
+                        className="notification-item w-full text-left"
+                        disabled={
+                          markNotificationAsRead.isPending
+                        }
+                        onClick={() =>
+                          void handleNotificationClick(
+                            notification,
+                          )
+                        }
+                      >
+                        <strong className="mb-1 block text-sm text-[var(--color-ink)]">
+                          {notification.title ??
+                            "Notification"}
+                        </strong>
+
+                        <p className="m-0 text-xs leading-relaxed text-[var(--muted)]">
+                          {notification.message}
+                        </p>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Profile Dropdown */}
